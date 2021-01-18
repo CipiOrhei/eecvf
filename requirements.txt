@@ -1,0 +1,43 @@
+#
+####### requirements.txt #######
+#
+###### Requirements without Version Specifiers ######
+#
+Cython~=0.29.18
+decorator
+imageio
+imgaug==0.4.0
+Keras~=2.3.1
+Keras-Applications
+Keras-Preprocessing
+matplotlib~=3.2.1
+numpy~=1.18.4
+numba~=0.51.0
+networkx
+# opencv-python~=4.2.0.34
+opencv-contrib-python~=4.4.0
+Pillow~=7.1.2
+Pillow-PIL
+scikit-image~=0.17.2
+scipy~=1.4.1
+six
+tqdm~=4.46.0
+thinning_py3
+wheel
+theano
+cntk
+###### Requirements with Version Specifiers ######
+#   See https://www.python.org/dev/peps/pep-0440/#version-specifiers
+tensorflow == 1.15.0
+tensorflow-gpu == 1.15.0
+#
+###### Refer to other requirements files ######
+#
+#
+###### A particular file ######
+#
+###### Additional Requirements without Version Specifiers ######
+#   Same as 1st section, just here to show that you can put things in any order.
+#
+
+setuptools~=46.4.0

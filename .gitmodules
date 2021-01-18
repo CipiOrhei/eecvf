@@ -1,0 +1,3 @@
+[submodule "MachineLearning/external/image_segmentation_keras"]
+	path = MachineLearning/external/image_segmentation_keras
+	url = C:/repos/image-segmentation-keras
