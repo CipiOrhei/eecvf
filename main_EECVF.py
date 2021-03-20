@@ -1,17 +1,22 @@
+# noinspection PyUnresolvedReferences
 import Application
+# noinspection PyUnresolvedReferences
 import Benchmarking
+# noinspection PyUnresolvedReferences
 import MachineLearning
+# noinspection PyUnresolvedReferences
 import config_main as CONFIG
+# noinspection PyUnresolvedReferences
 import Utils
 
 """
 Code for paper:
-title={End-to-End Computer Vision Framework},
-author={Ciprian Orhei, Muguras Mocofan, Silviu Vert, Radu Vasiu},
-booktitle={2020 International Symposium on Electronics and Telecommunications (ISETC)},
-pages={},
-year={2020},
-organization={}
+  title={End-to-End Computer Vision Framework},
+  author={Orhei, Ciprian and Mocofan, Muguras and Vert, Silviu and Vasiu, Radu},
+  booktitle={2020 International Symposium on Electronics and Telecommunications (ISETC)},
+  pages={1--4},
+  year={2020},
+  organization={IEEE}
 """
 
 
@@ -58,7 +63,10 @@ def main_isetc():
                            name_to_save='nr_edge')
     # run benchmark
     # Benchmarking.delete_folder_benchmark_out()
-    # Benchmarking.run_FOM_benchmark(input_location='Logs/application_results', gt_location='Logs/application_results/CANNY_L0', raw_image='TestData/pattern_mugur_small', jobs_set=['THINNED_EDGE_UNET_L0'])
+    Benchmarking.run_FOM_benchmark(input_location='Logs/application_results',
+                                   gt_location='Logs/application_results/CANNY_L0',
+                                   raw_image='TestData/pattern_full',
+                                   jobs_set=['THINNED_EDGE_UNET_L0'])
     # by default a set of statistics are saved in csv file
     Utils.close_files()
     Utils.plot_avg_time_jobs(table_number=2, save_plot=True)
@@ -192,6 +200,6 @@ def main_2():
 
 
 if __name__ == "__main__":
-    # main()
-    # main_2()
+    main()
+    main_2()
     main_isetc()

@@ -1,8 +1,12 @@
+# noinspection PyUnresolvedReferences
 import Application
+# noinspection PyUnresolvedReferences
 import Benchmarking
+# noinspection PyUnresolvedReferences
 import MachineLearning
-# noinspection PyPep8Naming
+# noinspection PyUnresolvedReferences
 import config_main as CONFIG
+# noinspection PyUnresolvedReferences
 import Utils
 
 

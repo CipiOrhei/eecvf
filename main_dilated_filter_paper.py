@@ -2,25 +2,32 @@
 import Application
 # noinspection PyUnresolvedReferences
 import Benchmarking
-# noinspection PyPep8Naming
+# noinspection PyUnresolvedReferences
+import MachineLearning
+# noinspection PyUnresolvedReferences
 import config_main as CONFIG
+# noinspection PyUnresolvedReferences
+import Utils
 
 """
 Code for paper:
-title={Custom Dilated Edge Detection Filters},
-author={Bogdan, V and Bonchis, C and Orhei, C},
-booktitle={International Conference in Central Europe on Computer Graphics, Visualization and Computer Vision},
-pages={to appear},
-publisher={V{\'a}clav Skala-UNION Agency}
-year={May 2020},
-organization={WSCG}
-eprint={arXiv:1910.00138}
+  title={Custom dilated edge detection filters},
+  author={Bogdan, Victor and Bonchis, Cosmin and Orhei, Ciprian},
+  year={2020},
+  publisher={V{\'a}clav Skala-UNION Agency}
+  
+  OR 
+  
+  title={Custom Extended Sobel Filters},
+  author={Bogdan, Victor and Bonchi{\c{s}}, Cosmin and Orhei, Ciprian},
+  journal={arXiv preprint arXiv:1910.00138},
+  year={2019}
 """
 
 
 def main():
-    """Main function of framework Please look in example_main for all functions
-    you can use
+    """
+    Main function of framework Please look in example_main for all functions you can use
     """
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/train')
 
@@ -28,9 +35,6 @@ def main():
 
     Application.do_get_image_job(port_output_name='RAW')
     Application.do_grayscale_transform_job(port_input_name='RAW', port_output_name='RAW_GRAY')
-
-    # Application.do_pyramid_level_down_job(port_name_input='RAW_GRAY', port_input_lvl=Application.PYRAMID_LEVEL.LEVEL_0,
-    #                                  port_name_output='RAW_GRAY', number_of_lvl=4, verbose=False)
 
     levels = [CONFIG.PYRAMID_LEVEL.LEVEL_0]
     input_image_list = []
@@ -75,7 +79,6 @@ def main():
     Application.create_config_file(verbose=False)
 
     Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save='ALL')
-
     # Application.configure_show_pictures(ports_to_show=list_to_save, time_to_show=200)
 
     Application.run_application()

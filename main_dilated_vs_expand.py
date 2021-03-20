@@ -1,18 +1,22 @@
+# noinspection PyUnresolvedReferences
 import Application
+# noinspection PyUnresolvedReferences
 import Benchmarking
-# noinspection PyPep8Naming
+# noinspection PyUnresolvedReferences
+import MachineLearning
+# noinspection PyUnresolvedReferences
 import config_main as CONFIG
+# noinspection PyUnresolvedReferences
 import Utils
 
 """
 Code for paper:
-title={Edge map response of dilated and reconstructed classical filters},
-author={Orhei, C and Bogdan, V and Bonchis, C},
-booktitle={},
-pages={to appear},
-year={September 2020},
-organization={SYNASC}
-eprint={}
+  title={Edge map response of dilated and reconstructed classical filters},
+  author={Orhei, Ciprian and Bogdan, Victor and Bonchi{\c{s}}, Cosmin},
+  booktitle={2020 22nd International Symposium on Symbolic and Numeric Algorithms for Scientific Computing (SYNASC)},
+  pages={187--194},
+  year={2020},
+  organization={IEEE}
 """
 
 
@@ -21,8 +25,6 @@ def main():
     Main function of framework Please look in example_main for all functions you can use
     """
     Application.set_input_image_folder('TestData/dilation_test/test')
-    # Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/small')
-    # Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/all')
 
     list_to_save = []
     list_to_benchmark = []
@@ -781,10 +783,10 @@ def main():
                                    raw_image='TestData/BSR/BSDS500/data/images/buildings',
                                    jobs_set=list_to_benchmark)
 
-    # Benchmarking.run_bsds500_boundry_benchmark(input_location='Logs/application_results',
-    #                                            gt_location='TestData/BSR/BSDS500/data/groundTruth/all',
-    #                                            raw_image='TestData/BSR/BSDS500/data/images/all',
-    #                                            jobs_set=list_to_benchmark)
+    Benchmarking.run_bsds500_boundry_benchmark(input_location='Logs/application_results',
+                                               gt_location='TestData/BSR/BSDS500/data/groundTruth/all',
+                                               raw_image='TestData/BSR/BSDS500/data/images/all',
+                                               jobs_set=list_to_benchmark)
     Utils.close_files()
 
 

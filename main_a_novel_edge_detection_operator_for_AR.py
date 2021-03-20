@@ -1,16 +1,22 @@
+# noinspection PyUnresolvedReferences
 import Application
-import Utils
-# noinspection PyPep8Naming
+# noinspection PyUnresolvedReferences
+import Benchmarking
+# noinspection PyUnresolvedReferences
+import MachineLearning
+# noinspection PyUnresolvedReferences
 import config_main as CONFIG
+# noinspection PyUnresolvedReferences
+import Utils
 
 """
 This module contains the code used for the following paper:
-title={A Novel Edge Detection Operator for Identifying Buildings in Augmented Reality Applications},
-author={Orhei, Ciprian and Vert, Silviu and Vasiu, Radu},
-booktitle={International Conference on Information and Software Technologies},
-pages={208--219},
-year={2020},
-organization={Springer}
+  title={A Novel Edge Detection Operator for Identifying Buildings in Augmented Reality Applications},
+  author={Orhei, Ciprian and Vert, Silviu and Vasiu, Radu},
+  booktitle={International Conference on Information and Software Technologies},
+  pages={208--219},
+  year={2020},
+  organization={Springer}
 """
 
 

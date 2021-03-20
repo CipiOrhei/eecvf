@@ -1,7 +1,13 @@
+# noinspection PyUnresolvedReferences
 import Application
+# noinspection PyUnresolvedReferences
 import Benchmarking
-# noinspection PyPep8Naming
+# noinspection PyUnresolvedReferences
+import MachineLearning
+# noinspection PyUnresolvedReferences
 import config_main as CONFIG
+# noinspection PyUnresolvedReferences
+import Utils
 
 """
 This module is an example to use the EECVF with camera video input stream.

@@ -1,3 +1,8 @@
+Logs
+.idea
+/Application/Config/json/new_config.json
+/MachineLearning/model_weights
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
