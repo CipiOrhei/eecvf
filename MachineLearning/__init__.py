@@ -7,6 +7,7 @@ if CUDA_GPU:
     from MachineLearning.Config.create_ml_job import set_output_model_folder
     from MachineLearning.Config.create_ml_job import set_output_checkpoint_location
     from MachineLearning.Config.create_ml_job import clear_model_trained
+    from MachineLearning.Config.create_ml_job import delete_folder_ai_out
 
     from MachineLearning.main_flow import do_U_net_model
     from MachineLearning.semseg_wrappers import do_mobilenet_unet_training

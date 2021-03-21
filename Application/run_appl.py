@@ -10,6 +10,7 @@ from Application.Utils.parseJsonFile import get_jobs
 from Application.Utils.image_handler import show_pictures, save_pict_to_file
 from Application.Frame.job_handler import job_creation, init_jobs, log_to_console_avg_time, terminate_jobs
 from Application.Frame.global_variables import global_var_handler
+from Application.Jobs.get_image import get_used_size_values
 
 
 def run_application():
@@ -28,12 +29,16 @@ def run_application():
         log_setup_info_to_console("SETUP STEP")
         timer_setup.start_cycle_timer()
         global_var_handler()
+
         if config_main.APPL_INPUT == config_main.IMAGE_INPUT:
             get_picture_size_and_number()
+        elif config_main.APPL_INPUT == config_main.IMAGE_TXT_INPUT:
+            get_picture_size_and_number(is_txt=True)
         elif config_main.APPL_INPUT == config_main.VIDEO_INPUT:
             get_video_capture()
         elif config_main.APPL_INPUT == config_main.CAMERA_INPUT:
             get_camera_capture()
+
         log_setup_info_to_console("JOB CREATION STEP")
         job_list = job_creation(job_description=get_jobs(json_file=config_main.APPL_INPUT_JOB_LIST))
         timer_setup.end_cycle_timer()
@@ -66,6 +71,8 @@ def run_application():
         timer_application.cycle_updater()
         log_setup_info_to_console("TERMINATE STEP")
         terminate_jobs(job_list)
+
+        log_to_console("IMAGE SIZE USED IN APPLICATION: {}".format(get_used_size_values()))
 
         if config_main.APPL_INPUT == config_main.VIDEO_INPUT or config_main.APPL_INPUT == config_main.CAMERA_INPUT:
             release_video()

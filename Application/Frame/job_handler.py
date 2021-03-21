@@ -4,6 +4,9 @@ from Application.Utils.parseJsonFile import FIELD_POSITION
 # noinspection PyPep8Naming
 import config_main as CONFIG
 
+if CONFIG.CUDA_GPU is True:
+    import tensorflow as tf
+
 """
 Module handles the manipulations of jobs for the APPL block
 """
@@ -49,6 +52,9 @@ def terminate_jobs(list_jobs: list) -> None:
     """
     for job in list_jobs:
         job.terminate()
+        
+    if CONFIG.CUDA_GPU is True:
+        tf.keras.backend.clear_session()
 
 
 def log_to_console_avg_time(job_list: list) -> None:

@@ -29,8 +29,10 @@ def load_pred(sample_name, set_name):
 def run_verify_boundry(thinning, max_distance_px):
     log_setup_info_to_console("BENCHMARKING BSDS500 BOUNDRY")
 
+    idx = 1
     for set in config_main.BENCHMARK_SETS:
-        log_benchmark_info_to_console('Current set: {}'.format(set))
+        log_benchmark_info_to_console('Current set: {id}/{max}: {set}'.format(id=idx, max=len(config_main.BENCHMARK_SETS),
+                                                                            set=set))
         try:
             sample_results, threshold_results, overall_result = \
                 evaluate_boundaries.pr_evaluation(thresholds=config_main.BENCHMARK_BSDS_500_N_THRESHOLDS,
@@ -41,6 +43,7 @@ def run_verify_boundry(thinning, max_distance_px):
                                                   thinning=thinning,
                                                   max_distance_px=max_distance_px,
                                                   progress=tqdm.tqdm)
+            idx += 1
 
             # Write results to disk
             results_path = os.path.join(os.getcwd(), config_main.BENCHMARK_RESULTS, 'PCM')

@@ -37,6 +37,18 @@ def set_input_image_folder(folder: str) -> None:
     log_setup_info_to_console('IMAGE FOLDER INPUT:{}'.format(os.path.join(os.getcwd(), config_main.APPL_INPUT_DIR)))
 
 
+def set_input_image_from_txt_folder(folder: str) -> None:
+    """
+    Service that sets up the location of image input folder when images are txt files.
+    :param folder: location to set
+    :return: None
+    """
+    config_main.APPL_INPUT = config_main.IMAGE_TXT_INPUT
+    config_main.APPL_INPUT_DIR = folder
+
+    log_setup_info_to_console('IMAGE FROM TXT FOLDER INPUT:{}'.format(os.path.join(os.getcwd(), config_main.APPL_INPUT_DIR)))
+
+
 def set_input_video(path: str) -> None:
     """
     Service that sets up the video path.
@@ -191,11 +203,12 @@ def define_output_extension(extension: str) -> None:
     config_main.APPl_SAVE_PICT_EXTENSION = '.' + extension
 
 
-def create_folder_from_list_ports(folder_name: str, list_port: list) -> None:
+def create_folder_from_list_ports(folder_name: str, list_port: list, sampling_rate: int = 1) -> None:
     """
     Copies ports from multiple output folders of ports into one
     :param folder_name: name of folder
     :param list_port: list of ports
+    :param sampling_rate: sampling rate
     :return: None
     """
     if not os.path.exists(os.path.join(folder_name)):
@@ -203,10 +216,13 @@ def create_folder_from_list_ports(folder_name: str, list_port: list) -> None:
 
     for port in list_port:
         list_img = [x for x in os.listdir(os.path.join(config_main.APPL_SAVE_LOCATION, port))]
+        idx = 0
         for file in list_img:
-            src = os.path.join(config_main.APPL_SAVE_LOCATION, port, file)
-            dst = os.path.join(folder_name, file)
-            shutil.copy2(src, dst)
+            if idx % sampling_rate == 0:
+                src = os.path.join(config_main.APPL_SAVE_LOCATION, port, file)
+                dst = os.path.join(folder_name, file)
+                shutil.copy2(src, dst)
+            idx += 1
 
 
 if __name__ == "__main__":

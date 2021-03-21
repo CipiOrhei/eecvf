@@ -3,9 +3,10 @@ import cv2
 
 from Application.Config.create_config import jobs_dict, create_dictionary_element
 from config_main import MORPH_CONFIG, PYRAMID_LEVEL, FILTERS, CANNY_VARIANTS, FILTERS_SECOND_ORDER, THRESHOLD_CONFIG
+from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create
 
 # for using same names for levels
-from Utils.log_handler import log_to_console, log_setup_info_to_console
+from Utils.log_handler import log_to_console, log_setup_info_to_console, log_error_to_console
 
 import numpy as np
 
@@ -20,68 +21,6 @@ All functions from this module will add one or more jobs to the job buffer.
 # list to hold custom kernels used in application
 # important to avoid confusion of names
 custom_kernels_used = []
-
-
-def transform_port_name_lvl(name: str, lvl: PYRAMID_LEVEL):
-    """
-    Function for creating name of port for manipulation.
-    :param name: name of port
-    :param lvl: pyramid level of port
-    :return: port name
-    """
-    return name + '_' + str(lvl)
-
-
-def transform_port_size_lvl(lvl: PYRAMID_LEVEL, rgb: bool):
-    """
-    Function for creating size of ports.
-    :param lvl: pyramid level of port
-    :param rgb: is port rgb or greyscale
-    :return: string of port size
-    """
-    if rgb is False:
-        return str(lvl) + '_SIZE'
-    else:
-        return str(lvl) + '_SIZE_RGB'
-
-
-def job_name_create(action: str, input_list: list = None, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: list = 0, **kwargs):
-    """
-    Function for job name.
-    :param action: string representing the action done by the job
-    :param input_list: list of strings representing the input ports
-    :param wave_offset: list of ints representing the wave of each input port
-    :param level: pyramid level on which the job will take place
-    :param kwargs: list of parameter for job configuration( use example : Var=5)
-    :return: job name
-    """
-    string = str(action)
-
-    if input_list is not None:
-        if 'Add' in action:
-            string += ' to '
-        else:
-            string += ' of '
-
-        if len(input_list) == 1:
-            string += input_list[0] + ' W-' + str(wave_offset[0])
-        else:
-            for i in range(len(input_list)):
-                if i != 0:
-                    string += ' and '
-                string += input_list[i] + ' W-' + str(wave_offset[i])
-
-    if len(kwargs) is not 0:
-        string += ' with '
-        for i in range(len(kwargs)):
-            if i != 0:
-                string += ' '
-            string += str(list(kwargs.keys())[i]) + '=' + str(kwargs[list(kwargs.keys())[i]])
-
-    string += ' on ' + str(level)
-
-    return string
-
 
 ############################################################################################################################################
 # Input jobs
@@ -195,6 +134,49 @@ def do_get_video_capture_job(port_output_name: str = 'RAW') -> str:
                                   output_ports=output_port_list)
 
     jobs_dict.append(d)
+    return port_output_name
+
+
+def do_get_image_from_txt_job(line_separator, pixel_separator,
+                              port_output_name: str = 'RAW', is_rgb=False) -> str:
+    """
+    Function for configure the image retrieval job from folder.
+    The job is added to the job buffer.
+    :param line_separator: character used to separate lines
+    :param pixel_separator: character used to separate pixels
+    :param port_output_name: name you want to use for raw image in the application
+    :param is_rgb: if resulting image is RGB
+    :return: output image port name
+    """
+    output_raw_port_name = transform_port_name_lvl(name=port_output_name, lvl=PYRAMID_LEVEL.LEVEL_0)
+    output_raw_port_size = transform_port_size_lvl(lvl=PYRAMID_LEVEL.LEVEL_0, rgb=is_rgb)
+
+    input_port_list = None
+    main_func_list = [output_raw_port_name]
+    output_port_list = [(output_raw_port_name, output_raw_port_size, 'B', True)]
+
+    if isinstance(line_separator, str):
+        main_func_list.append(line_separator)
+    else:
+        log_error_to_console("LINE SEPARATOR IS NOT STRING")
+
+    if isinstance(pixel_separator, str):
+        main_func_list.append(pixel_separator)
+    else:
+        log_error_to_console("PIXEL SEPARATOR IS NOT STRING")
+
+    job_name = job_name_create(action='Get image frame')
+
+    d = create_dictionary_element(job_module='get_image',
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  init_func_name='init_func', init_func_param=None,
+                                  main_func_name='main_func_from_txt',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
     return port_output_name
 
 
@@ -916,7 +898,7 @@ def do_pixelate_image_job(port_input_name: str,
 
 
 def do_matrix_difference_job(port_input_name_1: str, port_input_name_2: str,
-                             port_output_name: str = None,
+                             port_output_name: str = None, normalize_image: bool = True, result_is_image: bool = True,
                              wave_offset_port_1: int = 0, wave_offset_port_2: int = 0,
                              is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
     """
@@ -926,6 +908,8 @@ def do_matrix_difference_job(port_input_name_1: str, port_input_name_2: str,
     :param port_input_name_2: second matrix
     :param wave_offset_port_2: port wave offset. If 0 it is in current wave.
     :param port_output_name: result matrix
+    :param normalize_image: if we want the resulting image to be normalized
+    :param result_is_image: if the resulted port is an image. If the result is a value set to false.
     :param level:  pyramid level to calculate at
     :param is_rgb: if the output ports is rgb, 3 channels
     :return: output image port name
@@ -940,8 +924,8 @@ def do_matrix_difference_job(port_input_name_1: str, port_input_name_2: str,
     output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
 
     input_port_list = [input_port_1, input_port_2]
-    main_func_list = [input_port_1, wave_offset_port_1, input_port_2, wave_offset_port_2, output_port]
-    output_port_list = [(output_port, output_port_size, 'B', True)]
+    main_func_list = [input_port_1, wave_offset_port_1, input_port_2, wave_offset_port_2, output_port, normalize_image]
+    output_port_list = [(output_port, output_port_size, 'B', result_is_image)]
 
     job_name = job_name_create(action='Difference', input_list=input_port_list, wave_offset=[wave_offset_port_1, wave_offset_port_2],
                                level=level)
@@ -4662,7 +4646,7 @@ def do_otsu_job(port_input_name: str,
                                   job_name=job_name,
                                   input_ports=input_port_list,
                                   max_wave=wave_offset,
-                                  init_func_name='init_func_global', init_func_param=None,
+                                  init_func_name='init_func_global', init_func_param=[port_output_name],
                                   main_func_name='main_func',
                                   main_func_param=main_func_list,
                                   output_ports=output_port_list)
@@ -4875,56 +4859,6 @@ def do_edge_label_job(port_input_name: str,
     jobs_dict.append(d)
 
     return port_output_name
-
-
-############################################################################################################################################
-# Augmentation jobs
-############################################################################################################################################
-
-
-def do_class_correlation(port_input_name: str,
-                         class_list_in: list, class_list_out: list,
-                         port_output_name: str = None,
-                         level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> None:
-    """
-    Modify label values for an labeled image from the class_list_in to class_list_out labels.
-    :param port_input_name: name of input port
-    :param class_list_in: list of input classes
-    :param class_list_out: list of output classes
-    :param port_output_name: name of output port
-    :param level: pyramid level to calculate at
-    :param wave_offset: port wave offset. If 0 it is in current wave.
-    :return: None
-    """
-    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
-
-    if port_output_name is None:
-        port_output_name = 'CLASS_CORRELATION_' + port_input_name
-
-    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
-    output_port_size = transform_port_size_lvl(lvl=level, rgb=False)
-    # Transform to greyscale if RGB
-    if len(class_list_in[0]) == 3:
-        tmp_img = np.array(class_list_in)
-        tmp_img = np.rint(0.2989 * tmp_img[:,2] + 0.5870 * tmp_img[:,1] + 0.1140 * tmp_img[:,0])
-        class_list_in = tmp_img.tolist()
-
-    input_port_list = [input_port_name]
-    main_func_list = [input_port_name, wave_offset, class_list_in, class_list_out, output_port_name]
-    output_port_list = [(output_port_name, output_port_size, 'B', True)]
-
-    job_name = job_name_create(action='Class correlation', input_list=input_port_list, wave_offset=[wave_offset], level=level,
-                               LIST_IN=class_list_in, LIST_OUT=class_list_out)
-
-    d = create_dictionary_element(job_module='image_augmentation',
-                                  job_name=job_name,
-                                  input_ports=input_port_list,
-                                  init_func_name='init_func_global', init_func_param=None,
-                                  main_func_name='main_func',
-                                  main_func_param=main_func_list,
-                                  output_ports=output_port_list)
-
-    jobs_dict.append(d)
 
 
 ############################################################################################################################################

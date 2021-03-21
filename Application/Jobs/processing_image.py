@@ -11,6 +11,10 @@ from Application.Frame.global_variables import JobInitStateReturn, global_var_ha
 from Application.Frame.transferJobPorts import get_port_from_wave
 from Utils.log_handler import log_to_file, log_error_to_console
 
+from Application.Config.create_config import jobs_dict, create_dictionary_element
+from config_main import PYRAMID_LEVEL, FILTERS
+from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create, get_module_name_from_file
+
 """
 Module handles single image jobs for the APPL block.
 """
@@ -475,7 +479,7 @@ def rotate_main(param_list: list = None) -> bool:
 
                 # TODO fix this so we can have a fixed port size from beginning
                 p_out.arr = ndimage.rotate(input=p_in_image.arr.copy(), angle=param_list[PORT_IN_ANGLE],
-                                              reshape=param_list[PORT_IN_RESHAPE], mode=mode, order=order, prefilter=prefilter)
+                                           reshape=param_list[PORT_IN_RESHAPE], mode=mode, order=order, prefilter=prefilter)
 
                 p_out.set_valid()
             except BaseException as error:
@@ -733,6 +737,102 @@ def pixelate_main(param_list: list = None) -> bool:
             return False
 
         return True
+
+
+def resize_main(param_list: list = None) -> bool:
+    """
+    Resizing an image means changing the dimensions of it.
+    :param param_list: Param needed to respect the following list:
+                       [port_in name: image, port_in_wave: wave of image, angle: to rotate, reshape: if we want to reshape, extend_border:
+                        port_out: image_result]
+    :return: True if the job executed OK.
+    """
+    # noinspection PyPep8Naming
+    PORT_IN_IMG_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE = 1
+    # noinspection PyPep8Naming
+    PORT_IN_SIZE = 2
+    # noinspection PyPep8Naming
+    PORT_IN_INTERPOLATION = 3
+    # noinspection PyPep8Naming
+    PORT_IN_SCALE = 4
+    # noinspection PyPep8Naming
+    PORT_OUT_IMG_POS = 5
+
+    if len(param_list) != 6:
+        log_error_to_console("RESIZE IMAGE JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
+        return False
+    else:
+        p_in_image = get_port_from_wave(name=param_list[PORT_IN_IMG_POS], wave_offset=param_list[PORT_IN_WAVE])
+        p_out = get_port_from_wave(name=param_list[PORT_OUT_IMG_POS])
+
+        if p_in_image.is_valid() is True:
+            # try:
+            if True:
+                if not isinstance(param_list[PORT_IN_SIZE], tuple):
+                    size = tuple(param_list[PORT_IN_SIZE])
+                resized = cv2.resize(src=p_in_image.arr, dsize=size, interpolation=param_list[PORT_IN_INTERPOLATION],
+                                     fx=param_list[PORT_IN_SCALE][0], fy=param_list[PORT_IN_SCALE][1])
+                # TODO fix that this port is not resized at image resized
+                p_out.arr = resized
+                p_out.set_valid()
+            # except BaseException as error:
+            #     log_error_to_console("RESIZE IMAGE JOB NOK: ", str(error))
+            #     pass
+        else:
+            return False
+
+        return True
+
+
+def do_resize_image_job(port_input_name: str,
+                        new_size, interpolation = cv2.INTER_CUBIC, scale = (0,0),
+                        port_output_name: str = None,
+                        level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0, is_rgb: bool = True) -> str:
+    """
+    Create a pixelate effect on an image.
+    :param port_input_name: name of input port
+    :param nr_pixels_to_group: number of pixels to group as one pixel
+    :param port_output_name: name of output port
+    :param wave_offset: port wave offset. If 0 it is in current wave.
+    :param is_rgb: if the output ports is rgb, 3 channels
+    :param level: pyramid level to calculate at
+    :return: None
+    """
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    if port_output_name is None:
+        port_output_name = 'RESIZED_' + str(new_size[0]) + 'x' + str(new_size[1])
+        port_output_name += '_' + port_input_name
+
+    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
+
+    if is_rgb :
+        output_port_size = '(' + str(new_size[0]) + ',' + str(new_size[1]) +', 3)'
+    else:
+        output_port_size = '(' + str(new_size[0]) + ',' + str(new_size[1]) +')'
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, new_size, interpolation, scale, output_port_name]
+    output_port_list = [(output_port_name, output_port_size, 'B', True)]
+
+    job_name = job_name_create(action='Resize', input_list=input_port_list, wave_offset=[wave_offset], level=level)
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  max_wave=wave_offset,
+                                  init_func_name='init_func_global', init_func_param=None,
+                                  main_func_name='resize_main',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output_name
 
 
 if __name__ == "__main__":

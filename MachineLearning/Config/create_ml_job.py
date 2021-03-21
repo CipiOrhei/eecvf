@@ -82,5 +82,24 @@ def clear_model_trained():
     log_setup_info_to_console('DELETED CONTENT OF: {}'.format(config_main.ML_WEIGHT_OUTPUT_LOCATION))
 
 
+def delete_folder_ai_out(folder_name:str = None) -> None:
+    """
+    Service that deletes the content of out folder where the saved images are.
+    :param: folder name if changed
+    :return: None
+    """
+    if folder_name is None:
+        path = os.path.join(os.getcwd(), config_main.ML_OUTPUT_IMG_LOCATION, '*')
+    else:
+        path = os.path.join(os.getcwd(), folder_name, '*')
+
+    files = glob.glob(path)
+
+    for f in files:
+        shutil.rmtree(f, ignore_errors=True)
+
+    log_setup_info_to_console('DELETED CONTENT OF: {}'.format(config_main.ML_OUTPUT_IMG_LOCATION))
+
+
 if __name__ == "__main__":
     pass

@@ -248,7 +248,7 @@ def plot_cpm_results(list_of_data: list, inputs: list, prefix: str = '', level: 
 def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: str = '', prefix: str = '', level: str = 'L0',
                            self_contained_list: bool = False, number_decimal: int = 3, show_input: bool = False, show_level: bool = False,
                            order_by: str = None, name: str = 'PCM_results', save_location: str = 'Logs/',
-                           prefix_to_cut_legend = None, suffix_to_cut_legend=None, set_legend_left = False,
+                           prefix_to_cut_legend = None, suffix_to_cut_legend=None, set_legend_left = False, set_all_to_legend = False,
                            show_plot: bool = False, save_plot: bool = False):
     """
     Plot f1-r-p diagram of series.
@@ -259,6 +259,7 @@ def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: st
     :param prefix: prefix of series name
     :param level: level of data to plot
     :param number_decimal: number of decimals
+    :param set_all_to_legend: set data of F1, P, and R to plot
     :param self_contained_list: if name is in data
     :param show_input: add input to series name
     :param show_level: add level to series name
@@ -333,7 +334,12 @@ def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: st
         if suffix_to_cut_legend is not None or prefix_to_cut_legend is not None:
             name_legend = (name_legend.split(suffix_to_cut_legend)[0]).split(prefix_to_cut_legend)[-1]
         color = next(colors)
-        plt.plot(i[0], i[1], label="[F={value:0.3f}] {name}".format(value=i[3], name=name_legend), marker='o', color=color)
+
+        if set_all_to_legend is False:
+            plt.plot(i[0], i[1], label="[F={value:0.3f}] {name}".format(value=i[3], name=name_legend), marker='o', color=color)
+        else:
+
+            plt.plot(i[0], i[1], label="[F1={f1:0.3f}][P={p:0.3f}][R={r:0.3f}]{name}".format(f1=i[3], p=i[1], r=i[0], name=name_legend), marker='o', color=color)
 
     fig.set_size_inches(15, 15)
 

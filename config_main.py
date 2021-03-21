@@ -12,6 +12,7 @@ JSON_FILE_NAME = 'new_config'
 IMAGE_INPUT = 0
 VIDEO_INPUT = 1
 CAMERA_INPUT = 2
+IMAGE_TXT_INPUT = 3
 # Please take care that this values are rewritten by the service jobs
 # Input l
 APPL_INPUT_DIR = 'TestData/smoke_test'

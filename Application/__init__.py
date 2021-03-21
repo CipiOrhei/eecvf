@@ -4,6 +4,7 @@ from config_main import CUDA_GPU
 ########################################################################################################################
 from Application.Config.create_config import create_config_file
 from Application.Config.service_job_create import set_input_image_folder
+from Application.Config.service_job_create import set_input_image_from_txt_folder
 from Application.Config.service_job_create import set_output_image_folder
 from Application.Config.service_job_create import set_input_video
 from Application.Config.service_job_create import set_number_waves
@@ -19,6 +20,7 @@ from .run_appl import run_application
 # Input jobs
 ########################################################################################################################
 from Application.Config.job_create import do_get_image_job
+from Application.Config.job_create import do_get_image_from_txt_job
 from Application.Config.job_create import do_get_satellite_image_job
 from Application.Config.job_create import do_get_video_job
 from Application.Config.job_create import do_get_video_capture_job
@@ -46,6 +48,7 @@ from Application.Config.job_create import do_zoom_image_job
 from Application.Config.job_create import do_contrast_brightness_change_image_job
 from Application.Config.job_create import do_gamma_correction_image_job
 from Application.Config.job_create import do_pixelate_image_job
+from Application.Jobs.processing_image import do_resize_image_job
 ########################################################################################################################
 # Image blurring jobs
 ########################################################################################################################
@@ -128,14 +131,21 @@ from Application.Config.job_create import do_marr_hildreth_job
 from Application.Config.job_create import do_dog_job
 from Application.Config.job_create import do_dob_job
 ########################################################################################################################
+# edge detection algorithms
+########################################################################################################################
+from Application.Jobs.edge_edline import do_edge_drawing_job
+from Application.Jobs.edge_edline import do_edge_drawing_mod_job
+########################################################################################################################
 # line/shape detection
 ########################################################################################################################
 from Application.Config.job_create import do_hough_lines_job
+from Application.Jobs.edge_edline import do_ed_lines_job
 from Application.Config.job_create import do_hough_circle_job
 ########################################################################################################################
 # Image threshold jobs
 ########################################################################################################################
 from Application.Config.job_create import do_otsu_job
+from Application.Jobs.thresholding_image import do_multi_otsu_job
 from Application.Config.job_create import do_image_threshold_job
 from Application.Config.job_create import do_image_adaptive_threshold_job
 ########################################################################################################################
@@ -146,6 +156,10 @@ from Application.Config.job_create import do_thinning_guo_hall_image_job
 # Line/edge connectivity jobs
 ########################################################################################################################
 from Application.Config.job_create import do_edge_label_job
+########################################################################################################################
+# Value manipulations
+########################################################################################################################
+from Application.Jobs.value_manipulating import do_value_manipulation_job
 ########################################################################################################################
 # Multiple image jobs
 ########################################################################################################################
@@ -159,7 +173,7 @@ from Application.Config.job_create import do_matrix_bitwise_xor_job
 ########################################################################################################################
 # Augmentation jobs
 ########################################################################################################################
-from Application.Config.job_create import do_class_correlation
+from Application.Jobs.image_augmentation import do_class_correlation
 ########################################################################################################################
 # U-Net jobs
 ########################################################################################################################

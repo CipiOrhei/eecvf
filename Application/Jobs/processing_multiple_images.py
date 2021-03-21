@@ -40,21 +40,26 @@ def difference_2_matrix(param_list: list = None) -> bool:
     PORT_IN_WAVE_2 = 3
     # noinspection PyPep8Naming
     PORT_OUT_VAL_POS = 4
+    # noinspection PyPep8Naming
+    PORT_IN_NORMALIZE = 5
 
-    if len(param_list) != 5:
+    if len(param_list) != 6:
         log_error_to_console("MATRIX DIFFERENCE CALCULATION INTENSITY JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
         return False
     else:
         p_in_1 = get_port_from_wave(name=param_list[PORT_IN_1_POS], wave_offset=param_list[PORT_IN_WAVE_1])
         p_in_2 = get_port_from_wave(name=param_list[PORT_IN_2_POS], wave_offset=param_list[PORT_IN_WAVE_2])
-        p_out_1 = get_port_from_wave(name=param_list[PORT_OUT_VAL_POS])
+        p_out = get_port_from_wave(name=param_list[PORT_OUT_VAL_POS])
 
         if p_in_1.is_valid() is True and p_in_2.is_valid() is True:
             if p_in_1.arr.shape == p_in_2.arr.shape:
                 try:
                     img = cv2.subtract(src1=p_in_1.arr, src2=p_in_2.arr)
-                    ret, p_out_1.arr[:] = cv2.threshold(src=img, thresh=2, maxval=255, type=cv2.THRESH_BINARY)
-                    p_out_1.set_valid()
+                    if param_list[PORT_IN_NORMALIZE] is True:
+                        ret, img = cv2.threshold(src=img, thresh=2, maxval=255, type=cv2.THRESH_BINARY)
+
+                    p_out.arr = img
+                    p_out.set_valid()
                 except BaseException as error:
                     log_error_to_console("MATRIX DIFFERENCE JOB NOK: ", str(error))
                     pass
