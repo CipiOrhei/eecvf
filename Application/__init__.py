@@ -140,6 +140,7 @@ from Application.Jobs.edge_edline import do_edge_drawing_mod_job
 ########################################################################################################################
 from Application.Config.job_create import do_hough_lines_job
 from Application.Jobs.edge_edline import do_ed_lines_job
+from Application.Jobs.edge_edline import do_ed_lines_mod_job
 from Application.Config.job_create import do_hough_circle_job
 ########################################################################################################################
 # Image threshold jobs

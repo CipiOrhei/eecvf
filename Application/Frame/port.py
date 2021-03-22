@@ -100,3 +100,9 @@ class Port:
         :return: none
         """
         self.arr = np.zeros(size_new_array, dtype=type_new_array)
+
+    def self_reset(self):
+        Reset arr of port
+        :return: none
+        """
+        self.arr = np.zeros(shape=self.arr.shape, dtype=self.arr.dtype)

@@ -41,11 +41,19 @@ class EdgeDrawing_modified:
         """
         # set parameters for line segment detection
         if EDParam is None:
-            EDParam = {'gradientThreshold': 36, 'anchorThreshold': 8, 'scanIntervals': 1}
+            EDParam = {
+                'gradientThreshold': 36,
+                'anchorThreshold': 8,
+                'scanIntervals': 1,
+                'kernel_x': np.array([[-1, 0, 1],[-2, 0, 2],[-1, 0, 1]]),
+                'kernel_y': np.array([[-1, -2, -1],[0, 0, 0],[1, 2, 1]]),
+                       }
 
         self.gradientThreshold_ = EDParam['gradientThreshold']
         self.anchorThreshold_ = EDParam['anchorThreshold']
         self.scanIntervals_ = EDParam['scanIntervals']
+        self.kernel_x = EDParam['kernel_x']
+        self.kernel_y = EDParam['kernel_y']
         self.MAX_X = 0
         self.MAX_Y = 0
         self.G_ = np.array([])
@@ -193,15 +201,15 @@ class EdgeDrawing_modified:
         return
 
     # edge drawing algorithm
-    def EdgeDrawing(self, image, kernel_x, kernel_y):
+    def EdgeDrawing(self, image):
         # set up dimension
         self.MAX_X, self.MAX_Y = image.shape[0], image.shape[1]
         dxImg_ = np.zeros(shape=image.shape, dtype=np.float32)
         dyImg_ = np.zeros(shape=image.shape, dtype=np.float32)
 
         # compute dx,dy image gradient
-        cv2.filter2D(src=image.copy(), ddepth=cv2.CV_32F, kernel=kernel_x, dst=dxImg_, anchor=(-1, -1))
-        cv2.filter2D(src=image.copy(), ddepth=cv2.CV_32F, kernel=kernel_y, dst=dyImg_, anchor=(-1, -1))
+        cv2.filter2D(src=image.copy(), ddepth=cv2.CV_32F, kernel=self.kernel_x, dst=dxImg_, anchor=(-1, -1))
+        cv2.filter2D(src=image.copy(), ddepth=cv2.CV_32F, kernel=self.kernel_y, dst=dyImg_, anchor=(-1, -1))
 
         # Compute gradient map and direction map
         self.G_ = np.hypot(dxImg_, dyImg_)

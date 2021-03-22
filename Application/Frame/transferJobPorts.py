@@ -86,6 +86,9 @@ def prepare_ports_new_wave(frame: int) -> None:
 
     ACTIVE_WAVE = frame % NR_WAVES
 
+    for el in portsDict[ACTIVE_WAVE].keys():
+        port_to_change = portsDict[ACTIVE_WAVE][el]
+        port_to_change.self_reset()
 
 def set_invalid_ports_of_job(ports: list) -> None:
     """

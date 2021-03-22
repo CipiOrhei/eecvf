@@ -41,9 +41,13 @@ def run_CM_benchmark_FOM():
     :return:
     """
     log_setup_info_to_console("BENCHMARKING CM FOM")
+    idx = 0
 
     for set in config_main.BENCHMARK_SETS:
         log_benchmark_info_to_console('Current set: {}'.format(set))
+        log_benchmark_info_to_console('Current set: {number}\{total}'.format(number=idx, total=len(config_main.BENCHMARK_SETS)))
+
+        idx += 1
 
         try:
             # Write results to disk
@@ -77,14 +81,11 @@ def run_CM_benchmark_FOM():
                 img_gt = cv2.imread(path_img_gt)
                 img_al = cv2.imread(path_img_al)
                 try:
-
-                    log_benchmark_info_to_console('Current set: {number}\{total}'.format(number=count,
-                                                                                         total=len(config_main.BENCHMARK_SAMPLE_NAMES)))
                     val = fom_calc(cv2.cvtColor(img_gt, cv2.COLOR_BGR2GRAY), cv2.cvtColor(img_al, cv2.COLOR_BGR2GRAY))
                     avg_fom += val
                     count += 1
                     csv.write('{:<10s} {:<10.6f}\n'.format(file, val))
-                    log_benchmark_info_to_console('{:<10s} {:<10.6f}\n'.format(file, val * 100))
+                    # log_benchmark_info_to_console('{:<10s} {:<10.6f}\n'.format(file, val * 100))
                 except Exception as ex:
                     log_error_to_console("BENCHMARK CM FOM: {file}".format(file=file), ex.__str__())
 
