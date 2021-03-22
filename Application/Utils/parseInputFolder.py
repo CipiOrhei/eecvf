@@ -99,25 +99,37 @@ def find_big_picture() -> None:
             pass
 
 
-def get_picture_size_and_number() -> None:
+def get_picture_size_and_number(is_txt=False) -> None:
     """
     Maps the picture from the input dir.
+    :param is_txt: if img is coded in txt
     Updates data in global_variables.py(HEIGHT_L0,WIDTH_L0,NR_PICTURES)
     :return: None
     """
     get_images_from_dir(os.path.join(os.getcwd(), config_main.APPL_INPUT_DIR))
 
     if len(config_main.APPL_INPUT_IMG_DIR) != 0:
-        img = cv2.imread(os.path.join(os.getcwd(), config_main.APPL_INPUT_DIR, config_main.APPL_INPUT_IMG_DIR[0]))
-        height, width = img.shape[:2]
-        global_var_handler.WIDTH_L0 = width
-        global_var_handler.HEIGHT_L0 = height
-        global_var_handler.recalculate_pyramid_level_values()
-        global_var_handler.NR_PICTURES = len(config_main.APPL_INPUT_IMG_DIR)
+        if is_txt is False:
+            img = cv2.imread(os.path.join(os.getcwd(), config_main.APPL_INPUT_DIR, config_main.APPL_INPUT_IMG_DIR[0]))
+            if img is not None:
+                height, width = img.shape[:2]
+                global_var_handler.WIDTH_L0 = width
+                global_var_handler.HEIGHT_L0 = height
+                global_var_handler.recalculate_pyramid_level_values()
+                global_var_handler.NR_PICTURES = len(config_main.APPL_INPUT_IMG_DIR)
 
-        # noinspection PyUnresolvedReferences
-        log_to_console('CONFIGURATION UPDATE TO: MAX PICTURE SIZE {} AND NR PICTURES {}'.
-                       format(global_var_handler.STR_L0_SIZE, global_var_handler.NR_PICTURES))
+                # noinspection PyUnresolvedReferences
+                log_to_console('CONFIGURATION UPDATE TO: MAX PICTURE SIZE {} AND NR PICTURES {}'.
+                               format(global_var_handler.STR_L0_SIZE, global_var_handler.NR_PICTURES))
+        else:
+            global_var_handler.WIDTH_L0 = 500
+            global_var_handler.HEIGHT_L0 = 500
+            global_var_handler.recalculate_pyramid_level_values()
+            global_var_handler.NR_PICTURES = len(config_main.APPL_INPUT_IMG_DIR)
+
+            # noinspection PyUnresolvedReferences
+            log_to_console('CONFIGURATION UPDATE TO: MAX PICTURE SIZE {} AND NR PICTURES {}'.
+                           format(global_var_handler.STR_L0_SIZE, global_var_handler.NR_PICTURES))
     else:
         log_error_to_console('IMAGE FOLDER IS EMPTY')
 
