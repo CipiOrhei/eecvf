@@ -212,5 +212,34 @@ def create_latex_cpm_table(header_list: list, list_of_data: list, name_of_table:
     file_to_save.close()
 
 
+def create_latex_fom_table(number_decimal: int = 3, order_by: bool = True, number_of_series: int = 5):
+    input_location = os.path.join(CONFIG.BENCHMARK_RESULTS, 'FOM')
+    d = dict()
+    new_string = ''
+
+    # get files from benchmark folder
+    for dirname, dirnames, filenames in os.walk(input_location):
+        for filename in filenames:
+            # files.append(filename)
+            try:
+                f = open(os.path.join(input_location, filename)).readlines()[-1].split(' ')
+
+                for idx in range(len(f), 0, -1):
+                    value = f[idx - 1]
+                    if value != '' and value != '\n':
+                        break
+
+                d[filename.split('.')[0]] = round(float(value), number_decimal)
+            except:
+                print(filename)
+
+    print(d)
+
+    if order_by is True:
+        d = (sorted(d.items(), key=lambda key_value: key_value[1], reverse=True))[:number_of_series]
+
+    print(d)
+
+
 if __name__ == "__main__":
     pass

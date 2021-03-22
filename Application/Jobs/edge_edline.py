@@ -467,12 +467,12 @@ def do_edge_drawing_mod_job(port_input_name: str, operator: str,
 
     if port_edge_map_name_output is None:
         port_edge_map_name_output = 'EDGE_DRAWING_MOD_THR_' + str(gradient_thr) + '_ANC_THR_' + str(anchor_thr) + '_SCAN_' + str(scan_interval)
-        port_edge_map_name_output += '_' + operator_job + '_' + port_input_name
+        port_edge_map_name_output += '_' + operator_job.replace(' ', '_') + '_' + port_input_name
 
     if port_edges_name_output is None:
         port_edges_name_output = 'EDGE_DRAWING_MOD_SEGMENTS_' + str(gradient_thr) + '_ANC_THR_' + str(anchor_thr) + '_SCAN_' + str(
             scan_interval)
-        port_edges_name_output += '_' + operator_job + '_' + port_input_name
+        port_edges_name_output += '_' + operator_job.replace(' ', '_') + '_' + port_input_name
 
     if isinstance(gradient_thr, str):
         gradient_thr += '_' + level

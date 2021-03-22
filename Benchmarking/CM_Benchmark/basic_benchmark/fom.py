@@ -77,6 +77,9 @@ def run_CM_benchmark_FOM():
                 img_gt = cv2.imread(path_img_gt)
                 img_al = cv2.imread(path_img_al)
                 try:
+
+                    log_benchmark_info_to_console('Current set: {number}\{total}'.format(number=count,
+                                                                                         total=len(config_main.BENCHMARK_SAMPLE_NAMES)))
                     val = fom_calc(cv2.cvtColor(img_gt, cv2.COLOR_BGR2GRAY), cv2.cvtColor(img_al, cv2.COLOR_BGR2GRAY))
                     avg_fom += val
                     count += 1
