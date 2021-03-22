@@ -34,9 +34,11 @@ def run_CM_benchmark_PSNR():
     """
     # todo try using cv2.PSNR
     log_setup_info_to_console("BENCHMARKING CM PSNR")
+    idx = 0
 
     for set in config_main.BENCHMARK_SETS:
-        log_benchmark_info_to_console('Current set: {}'.format(set))
+        log_benchmark_info_to_console('Current set: {number}\{total} : {set}'.format(number=idx, total=len(config_main.BENCHMARK_SETS), set=set))
+        idx += 1
 
         try:
             # Write results to disk
@@ -47,7 +49,7 @@ def run_CM_benchmark_PSNR():
 
             csv = open(os.path.join(results_path, set + '.log'), "w+")
             csv.write('Per image (#, PSNR):\n')
-            log_benchmark_info_to_console('Per image (#, PSNR):\n')
+            # log_benchmark_info_to_console('Per image (#, PSNR):\n')
 
             avg_psnr = 0
             count = 0
@@ -76,7 +78,7 @@ def run_CM_benchmark_PSNR():
                     avg_psnr += val
                     count += 1
                     csv.write('{:<10s} {:<10.6f}\n'.format(file, val))
-                    log_benchmark_info_to_console('{:<10s} {:<10.6f}\n'.format(file, val))
+                    # log_benchmark_info_to_console('{:<10s} {:<10.6f}\n'.format(file, val))
                 except Exception as ex:
                     log_error_to_console("BENCHMARK CM PSNR: {file}".format(file=file), ex.__str__())
 

@@ -212,8 +212,8 @@ def create_latex_cpm_table(header_list: list, list_of_data: list, name_of_table:
     file_to_save.close()
 
 
-def create_latex_fom_table(number_decimal: int = 3, order_by: bool = True, number_of_series: int = 25):
-    input_location = os.path.join(CONFIG.BENCHMARK_RESULTS, 'FOM')
+def create_latex_fom_table(number_decimal: int = 3, order_by: bool = True, number_of_series: int = 25, data = 'FOM'):
+    input_location = os.path.join(CONFIG.BENCHMARK_RESULTS, data)
     d = dict()
     new_string = ''
 
@@ -233,7 +233,7 @@ def create_latex_fom_table(number_decimal: int = 3, order_by: bool = True, numbe
             except:
                 print(filename)
 
-    print(d)
+    # print(d)
 
     if order_by is True:
         d = (sorted(d.items(), key=lambda key_value: key_value[1], reverse=True))[:number_of_series]
