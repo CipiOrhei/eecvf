@@ -87,7 +87,10 @@ def run_bsds500_boundary_benchmark(input_location: str, gt_location: str, raw_im
     set_image_set(location=raw_image)
     job_set(set_to_use=jobs_set)
 
-    run_verify_boundry(thinning=do_thinning, max_distance_px=px_offset)
+    if config_main.LINUX_OS:
+        run_verify_boundry(thinning=do_thinning, max_distance_px=px_offset)
+    else:
+        log_benchmark_info_to_console("WE CAN'T RUN ON WINDOWS OS")
 
 
 # noinspection PyPep8Naming

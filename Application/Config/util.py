@@ -14,7 +14,13 @@ def transform_port_name_lvl(name: str, lvl: PYRAMID_LEVEL):
     :param lvl: pyramid level of port
     :return: port name
     """
-    return name + '_' + str(lvl)
+    new_name = ""
+    if isinstance(lvl, str):
+        new_name = name + '_' + str(lvl)
+    else:
+        new_name = name + '_LC'
+
+    return new_name
 
 
 def transform_port_size_lvl(lvl: PYRAMID_LEVEL, rgb: bool):
@@ -24,10 +30,24 @@ def transform_port_size_lvl(lvl: PYRAMID_LEVEL, rgb: bool):
     :param rgb: is port rgb or greyscale
     :return: string of port size
     """
-    if rgb is False:
-        return str(lvl) + '_SIZE'
-    else:
-        return str(lvl) + '_SIZE_RGB'
+    new_size = ""
+
+    if isinstance(lvl, str):
+        if 'LC' in lvl:
+            new_size = getattr(PYRAMID_LEVEL,"LEVEL_{lvl}_SIZE".format(lvl=lvl))
+        else:
+            if rgb is False:
+                new_size = str(lvl) + '_SIZE'
+            else:
+                new_size = str(lvl) + '_SIZE_RGB'
+
+    elif isinstance(lvl, tuple):
+        new_size = "("
+        for el in lvl:
+            new_size += str(el) + ","
+        new_size = new_size[:-1] + ")"
+
+    return new_size
 
 
 def job_name_create(action: str, input_list: list = None, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: list = 0, **kwargs):

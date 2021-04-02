@@ -248,6 +248,7 @@ def plot_cpm_results(list_of_data: list, inputs: list, prefix: str = '', level: 
 def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: str = '', prefix: str = '', level: str = 'L0',
                            self_contained_list: bool = False, number_decimal: int = 3, show_input: bool = False, show_level: bool = False,
                            order_by: str = None, name: str = 'PCM_results', save_location: str = 'Logs/',
+                           replace_list: list = None,
                            prefix_to_cut_legend = None, suffix_to_cut_legend=None, set_legend_left = False, set_all_to_legend = False,
                            show_plot: bool = False, save_plot: bool = False):
     """
@@ -257,6 +258,7 @@ def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: st
     :param inputs: inputs of series name
     :param number_of_series: inputs of series name
     :param prefix: prefix of series name
+    :param replace_list: list of strings to replace in legend
     :param level: level of data to plot
     :param number_decimal: number of decimals
     :param set_all_to_legend: set data of F1, P, and R to plot
@@ -333,6 +335,11 @@ def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: st
         name_legend = i[2]
         if suffix_to_cut_legend is not None or prefix_to_cut_legend is not None:
             name_legend = (name_legend.split(suffix_to_cut_legend)[0]).split(prefix_to_cut_legend)[-1]
+
+        if replace_list is not None:
+            for el in replace_list:
+                name_legend = name_legend.replace(el[0], el[1])
+
         color = next(colors)
 
         if set_all_to_legend is False:

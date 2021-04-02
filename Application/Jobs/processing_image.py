@@ -771,7 +771,7 @@ def resize_main(param_list: list = None) -> bool:
             # try:
             if True:
                 if not isinstance(param_list[PORT_IN_SIZE], tuple):
-                    size = tuple(param_list[PORT_IN_SIZE])
+                    size = tuple(param_list[PORT_IN_SIZE][:2])
                 resized = cv2.resize(src=p_in_image.arr, dsize=size, interpolation=param_list[PORT_IN_INTERPOLATION],
                                      fx=param_list[PORT_IN_SCALE][0], fy=param_list[PORT_IN_SCALE][1])
                 # TODO fix that this port is not resized at image resized
@@ -803,17 +803,14 @@ def do_resize_image_job(port_input_name: str,
     input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
 
     if port_output_name is None:
-        port_output_name = 'RESIZED_' + str(new_size[0]) + 'x' + str(new_size[1])
-        port_output_name += '_' + port_input_name
+        port_output_name = 'RESIZED_' + str(new_size[0]) + 'x' + str(new_size[1]) + '_' + port_input_name
 
+    if is_rgb is True and len(new_size) == 2:
+        new_size = (new_size[0], new_size[1], 3)
+
+    level = PYRAMID_LEVEL.add_level(size=new_size)
     output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
-
-    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
-
-    if is_rgb :
-        output_port_size = '(' + str(new_size[0]) + ',' + str(new_size[1]) +', 3)'
-    else:
-        output_port_size = '(' + str(new_size[0]) + ',' + str(new_size[1]) +')'
+    output_port_size = transform_port_size_lvl(lvl=new_size, rgb=is_rgb)
 
     input_port_list = [input_port_name]
     main_func_list = [input_port_name, wave_offset, new_size, interpolation, scale, output_port_name]

@@ -34,6 +34,14 @@ def run_verify_boundry(thinning, max_distance_px):
         log_benchmark_info_to_console('Current set: {id}/{max}: {set}'.format(id=idx, max=len(config_main.BENCHMARK_SETS),
                                                                             set=set))
         try:
+            idx += 1
+
+            # Write results to disk
+            results_path = os.path.join(os.getcwd(), config_main.BENCHMARK_RESULTS, 'PCM')
+
+            if os.path.exists(os.path.join(results_path, set + '.log')):
+                log_benchmark_info_to_console('SET BENCHMARK OUTPUT EXISTS')
+
             sample_results, threshold_results, overall_result = \
                 evaluate_boundaries.pr_evaluation(thresholds=config_main.BENCHMARK_BSDS_500_N_THRESHOLDS,
                                                   sample_names=config_main.BENCHMARK_SAMPLE_NAMES,
@@ -43,10 +51,6 @@ def run_verify_boundry(thinning, max_distance_px):
                                                   thinning=thinning,
                                                   max_distance_px=max_distance_px,
                                                   progress=tqdm.tqdm)
-            idx += 1
-
-            # Write results to disk
-            results_path = os.path.join(os.getcwd(), config_main.BENCHMARK_RESULTS, 'PCM')
 
             if not os.path.exists(results_path):
                 os.makedirs(results_path)

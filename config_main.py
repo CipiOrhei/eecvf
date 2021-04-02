@@ -1,9 +1,12 @@
+import sys
 """
 Module handles the configuration of the EECVF.
 Please do not change this file, only if necessary and service does not exist for that change.
 """
 
 CUDA_GPU = True
+WIN_OS = sys.platform.startswith('win')
+LINUX_OS = sys.platform.startswith('linux')
 
 JSON_FILE_LOCATION = 'Application//Config//json'
 JSON_FILE_NAME = 'new_config'
@@ -74,6 +77,29 @@ class PYRAMID_LEVEL:
     LEVEL_8 = 'L8'
 
     NUMBER_LVL = 8
+
+    @staticmethod
+    def add_level(size):
+        idx = 99
+        val = ""
+        for level in range(PYRAMID_LEVEL.NUMBER_LVL - 8):
+            val = getattr(PYRAMID_LEVEL, "LEVEL_LC{lvl}_SIZE".format(lvl=level))
+
+            if str(size) == val:
+                idx = level
+                return getattr(PYRAMID_LEVEL, "LEVEL_LC{lvl}".format(lvl=level))
+
+        if idx == 99:
+            setattr(PYRAMID_LEVEL,"LEVEL_LC{lvl}".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - 8), "LC{lvl}".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - 8))
+            setattr(PYRAMID_LEVEL,"LEVEL_LC{lvl}_SIZE".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - 8), str(size))
+
+            from Utils.log_handler import log_to_console
+            log_to_console('CUSTOM PORT LC' + str(PYRAMID_LEVEL.NUMBER_LVL - 8) + ' CREATED FOR SIZE: ' + str(size))
+
+            val = getattr(PYRAMID_LEVEL, "LEVEL_LC{lvl}".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - 8))
+            PYRAMID_LEVEL.NUMBER_LVL += 1
+
+        return val
 
 
 class MORPH_CONFIG:
