@@ -7,3 +7,6 @@
 [submodule "Application/Jobs/external/EDLine"]
 	path = Application/Jobs/external/EDLine
 	url = https://github.com/shaojunluo/EDLinePython.git
+[submodule "Application/Jobs/external/Deep_Video_Deinterlacing"]
+	path = Application/Jobs/external/Deep_Video_Deinterlacing
+	url = https://github.com/lszhuhaichao/Deep-Video-Deinterlacing.git
