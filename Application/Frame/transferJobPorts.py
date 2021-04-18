@@ -45,16 +45,17 @@ def reshape_ports(size_array: list) -> None:
     :return: None
     """
     for el in portsDict[ACTIVE_WAVE].keys():
-        port_to_change = portsDict[ACTIVE_WAVE][el]
-        if port_to_change.get_is_image() is True:
-            channels = len(port_to_change.arr.shape)
-            level_to_change = int(port_to_change.name[-1])
-            if channels == 2:
-                port_to_change.reshape_arr(size_new_array=(size_array[level_to_change][0], size_array[level_to_change][1]),
-                                           type_new_array=port_to_change.arr.dtype)
-            if channels == 3:
-                port_to_change.reshape_arr(size_new_array=(size_array[level_to_change][0], size_array[level_to_change][1], channels),
-                                           type_new_array=port_to_change.arr.dtype)
+        if 'LC' not in el:
+            port_to_change = portsDict[ACTIVE_WAVE][el]
+            if port_to_change.get_is_image() is True:
+                channels = len(port_to_change.arr.shape)
+                level_to_change = int(port_to_change.name[-1])
+                if channels == 2:
+                    port_to_change.reshape_arr(size_new_array=(size_array[level_to_change][0], size_array[level_to_change][1]),
+                                               type_new_array=port_to_change.arr.dtype)
+                if channels == 3:
+                    port_to_change.reshape_arr(size_new_array=(size_array[level_to_change][0], size_array[level_to_change][1], channels),
+                                               type_new_array=port_to_change.arr.dtype)
 
 
 def exist_port(name: str) -> bool:

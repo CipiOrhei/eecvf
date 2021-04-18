@@ -25,6 +25,9 @@ ERROR = False
 def reopen_files():
     global file_KPI
     global file_log
+    # delete any custom ports
+    config_main.PYRAMID_LEVEL.delete_levels_add_runtime()
+    # reopen files for debug
     file_KPI = open(file=config_main.LOG_KPI_FILE, mode='a')
     file_log = open(file=config_main.LOG_FILE, mode='a')
 

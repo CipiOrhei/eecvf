@@ -385,5 +385,45 @@ def xor_bitwise_between_2_images(param_list: list = None) -> bool:
         return True
 
 
+def intersect_between_2_images(param_list: list = None) -> bool:
+    """
+    Calculates the matrix that results intersections of 2 matrix.
+    :param param_list: Param needed to respect the following list:
+                       [port_in name: image_1, wave_offset_1, image_2, wave_offset_2,
+                        port_out: image_result]
+    :return: True if the job executed OK.
+    """
+    # noinspection PyPep8Naming
+    PORT_IN_1_IMG_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE_1 = 1
+    # noinspection PyPep8Naming
+    PORT_IN_MASK_POS = 2
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE_2 = 3
+    # noinspection PyPep8Naming
+    PORT_OUT_IMG_POS = 4
+
+    if len(param_list) != 5:
+        log_error_to_console("IMAGE INTERSECT JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
+        return False
+    else:
+        p_in_1_image = get_port_from_wave(name=param_list[PORT_IN_1_IMG_POS], wave_offset=param_list[PORT_IN_WAVE_1])
+        p_in_2_image = get_port_from_wave(name=param_list[PORT_IN_MASK_POS], wave_offset=param_list[PORT_IN_WAVE_2])
+        p_out_out = get_port_from_wave(name=param_list[PORT_OUT_IMG_POS])
+
+        if p_in_1_image.is_valid() is True and p_in_2_image.is_valid() is True:
+            try:
+                p_out_out.arr[:] = ((p_in_1_image.arr != 0) & (p_in_2_image.arr != 0)) * p_in_1_image.arr
+                p_out_out.set_valid()
+            except BaseException as error:
+                log_error_to_console("IMAGE INTERSECT JOB NOK: ", str(error))
+                pass
+        else:
+            return False
+
+        return True
+
+
 if __name__ == "__main__":
     pass

@@ -4,6 +4,8 @@ if CUDA_GPU:
     from MachineLearning.Config.create_ml_job import set_input_train_image_folder
     from MachineLearning.Config.create_ml_job import set_image_input_folder
     from MachineLearning.Config.create_ml_job import set_label_input_folder
+    from MachineLearning.Config.create_ml_job import set_image_validate_folder
+    from MachineLearning.Config.create_ml_job import set_label_validate_folder
     from MachineLearning.Config.create_ml_job import set_output_model_folder
     from MachineLearning.Config.create_ml_job import set_output_checkpoint_location
     from MachineLearning.Config.create_ml_job import clear_model_trained

@@ -35,13 +35,14 @@ def get_table_data_from_csv(content: str, table_number: int) -> dict:
 
 
 def plot_avg_time_jobs(input_location: str = CONFIG.LOG_KPI_FILE, table_number: int = 1, save_location: str = 'Logs/',
-                       show_plot: bool = False, save_plot: bool = False, eliminate_get_image=False) -> None:
+                       show_plot: bool = False, save_plot: bool = False, eliminate_get_image=False, show_legend=True) -> None:
     """
     Plot average time of jobs.
     :param input_location location of input csv files
     :param table_number if there are more than one application run in one main
     :param show_plot if we want to show the plot
     :param save_plot if we want to save the plot
+    :param show_legend add legend to plot
     :param eliminate_get_image if we don't want the get image job plotted
     :param save_location: location to save the plots
     :return None
@@ -72,7 +73,8 @@ def plot_avg_time_jobs(input_location: str = CONFIG.LOG_KPI_FILE, table_number: 
     plt.yticks(np.arange(0, max_value * 1.1, max_value / 20))
     plt.xticks(np.arange(0, data[-1], round(data[-1], -1) // 20))
     plt.ylim(0)
-    plt.legend(fancybox=True, fontsize='small', title='Jobs', loc='best')
+    if show_legend is True:
+        plt.legend(fancybox=True, fontsize='small', title='Jobs', loc='best')
 
     if show_plot is True:
         plt.show()

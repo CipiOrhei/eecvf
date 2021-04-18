@@ -48,6 +48,26 @@ def set_label_input_folder(location_img_label_in: str = ''):
     log_ml_info_to_console('Labelled image set location to: {}'.format(config_main.ML_LABEL_IMG_LOCATION))
 
 
+def set_image_validate_folder(location_img_in: str = ''):
+    """
+    Sets the location of validation input images for machine learning jobs.
+    :param location_img_in: location relative to repo of training images
+    :return: None
+    """
+    config_main.ML_VALIDATE_IMG_LOCATION = location_img_in
+    log_ml_info_to_console('Validate image set location to: {}'.format(config_main.ML_VALIDATE_IMG_LOCATION))
+
+
+def set_label_validate_folder(location_img_label_in: str = ''):
+    """
+    Sets the location of validation labelled images for machine learning jobs.
+    :param location_img_label_in: location relative to repo of training images
+    :return: None
+    """
+    config_main.ML_LABEL_VALIDATE_LOCATION = location_img_label_in
+    log_ml_info_to_console('Labelled validate image set location to: {}'.format(config_main.ML_LABEL_VALIDATE_LOCATION))
+
+
 def set_output_model_folder(location_out: str = ''):
     """
     Sets the location of output model of training results.

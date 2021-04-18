@@ -245,7 +245,7 @@ def plot_cpm_results(list_of_data: list, inputs: list, prefix: str = '', level: 
     plt.close()
 
 
-def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: str = '', prefix: str = '', level: str = 'L0',
+def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: list = [''], prefix: str = '', level: str = 'L0',
                            self_contained_list: bool = False, number_decimal: int = 3, show_input: bool = False, show_level: bool = False,
                            order_by: str = None, name: str = 'PCM_results', save_location: str = 'Logs/',
                            replace_list: list = None,

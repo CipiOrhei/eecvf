@@ -81,7 +81,7 @@ def job_name_create(action: str, input_list: list = None, level: PYRAMID_LEVEL =
         for i in range(len(kwargs)):
             if i != 0:
                 string += ' '
-            string += str(list(kwargs.keys())[i]) + '=' + str(kwargs[list(kwargs.keys())[i]])
+            string += str(list(kwargs.keys())[i]) + '=' + str(kwargs[list(kwargs.keys())[i]]).replace(',', ';')
 
     string += ' on ' + str(level)
 

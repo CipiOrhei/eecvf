@@ -1227,6 +1227,51 @@ def do_matrix_bitwise_xor_job(port_input_name_1: str, port_input_name_2: str,
     return port_output_name
 
 
+def do_matrix_intersect_job(port_input_name: str, port_input_mask: str,
+                            wave_offset_port_1: int = 0, wave_offset_port_2: int = 0,
+                            port_output_name: str = None,
+                            level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
+    """
+    Intersect image with binary mask
+    Works only on grayscale images.
+    :param port_input_name: image we want to manipulate
+    :param wave_offset_port_1: port wave offset. If 0 it is in current wave.
+    :param port_input_mask: mask matrix
+    :param wave_offset_port_2: port wave offset. If 0 it is in current wave.
+    :param port_output_name: result matrix
+    :param level:  pyramid level to calculate at
+    :return: output image port name
+    """
+    input_port_1 = transform_port_name_lvl(name=port_input_name, lvl=level)
+    input_port_2 = transform_port_name_lvl(name=port_input_mask, lvl=level)
+
+    if port_output_name is None:
+        port_output_name = 'INTERSECT_' + port_input_name + '_AND_' + port_input_mask
+
+    output_port = transform_port_name_lvl(name=port_output_name, lvl=level)
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=False)
+
+    input_port_list = [input_port_1, input_port_2]
+    main_func_list = [input_port_1, wave_offset_port_1, input_port_2, wave_offset_port_2, output_port]
+    output_port_list = [(output_port, output_port_size, 'B', True)]
+
+    job_name = job_name_create(action='Bitwise AND', input_list=input_port_list,
+                               wave_offset=[wave_offset_port_1, wave_offset_port_2], level=level)
+
+    d = create_dictionary_element(job_module='processing_multiple_images',
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  max_wave=max(wave_offset_port_1, wave_offset_port_2),
+                                  init_func_name='init_func', init_func_param=None,
+                                  main_func_name='intersect_between_2_images',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output_name
+
+
 ############################################################################################################################################
 # Pyramid level processing jobs
 ############################################################################################################################################
@@ -4292,22 +4337,22 @@ def do_shen_castan_job(port_input_name: str, laplacian_kernel: str = None, lapla
 
         do_laplacian_from_img_diff_job(port_original_input_name=port_input_name, wave_offset=wave_offset,
                                        port_smoothed_input_name=output_isef_name,
-                                       do_binary=True,
+                                       do_binary=True, level=level,
                                        port_output_name=laplace_output_name)
     else:
         laplace_output_name = str((laplacian_kernel.upper().replace('_XY', '')).replace('X', 'x')) + '_THR_' + str(laplacian_threhold) +\
                               '_' + port_input_name
-        do_laplace_job(port_input_name=output_isef_name, wave_offset=wave_offset, threshold_value=laplacian_threhold,
+        do_laplace_job(port_input_name=output_isef_name, wave_offset=wave_offset, threshold_value=laplacian_threhold, level=level,
                        port_output_name=laplace_output_name, kernel=laplacian_kernel)
 
     zero_crossing_output_name = 'ZC_' + str(zc_window_size) + '_' + laplace_output_name
     do_zero_crossing_adaptive_window_isef_job(port_original_input_name=port_input_name, wave_offset=wave_offset,
                                               port_bli_input_name=laplace_output_name, win_size=zc_window_size,
-                                              port_smoothed_input_name=output_isef_name,
+                                              port_smoothed_input_name=output_isef_name, level=level,
                                               port_output_name=zero_crossing_output_name)
 
     do_threshold_hysteresis_isef_job(port_input_name=zero_crossing_output_name,
-                                     ratio=ratio,
+                                     ratio=ratio,  level=level,
                                      thinning_factor=thinning_factor,
                                      port_output_name=port_output_name)
 

@@ -49,14 +49,16 @@ def do_semseg_base(model: str, input_height=None, input_width=None, n_classes=No
         # TODO add all fields
         train(model=model_name,
               train_images=CONFIG.ML_TRAIN_IMG_LOCATION,
-              train_annotations=CONFIG.ML_LABEL_IMG_LOCATION,
+              train_annotations=CONFIG.ML_LABEL_IMG_LOCATION, validate=True,
+              val_images=CONFIG.ML_VALIDATE_IMG_LOCATION, val_annotations=CONFIG.ML_LABEL_VALIDATE_LOCATION,
+              # val_images=None, val_annotations=None,
               epochs=epochs, n_classes=n_classes, input_height=input_height, input_width=input_width, batch_size=batch_size,
               verify_dataset=verify_dataset, steps_per_epoch=steps_per_epoch, val_steps_per_epoch=val_steps_per_epoch,
               checkpoints_path=CONFIG.ML_WEIGHT_OUTPUT_LOCATION + '/' + model_name,
               # checkpoints_path=CONFIG.ML_WEIGHT_OUTPUT_LOCATION,
               optimizer_name=optimizer_name,
               auto_resume_checkpoint=True,
-              gen_use_multiprocessing=True)
+              gen_use_multiprocessing=False)
 
     except BaseException as error:
         log_error_to_console("SEMSEG " + model_name.upper() + " TRAIN JOB NOK: ", str(error))

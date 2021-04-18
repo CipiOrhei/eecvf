@@ -15,6 +15,7 @@ from Application.Config.service_job_create import delete_folder_appl_out
 from Application.Config.service_job_create import create_list_ports_with_word
 from Application.Config.service_job_create import create_list_ports_start_with_word
 from Application.Config.service_job_create import create_folder_from_list_ports
+from Application.Config.service_job_create import create_folders_from_list_ports
 from .run_appl import run_application
 ########################################################################################################################
 # Input jobs
@@ -171,6 +172,7 @@ from Application.Config.job_create import do_matrix_bitwise_and_job
 from Application.Config.job_create import do_matrix_bitwise_or_job
 from Application.Config.job_create import do_matrix_bitwise_or_4_job
 from Application.Config.job_create import do_matrix_bitwise_xor_job
+from Application.Config.job_create import do_matrix_intersect_job
 ########################################################################################################################
 # Augmentation jobs
 ########################################################################################################################

@@ -100,7 +100,7 @@ def main_func(param_list: list = None) -> bool:
 def do_class_correlation(port_input_name: str,
                          class_list_in: list, class_list_out: list,
                          port_output_name: str = None,
-                         level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> None:
+                         level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
     """
     Modify label values for an labeled image from the class_list_in to class_list_out labels.
     :param port_input_name: name of input port
@@ -144,6 +144,7 @@ def do_class_correlation(port_input_name: str,
 
     jobs_dict.append(d)
 
+    return port_output_name
 
 
 if __name__ == "__main__":

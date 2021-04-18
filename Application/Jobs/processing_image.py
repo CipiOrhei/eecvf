@@ -768,18 +768,15 @@ def resize_main(param_list: list = None) -> bool:
         p_out = get_port_from_wave(name=param_list[PORT_OUT_IMG_POS])
 
         if p_in_image.is_valid() is True:
-            # try:
-            if True:
-                if not isinstance(param_list[PORT_IN_SIZE], tuple):
-                    size = tuple(param_list[PORT_IN_SIZE][:2])
-                resized = cv2.resize(src=p_in_image.arr, dsize=size, interpolation=param_list[PORT_IN_INTERPOLATION],
+            try:
+                size = param_list[PORT_IN_SIZE]
+                resized = cv2.resize(src=p_in_image.arr, dsize=(size[1], size[0]), interpolation=param_list[PORT_IN_INTERPOLATION],
                                      fx=param_list[PORT_IN_SCALE][0], fy=param_list[PORT_IN_SCALE][1])
-                # TODO fix that this port is not resized at image resized
-                p_out.arr = resized
+                p_out.arr[:] = resized
                 p_out.set_valid()
-            # except BaseException as error:
-            #     log_error_to_console("RESIZE IMAGE JOB NOK: ", str(error))
-            #     pass
+            except BaseException as error:
+                log_error_to_console("RESIZE IMAGE JOB NOK: ", str(error))
+                pass
         else:
             return False
 
@@ -787,13 +784,17 @@ def resize_main(param_list: list = None) -> bool:
 
 
 def do_resize_image_job(port_input_name: str,
-                        new_size, interpolation = cv2.INTER_CUBIC, scale = (0,0),
+                        new_width, new_height, interpolation=cv2.INTER_CUBIC, new_scale_width=0, new_scale_height=0,
                         port_output_name: str = None,
                         level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0, is_rgb: bool = True) -> str:
     """
     Create a pixelate effect on an image.
     :param port_input_name: name of input port
-    :param nr_pixels_to_group: number of pixels to group as one pixel
+    :param new_width: size of new image width
+    :param new_height: size of new image height
+    :param new_scale_width: scale width of image
+    :param new_scale_height: scale height of image
+    :param interpolation: cv2.INTER_NEAREST, cv2.INTER_LINEAR, cv2.INTER_AREA, cv2.INTER_CUBIC, cv2.INTER_LANCZOS4
     :param port_output_name: name of output port
     :param wave_offset: port wave offset. If 0 it is in current wave.
     :param is_rgb: if the output ports is rgb, 3 channels
@@ -803,17 +804,19 @@ def do_resize_image_job(port_input_name: str,
     input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
 
     if port_output_name is None:
-        port_output_name = 'RESIZED_' + str(new_size[0]) + 'x' + str(new_size[1]) + '_' + port_input_name
+        port_output_name = 'RESIZED_' + str(new_width) + 'x' + str(new_height) + '_' + port_input_name
 
-    if is_rgb is True and len(new_size) == 2:
-        new_size = (new_size[0], new_size[1], 3)
+    if is_rgb is True:
+        new_size = (new_height, new_width, 3)
+    else:
+        new_size = (new_height, new_width)
 
     level = PYRAMID_LEVEL.add_level(size=new_size)
     output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
     output_port_size = transform_port_size_lvl(lvl=new_size, rgb=is_rgb)
 
     input_port_list = [input_port_name]
-    main_func_list = [input_port_name, wave_offset, new_size, interpolation, scale, output_port_name]
+    main_func_list = [input_port_name, wave_offset, new_size, interpolation, (new_scale_width, new_scale_height), output_port_name]
     output_port_list = [(output_port_name, output_port_size, 'B', True)]
 
     job_name = job_name_create(action='Resize', input_list=input_port_list, wave_offset=[wave_offset], level=level)

@@ -1,11 +1,12 @@
 import glob
 import os
+import random
 import shutil
 
 import config_main
 
 from Application.Config.create_config import created_port_list
-from Utils.log_handler import log_setup_info_to_console
+from Utils.log_handler import log_setup_info_to_console, log_error_to_console
 from Application.Utils.image_handler import rotate_picture
 
 """
@@ -223,6 +224,53 @@ def create_folder_from_list_ports(folder_name: str, list_port: list, sampling_ra
                 dst = os.path.join(folder_name, file)
                 shutil.copy2(src, dst)
             idx += 1
+
+
+def create_folders_from_list_ports(folder_names: list, list_port: list, folder_ratios: list) -> None:
+    """
+    Copies ports from multiple output folders of ports into one
+    :param folder_names: list of folder to create
+    :param folder_ratios: sampling rate
+    :param list_port: list of ports
+
+    :return: None
+    """
+    for folder_name in folder_names:
+        if not os.path.exists(os.path.join(folder_name)):
+            os.makedirs(os.path.join(folder_name))
+
+
+    if 1 != sum(folder_ratios):
+        log_error_to_console('RATIO OF FOLDERS DO NOT EQUAL TO ONE: 1 == {}'.format(sum(folder_ratios)))
+
+
+    for port in list_port:
+        filenames = [x for x in os.listdir(os.path.join(config_main.APPL_SAVE_LOCATION, port))]
+        filenames.sort()
+        random.seed(42)
+        random.shuffle(filenames)
+
+        split_sizes = []
+        split_sizes.append(int(folder_ratios[0] * len(filenames)))
+        for id in range(1, len(folder_ratios) - 1, 1):
+            split_sizes.append(int(folder_ratios[id] * len(filenames)))
+        split_sizes.append(int(folder_ratios[-1] * len(filenames)))
+
+        d = dict()
+        t = split_sizes[0]
+        d[folder_names[0]] = filenames[:split_sizes[0]]
+        for id in range(1, len(folder_ratios) - 1, 1):
+            start = t
+            end = t + split_sizes[id]
+            d[folder_names[id]] = filenames[start: end]
+            t = t + split_sizes[id]
+        d[folder_names[-1]] = filenames[t + 1:]
+
+        for folder_out in d.keys():
+            for file in d[folder_out]:
+                src = os.path.join(config_main.APPL_SAVE_LOCATION, port, file)
+                dst = os.path.join(folder_out, file)
+                shutil.copy2(src, dst)
 
 
 if __name__ == "__main__":

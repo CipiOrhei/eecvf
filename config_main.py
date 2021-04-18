@@ -1,4 +1,5 @@
 import sys
+
 """
 Module handles the configuration of the EECVF.
 Please do not change this file, only if necessary and service does not exist for that change.
@@ -47,6 +48,7 @@ APPL_SATELLITE_IMAGE_PROCESSING = False
 ML_TRAIN_IMG_LOCATION = ''
 ML_TEST_IMG_LOCATION = ''
 ML_VALIDATE_IMG_LOCATION = ''
+ML_LABEL_VALIDATE_LOCATION = ''
 ML_LABEL_IMG_LOCATION = ''
 ML_OUTPUT_IMG_LOCATION = 'Logs/ml_results'
 ML_WEIGHT_OUTPUT_LOCATION = 'MachineLearning/model_weights'
@@ -76,31 +78,48 @@ class PYRAMID_LEVEL:
     LEVEL_7 = 'L7'
     LEVEL_8 = 'L8'
 
-    NUMBER_LVL = 8
+    ORIGINAL_NUMBER_LVL = 9
+    NUMBER_LVL = ORIGINAL_NUMBER_LVL
 
     @staticmethod
     def add_level(size):
-        idx = 99
+        idx = None
         val = ""
-        for level in range(PYRAMID_LEVEL.NUMBER_LVL - 8):
+        for level in range(PYRAMID_LEVEL.NUMBER_LVL - PYRAMID_LEVEL.ORIGINAL_NUMBER_LVL):
             val = getattr(PYRAMID_LEVEL, "LEVEL_LC{lvl}_SIZE".format(lvl=level))
 
             if str(size) == val:
                 idx = level
                 return getattr(PYRAMID_LEVEL, "LEVEL_LC{lvl}".format(lvl=level))
 
-        if idx == 99:
-            setattr(PYRAMID_LEVEL,"LEVEL_LC{lvl}".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - 8), "LC{lvl}".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - 8))
-            setattr(PYRAMID_LEVEL,"LEVEL_LC{lvl}_SIZE".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - 8), str(size))
+        if idx is None:
+            setattr(PYRAMID_LEVEL,
+                    "LEVEL_LC{lvl}".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - PYRAMID_LEVEL.ORIGINAL_NUMBER_LVL),
+                    "LC{lvl}".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - PYRAMID_LEVEL.ORIGINAL_NUMBER_LVL))
+
+            setattr(PYRAMID_LEVEL,
+                    "LEVEL_LC{lvl}_SIZE".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - PYRAMID_LEVEL.ORIGINAL_NUMBER_LVL),
+                    str(size))
 
             from Utils.log_handler import log_to_console
-            log_to_console('CUSTOM PORT LC' + str(PYRAMID_LEVEL.NUMBER_LVL - 8) + ' CREATED FOR SIZE: ' + str(size))
+            log_to_console('CUSTOM PORT LC' + str(PYRAMID_LEVEL.NUMBER_LVL - PYRAMID_LEVEL.ORIGINAL_NUMBER_LVL) + ' CREATED FOR SIZE: ' + str(size))
 
-            val = getattr(PYRAMID_LEVEL, "LEVEL_LC{lvl}".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - 8))
+            val = getattr(PYRAMID_LEVEL, "LEVEL_LC{lvl}".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - PYRAMID_LEVEL.ORIGINAL_NUMBER_LVL))
             PYRAMID_LEVEL.NUMBER_LVL += 1
 
         return val
 
+    @staticmethod
+    def delete_levels_add_runtime():
+        start = PYRAMID_LEVEL.NUMBER_LVL
+        end = PYRAMID_LEVEL.ORIGINAL_NUMBER_LVL
+        for idx in range(start, end, -1):
+            delattr(PYRAMID_LEVEL,
+                    "LEVEL_LC{lvl}".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - idx))
+            delattr(PYRAMID_LEVEL,
+                    "LEVEL_LC{lvl}_SIZE".format(lvl=PYRAMID_LEVEL.NUMBER_LVL - idx))
+
+        PYRAMID_LEVEL.NUMBER_LVL = PYRAMID_LEVEL.ORIGINAL_NUMBER_LVL
 
 class MORPH_CONFIG:
     # configuration to choose for kernels type
