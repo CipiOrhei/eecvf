@@ -25,7 +25,7 @@ def prepare_LabelMe_dataset(height, width):
     :param width: width of image to train
     :return: None
     """
-    Application.set_input_image_folder('TestData/building_labels_database/LabelMeFacade/labels')
+    Application.set_input_image_folder(r'c:\repos\eecvf\TestData\building_labels_database\LabelMeFacade\labels')
     Application.set_output_image_folder('Logs/LabelMeFacade/labels')
     Application.do_get_image_job(port_output_name='RAW')
     #                VARIOUS      BUILDING        CAR            DOOR          PAVEMENT         ROAD           SKY       VEGETATION      WINDOW
@@ -45,7 +45,7 @@ def prepare_LabelMe_dataset(height, width):
 
 def main_training_data(height, width):
     Application.set_output_image_folder('Logs/application_results_ml_raw')
-    Application.set_input_image_folder('TestData/building_labels_database/LabelMeFacade/images')
+    Application.set_input_image_folder(r'c:\repos\eecvf\TestData\building_labels_database\LabelMeFacade\images')
     Application.delete_folder_appl_out()
     Application.do_get_image_job(port_output_name='RAW')
     list_of_ports_to_move = list()
@@ -167,17 +167,17 @@ def main_training_label(height, width):
     Utils.close_files()
 
 
-def train_model(height, width, epoch, train_steps, val_steps):
-    MachineLearning.set_image_input_folder('Logs/ml_results/TRAIN_INPUT')
-    MachineLearning.set_label_input_folder('Logs/ml_results/TRAIN_LABEL')
-    MachineLearning.set_image_validate_folder('Logs/ml_results/VAL_INPUT')
-    MachineLearning.set_label_validate_folder('Logs/ml_results/VAL_LABEL')
-    MachineLearning.clear_model_trained()
-    MachineLearning.do_semseg_base(model="vgg_unet", input_height=height, input_width=width, n_classes=8, epochs=100,
-                                   verify_dataset=False, steps_per_epoch=20, val_steps_per_epoch=58, optimizer_name='adam', batch_size=8)
-    MachineLearning.do_semseg_base(model="resnet50_segnet", input_height=height, input_width=width, n_classes=8, epochs=100,
-                                   verify_dataset=False, steps_per_epoch=58, val_steps_per_epoch=117, optimizer_name='adam', batch_size=4)
-    Application.set_input_image_folder('TestData/TMBuD/img/new_test/png')
+def train_model(height, width):
+    # MachineLearning.set_image_input_folder('Logs/ml_results/TRAIN_INPUT')
+    # MachineLearning.set_label_input_folder('Logs/ml_results/TRAIN_LABEL')
+    # MachineLearning.set_image_validate_folder('Logs/ml_results/VAL_INPUT')
+    # MachineLearning.set_label_validate_folder('Logs/ml_results/VAL_LABEL')
+    # MachineLearning.clear_model_trained()
+    # MachineLearning.do_semseg_base(model="vgg_unet", input_height=height, input_width=width, n_classes=8, epochs=70,
+    #                                verify_dataset=False, steps_per_epoch=20, val_steps_per_epoch=58, optimizer_name='adam', batch_size=8)
+    # MachineLearning.do_semseg_base(model="resnet50_segnet", input_height=height, input_width=width, n_classes=8, epochs=70,
+    #                                verify_dataset=False, steps_per_epoch=58, val_steps_per_epoch=117, optimizer_name='adam', batch_size=4)
+    Application.set_input_image_folder('TestData/TMBuD/img/TEST/png')
     Application.set_output_image_folder('Logs/application_results_semseg_iou')
     Application.delete_folder_appl_out()
     Application.do_get_image_job(port_output_name='RAW')
@@ -202,8 +202,8 @@ def train_model(height, width, epoch, train_steps, val_steps):
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
     Application.run_application()
 
-    Benchmarking.run_IoU_benchmark(input_location='Logs/application_results_semseg_iou/', gt_location='TestData/TMBuD/label/new_test/png',
-                                   raw_image='TestData/TMBuD/img/new_test/png',
+    Benchmarking.run_IoU_benchmark(input_location='Logs/application_results_semseg_iou/', gt_location='TestData/TMBuD/label/TEST/png',
+                                   raw_image='TestData/TMBuD/img/TEST/png',
                                    jobs_set=['SEMSEG_VGG_UNET_RAW_L0', 'SEMSEG_RESNET50_SEGNET_RAW_L0'],
                                    class_list_name=class_names, unknown_class=0,
                                    is_rgb_gt=True, show_only_set_mean_value=True,
@@ -289,11 +289,11 @@ def main_process_edges():
 if __name__ == "__main__":
     w = 320
     h = 512
-    prepare_LabelMe_dataset(width=w, height=h)
-    Utils.reopen_files()
-    main_training_data(width=w, height=h)
-    Utils.reopen_files()
-    main_training_label(width=w, height=h)
-    Utils.reopen_files()
+    # prepare_LabelMe_dataset(width=w, height=h)
+    # Utils.reopen_files()
+    # main_training_data(width=w, height=h)
+    # Utils.reopen_files()
+    # main_training_label(width=w, height=h)
+    # Utils.reopen_files()
     train_model(width=w, height=h)
     main_process_edges()
