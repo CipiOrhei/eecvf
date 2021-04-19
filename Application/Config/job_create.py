@@ -5159,7 +5159,7 @@ def do_semseg_base_job(port_input_name: str, number_of_classes: int, model: str,
     if model in model_list:
         model_name = model
 
-    location_model = 'MachineLearning/model_weights/' + model_name
+    location_model = 'MachineLearning\\model_weights\\' + model_name
 
     input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
 

@@ -10,7 +10,6 @@ import config_main as CONFIG
 import Utils
 
 import cv2
-import numpy as np
 
 """
 This module is an example to use the EECVF with video input stream.
@@ -168,15 +167,15 @@ def main_training_label(height, width):
 
 
 def train_model(height, width):
-    # MachineLearning.set_image_input_folder('Logs/ml_results/TRAIN_INPUT')
-    # MachineLearning.set_label_input_folder('Logs/ml_results/TRAIN_LABEL')
-    # MachineLearning.set_image_validate_folder('Logs/ml_results/VAL_INPUT')
-    # MachineLearning.set_label_validate_folder('Logs/ml_results/VAL_LABEL')
-    # MachineLearning.clear_model_trained()
-    # MachineLearning.do_semseg_base(model="vgg_unet", input_height=height, input_width=width, n_classes=8, epochs=70,
-    #                                verify_dataset=False, steps_per_epoch=20, val_steps_per_epoch=58, optimizer_name='adam', batch_size=8)
-    # MachineLearning.do_semseg_base(model="resnet50_segnet", input_height=height, input_width=width, n_classes=8, epochs=70,
-    #                                verify_dataset=False, steps_per_epoch=58, val_steps_per_epoch=117, optimizer_name='adam', batch_size=4)
+    MachineLearning.set_image_input_folder('Logs/ml_results/TRAIN_INPUT')
+    MachineLearning.set_label_input_folder('Logs/ml_results/TRAIN_LABEL')
+    MachineLearning.set_image_validate_folder('Logs/ml_results/VAL_INPUT')
+    MachineLearning.set_label_validate_folder('Logs/ml_results/VAL_LABEL')
+    MachineLearning.clear_model_trained()
+    MachineLearning.do_semseg_base(model="vgg_unet", input_height=height, input_width=width, n_classes=8, epochs=70,
+                                   verify_dataset=False, steps_per_epoch=20, val_steps_per_epoch=58, optimizer_name='adam', batch_size=8)
+    MachineLearning.do_semseg_base(model="resnet50_segnet", input_height=height, input_width=width, n_classes=8, epochs=70,
+                                   verify_dataset=False, steps_per_epoch=58, val_steps_per_epoch=117, optimizer_name='adam', batch_size=4)
     Application.set_input_image_folder('TestData/TMBuD/img/TEST/png')
     Application.set_output_image_folder('Logs/application_results_semseg_iou')
     Application.delete_folder_appl_out()
@@ -289,11 +288,12 @@ def main_process_edges():
 if __name__ == "__main__":
     w = 320
     h = 512
-    # prepare_LabelMe_dataset(width=w, height=h)
-    # Utils.reopen_files()
-    # main_training_data(width=w, height=h)
-    # Utils.reopen_files()
-    # main_training_label(width=w, height=h)
-    # Utils.reopen_files()
+    prepare_LabelMe_dataset(width=w, height=h)
+    Utils.reopen_files()
+    main_training_data(width=w, height=h)
+    Utils.reopen_files()
+    main_training_label(width=w, height=h)
+    Utils.reopen_files()
     train_model(width=w, height=h)
+    Utils.reopen_files()
     main_process_edges()

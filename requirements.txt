@@ -19,7 +19,7 @@ opencv-contrib-python~=4.4.0
 Pillow~=7.1.2
 Pillow-PIL
 scikit-image~=0.17.2
-scipy~=1.4.1
+scipy~=1.1.0
 six
 tqdm~=4.46.0
 thinning_py3

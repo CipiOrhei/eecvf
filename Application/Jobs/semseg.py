@@ -34,18 +34,19 @@ def init_func_semseg_keras_repo(param_list) -> JobInitStateReturn:
     if not os.path.exists(param_list[PORT_LOCATION_MODEL]):
         log_error_to_console('INIT' + param_list[PORT_MODEL].upper() + 'NOK','model not in location')
 
-    try:
+    # try:
+    if True:
         global model_semseg
-        #
+
         path = os.path.join(os.getcwd(),param_list[PORT_LOCATION_MODEL], param_list[PORT_MODEL])
         model_semseg[param_list[PORT_MODEL]] = model_from_checkpoint_path(checkpoints_path=path)
         size = eval('global_var_handler.' + param_list[PORT_OUTPUT_PORT_SIZE] + '_RGB')
         img = np.zeros(size)
         # noinspection PyUnusedLocal
         img_out = predict(model=model_semseg[param_list[PORT_MODEL]], inp=img)
-    except Exception as ex:
-        log_error_to_console('INIT' + param_list[PORT_MODEL].upper() + 'NOK', ex.__str__())
-        return JobInitStateReturn(False)
+    # except Exception as ex:
+    #     log_error_to_console('INIT' + param_list[PORT_MODEL].upper() + 'NOK', ex.__str__())
+    #     return JobInitStateReturn(False)
 
     return JobInitStateReturn(True)
 
@@ -95,7 +96,8 @@ def main_func_semseg_keras_repo(param_list: list = None) -> bool:
 
         # check if port's you want to use are valid
         if port_in.is_valid() is True:
-            try:
+            # try:
+            if True:
                 level = port_out.name.split('_')[-1]
                 w = eval('global_var_handler.WIDTH_' + level)
                 h = eval('global_var_handler.HEIGHT_' + level)
@@ -132,9 +134,9 @@ def main_func_semseg_keras_repo(param_list: list = None) -> bool:
                 port_out.arr[:] = img_out
                 port_out.set_valid()
 
-            except BaseException as error:
-                log_error_to_console("VGG-U-UNET JOB NOK: ", str(error))
-                pass
+            # except BaseException as error:
+            #     log_error_to_console("VGG-U-UNET JOB NOK: ", str(error))
+            #     pass
         else:
             return False
 
