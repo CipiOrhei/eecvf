@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 
 """
@@ -143,6 +144,25 @@ def rotate_matrix_7x7(mat):
     t[6][3] = mat[6][6]
 
     return t
+
+
+def save_keypoint_to_array(kp: cv2.KeyPoint):
+    """
+    Function to transfer data from cv2.KeyPoint to an array.
+    :param mat: cv2.KeyPoint object
+    :return: array of data from keypoints
+    """
+    tmp_array = np.zeros((7))
+
+    tmp_array[0] = kp.angle
+    tmp_array[1] = kp.class_id
+    tmp_array[2] = kp.octave
+    tmp_array[3] = kp.pt[0]
+    tmp_array[4] = kp.pt[1]
+    tmp_array[5] = kp.response
+    tmp_array[6] = kp.size
+
+    return tmp_array
 
 
 if __name__ == "__main__":
