@@ -101,15 +101,18 @@ def configure_save_pictures(location: str = 'DEFAULT', job_name_in_port: bool = 
     if location is not 'DEFAULT':
         config_main.APPL_SAVE_LOCATION = location
 
-    if ports_to_save is 'ALL':
-        for port in created_port_list:
-            if port[-1] is True:
-                save_port_list.append(port[0])
-    else:
-        for el in ports_to_save:
+    try:
+        if ports_to_save is 'ALL':
             for port in created_port_list:
-                if el == port[0]:
+                if port[-1] is True:
                     save_port_list.append(port[0])
+        else:
+            for el in ports_to_save:
+                for port in created_port_list:
+                    if el == port[0]:
+                        save_port_list.append(port[0])
+    except:
+        log_error_to_console('PORT IS NOT OK!')
 
     config_main.APPL_SAVE_PICT_LIST = save_port_list
 

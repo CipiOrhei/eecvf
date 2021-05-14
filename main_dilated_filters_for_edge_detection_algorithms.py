@@ -643,8 +643,8 @@ def main_find_thr_laplace_edges(dataset):
         list_to_save.append(thin_thr_edge_result + '_L0')
 
     Application.create_config_file()
-    Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
-    # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
+    # Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
+    Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
     Application.run_application()
 
     # Do bsds benchmarking
@@ -699,8 +699,8 @@ def main_laplace_edges(dataset):
         list_to_save.append(thin_thr_edge_result + '_L0')
 
     Application.create_config_file()
-    Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
-    # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
+    # Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
+    Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
     Application.run_application()
 
     # Do bsds benchmarking
@@ -813,8 +813,8 @@ def main_log_edges(dataset):
         list_to_save.append(thin_thr_edge_result + '_L0')
 
     Application.create_config_file()
-    Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
-    # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
+    # Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
+    Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
     Application.run_application()
 
     # Do bsds benchmarking
@@ -998,6 +998,56 @@ def main_sigma_finder_canny(dataset):
     Utils.close_files()
 
 
+def main_sigma_finder_canny_2(dataset):
+    Application.delete_folder_appl_out()
+    # Benchmarking.delete_folder_benchmark_out()
+
+    Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
+
+    list_to_save = []
+
+    Application.do_get_image_job(port_output_name='RAW')
+    Application.do_grayscale_transform_job(port_input_name='RAW', port_output_name='GREY')
+
+    edge = CONFIG.FILTERS.SOBEL_3x3
+
+    # find best threshold for first level
+    for sigma in range(100, 175, 25):
+        s = sigma / 100
+        blured_img = Application.do_gaussian_blur_image_job(port_input_name='GREY', sigma=s,
+                                                            port_output_name='BLURED_S_' + str(s).replace('.', '_'))
+        for low in range(70, 150, 10):
+            for high in range(90, 200, 10):
+            # for high in [90]:
+                if low < high:
+                    canny_result = Application.do_canny_config_job(port_input_name=blured_img, edge_detector=edge, canny_config=CONFIG.CANNY_VARIANTS.MANUAL_THRESHOLD,
+                                                                   low_manual_threshold = low, high_manual_threshold=high, canny_config_value=None,
+                                                                   port_output_name='CANNY_' + edge + '_S_' + str(s).replace('.', '_') + '_L_' + str(low) + '_H_' + str(high),
+                                                                   do_blur=False)
+                    list_to_save.append(canny_result + '_L0')
+
+    Application.create_config_file()
+    Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
+    # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
+    Application.run_application()
+
+    # Do bsds benchmarking
+    # Be ware not to activate job_name_in_port in Application.configure_save_pictures
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_save, do_thinning=False)
+
+    Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='canny_sigma_results_finder',
+                                 suffix_to_cut_legend='_L0',
+                                 list_of_data=list_to_save, number_of_series=30,
+                                 replace_list=[('CANNY_SOBEL_3x3', ''), ('_S_', ' S='), ('_L_', ' L='), ('_H_', ' H='), ('_L0', ''), ('_', '.')],
+                                 inputs=[''], self_contained_list=True,
+                                 save_plot=True, show_plot=False)
+
+    Utils.close_files()
+
+
 def main_canny(dataset):
     Application.delete_folder_appl_out()
     Benchmarking.delete_folder_benchmark_out()
@@ -1078,6 +1128,94 @@ def main_canny(dataset):
     Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='canny_latex_table_results', print_to_console=True,
                                  header_list=['Variant', '', '3x3', '5x5', 'Dilated 5x5', '7x7', 'Dilated 7x7'],
                                  prefix_data_name='FINAL', suffix_data_name='BLURED', level_data_name='L0',
+                                 version_data_name=['3x3', '5x5', 'DILATED_5x5', '7x7', 'DILATED_7x7'],
+                                 data_per_variant=['R', 'P', 'F1'], version_separation='DILATED')
+
+    Utils.close_files()
+
+
+def main_canny_2(dataset):
+    Application.delete_folder_appl_out()
+    # Benchmarking.delete_folder_benchmark_out()
+
+    Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
+
+    list_to_save = []
+
+    Application.do_get_image_job(port_output_name='RAW')
+    Application.do_grayscale_transform_job(port_input_name='RAW', port_output_name='GREY')
+
+    first_order_edge = [
+        CONFIG.FILTERS.PIXEL_DIFF_3x3, CONFIG.FILTERS.PIXEL_DIFF_SEPARATED_3x3
+        , CONFIG.FILTERS.PIXEL_DIFF_SEPARATED_5x5, CONFIG.FILTERS.PIXEL_DIFF_SEPARATED_7x7
+        , CONFIG.FILTERS.PIXEL_DIFF_5x5, CONFIG.FILTERS.PIXEL_DIFF_7x7
+
+        , CONFIG.FILTERS.SOBEL_3x3, CONFIG.FILTERS.SOBEL_5x5, CONFIG.FILTERS.SOBEL_7x7
+        , CONFIG.FILTERS.SOBEL_DILATED_5x5, CONFIG.FILTERS.SOBEL_DILATED_7x7
+
+        , CONFIG.FILTERS.PREWITT_3x3, CONFIG.FILTERS.PREWITT_5x5, CONFIG.FILTERS.PREWITT_7x7
+        , CONFIG.FILTERS.PREWITT_DILATED_5x5, CONFIG.FILTERS.PREWITT_DILATED_7x7
+
+        , CONFIG.FILTERS.KIRSCH_3x3, CONFIG.FILTERS.KIRSCH_5x5
+        , CONFIG.FILTERS.KIRSCH_DILATED_5x5, CONFIG.FILTERS.KIRSCH_DILATED_7x7
+
+        , CONFIG.FILTERS.KITCHEN_MALIN_3x3
+        , CONFIG.FILTERS.KITCHEN_MALIN_DILATED_5x5, CONFIG.FILTERS.KITCHEN_MALIN_DILATED_7x7
+
+        , CONFIG.FILTERS.KAYYALI_3x3
+        , CONFIG.FILTERS.KAYYALI_DILATED_5x5, CONFIG.FILTERS.KAYYALI_DILATED_7x7
+
+        , CONFIG.FILTERS.SCHARR_3x3, CONFIG.FILTERS.SCHARR_5x5
+        , CONFIG.FILTERS.SCHARR_DILATED_5x5, CONFIG.FILTERS.SCHARR_DILATED_7x7
+
+        , CONFIG.FILTERS.KROON_3x3
+        , CONFIG.FILTERS.KROON_DILATED_5x5, CONFIG.FILTERS.KROON_DILATED_7x7
+
+        , CONFIG.FILTERS.ORHEI_3x3, CONFIG.FILTERS.ORHEI_B_5x5
+        , CONFIG.FILTERS.ORHEI_DILATED_5x5, CONFIG.FILTERS.ORHEI_DILATED_7x7
+    ]
+
+    s = 1.5
+    # find best threshold for first level
+    for edge in first_order_edge:
+        blured_img = Application.do_gaussian_blur_image_job(port_input_name='GREY', sigma=s,
+                                                            port_output_name='BLURED_S_' + str(s).replace('.', '_'))
+        low = 80
+        high = 90
+        canny_result = Application.do_canny_config_job(port_input_name=blured_img, edge_detector=edge, canny_config=CONFIG.CANNY_VARIANTS.MANUAL_THRESHOLD,
+                                                       low_manual_threshold = low, high_manual_threshold=high, canny_config_value=None,
+                                                       port_output_name='CANNY_' + edge + '_S_' + str(s).replace('.', '_') + '_L_' + str(low) + '_H_' + str(high),
+                                                       do_blur=False)
+        list_to_save.append(canny_result + '_L0')
+
+    Application.create_config_file()
+    Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=True)
+    # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
+    Application.run_application()
+
+    # Do bsds benchmarking
+    # Be ware not to activate job_name_in_port in Application.configure_save_pictures
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_save, do_thinning=False)
+
+    Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='canny_results',
+                                 suffix_to_cut_legend='_S_1_5_L_80_H_90_L0', prefix_to_cut_legend='CANNY_',
+                                 list_of_data=list_to_save, number_of_series=40,
+                                 replace_list=[('SEPARATED_PIXEL_DIFFERENCE_', 'Separated Px Dif '),
+                                               ('PIXEL_DIFFERENCE_', 'Pixel Dif '),
+                                               ('PREWITT_', 'Prewitt '), ('KIRSCH_', 'Kirsch '), ('SOBEL_', 'Sobel '),
+                                               ('SCHARR_', 'Scharr '), ('KROON_', 'Kroon '), ('ORHEI_V1_', 'Orhei '),
+                                               ('ORHEI_', 'Orhei '),
+                                               ('KITCHEN_', 'Kitchen '), ('KAYYALI_', 'Kayyali '),
+                                               ('DILATED_', 'dilated ')],
+                                 inputs=[''], self_contained_list=True,
+                                 save_plot=True, show_plot=False)
+
+    Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='canny_latex_table_results', print_to_console=True,
+                                 header_list=['Variant', '', '3x3', '5x5', 'Dilated 5x5', '7x7', 'Dilated 7x7'],
+                                 prefix_data_name='CA', suffix_data_name='BLURED', level_data_name='L0',
                                  version_data_name=['3x3', '5x5', 'DILATED_5x5', '7x7', 'DILATED_7x7'],
                                  data_per_variant=['R', 'P', 'F1'], version_separation='DILATED')
 
@@ -1202,69 +1340,71 @@ def main_shen_edges(dataset):
 
 
 if __name__ == "__main__":
-    dataset = 'test'
-    # dataset = 'small'
-    main_find_thr_first_order_edges(dataset)
-    Utils.reopen_files()
-    main_find_sigma_first_order_edges(dataset)
-    Utils.reopen_files()
-    main_find_param_first_order_edges(dataset)
-    Utils.reopen_files()
-    main_first_order_edge_detection(dataset)
-    Utils.reopen_files()
-    main_find_thr_compass_first_order_edges(dataset)
-    Utils.reopen_files()
-    main_find_sigma_compass_first_order_edges(dataset)
-    Utils.reopen_files()
-    main_first_order_compass_edge_detection(dataset)
-    Utils.reopen_files()
-    main_find_thr_frei_chen_edges(dataset)
-    Utils.reopen_files()
-    main_find_sigma_frei_edges(dataset)
-    Utils.reopen_files()
-    main_frei_edges(dataset)
-    Utils.reopen_files()
-    main_find_thr_laplace_edges(dataset)
-    Utils.reopen_files()
-    main_laplace_edges(dataset)
-    Utils.reopen_files()
-    main_find_sigma_log_edges(dataset)
-    Utils.reopen_files()
-    main_log_edges(dataset)
-    Utils.reopen_files()
-    main_find_sigma_marr_edges(dataset)
-    Utils.reopen_files()
-    main_marr_edges(dataset)
-    Utils.reopen_files()
-    main_sigma_finder_canny(dataset)
-    Utils.reopen_files()
-    main_canny(dataset)
-    main_param_shen_finder(dataset)
-    Utils.reopen_files()
-    main_shen_edges(dataset)
-    Utils.create_latex_cpm_table_list(variants=['FINAL', 'CANNY'], variants_public=['Magnitude Gradient', 'Canny'],
-                                      sub_variants=[['3x3', '5x5', 'DILATED_5x5', '7x7', 'DILATED_7x7'],
-                                                    ['3x3', '5x5', 'DILATED_5x5', '7x7', 'DILATED_7x7']],
-                                      sub_variants_pub=[['3x3', '5x5', 'Dilated 5x5', '7x7', 'Dilated 7x7'],
-                                                        ['3x3', '5x5', 'Dilated 5x5', '7x7', 'Dilated 7x7']],
-                                      operators=['PIXEL_DIFFERENCE', 'SEPARATED_PIXEL_DIFFERENCE', 'SOBEL', 'PREWITT', 'KIRSCH', 'KITCHEN',
-                                                 'KAYYALI', 'SCHARR', 'KROON', 'ORHEI'],
-                                      operators_pub=['Pixel Diff', 'Separated Pixle Diff', 'Sobel', 'Prewitt', 'Kirsch', 'Kitchen',
-                                                     'Kayyali', 'Scharr', 'Kroon', 'Orhei'],
-                                      inputs=['BLURED', 'S_1_25'], levels=['L0', 'L0'],
-                                      order=['R', 'P', 'F1'], name_of_table='ortho_table')
-
-    Utils.create_latex_cpm_table_list(variants=['FINAL_THR_75', 'FINAL_THR_5', 'FINAL_MARR_HILDRETH', 'SHEN_CASTAN'],
-                                      variants_public=['Laplace', 'LoG', 'Marr-Hildreth', 'Shen-Castan'],
-                                      sub_variants=[['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'],
-                                                    ['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'],
-                                                    ['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'],
-                                                    ['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7']],
-                                      sub_variants_pub=[['3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
-                                                        ['3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
-                                                        ['3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
-                                                        ['3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7']],
-                                      operators=['LAPLACE_V1', 'LAPLACE_V2', 'LAPLACE_V3', 'LAPLACE_V4', 'LAPLACE_V5'],
-                                      operators_pub=['V1', 'V2', 'V3', 'V4', 'V5'],
-                                      inputs=['GREY', 'GREY', 'S_1_8_THR_0_3_GREY', ''], levels=['L0', 'L0', 'L0', 'L0', 'L0'],
-                                      order=['R', 'P', 'F1'], name_of_table='laplace_table')
+    # dataset = 'test'
+    dataset = 'small'
+    # main_find_thr_first_order_edges(dataset)
+    # Utils.reopen_files()
+    # main_find_sigma_first_order_edges(dataset)
+    # Utils.reopen_files()
+    # main_find_param_first_order_edges(dataset)
+    # Utils.reopen_files()
+    # main_first_order_edge_detection(dataset)
+    # Utils.reopen_files()
+    # main_find_thr_compass_first_order_edges(dataset)
+    # Utils.reopen_files()
+    # main_find_sigma_compass_first_order_edges(dataset)
+    # Utils.reopen_files()
+    # main_first_order_compass_edge_detection(dataset)
+    # Utils.reopen_files()
+    # main_find_thr_frei_chen_edges(dataset)
+    # Utils.reopen_files()
+    # main_find_sigma_frei_edges(dataset)
+    # Utils.reopen_files()
+    # main_frei_edges(dataset)
+    # Utils.reopen_files()
+    # main_find_thr_laplace_edges(dataset)
+    # Utils.reopen_files()
+    # main_laplace_edges(dataset)
+    # Utils.reopen_files()
+    # main_find_sigma_log_edges(dataset)
+    # Utils.reopen_files()
+    # main_log_edges(dataset)
+    # Utils.reopen_files()
+    # main_find_sigma_marr_edges(dataset)
+    # Utils.reopen_files()
+    # main_marr_edges(dataset)
+    # Utils.reopen_files()
+    # main_sigma_finder_canny(dataset)
+    # main_sigma_finder_canny_2(dataset)
+    # Utils.reopen_files()
+    # main_canny(dataset)
+    main_canny_2(dataset)
+    # main_param_shen_finder(dataset)
+    # Utils.reopen_files()
+    # main_shen_edges(dataset)
+    # Utils.create_latex_cpm_table_list(variants=['FINAL', 'CANNY'], variants_public=['Magnitude Gradient', 'Canny'],
+    #                                   sub_variants=[['3x3', '5x5', 'DILATED_5x5', '7x7', 'DILATED_7x7'],
+    #                                                 ['3x3', '5x5', 'DILATED_5x5', '7x7', 'DILATED_7x7']],
+    #                                   sub_variants_pub=[['3x3', '5x5', 'Dilated 5x5', '7x7', 'Dilated 7x7'],
+    #                                                     ['3x3', '5x5', 'Dilated 5x5', '7x7', 'Dilated 7x7']],
+    #                                   operators=['PIXEL_DIFFERENCE', 'SEPARATED_PIXEL_DIFFERENCE', 'SOBEL', 'PREWITT', 'KIRSCH', 'KITCHEN',
+    #                                              'KAYYALI', 'SCHARR', 'KROON', 'ORHEI'],
+    #                                   operators_pub=['Pixel Diff', 'Separated Pixle Diff', 'Sobel', 'Prewitt', 'Kirsch', 'Kitchen',
+    #                                                  'Kayyali', 'Scharr', 'Kroon', 'Orhei'],
+    #                                   inputs=['BLURED', 'S_1_25'], levels=['L0', 'L0'],
+    #                                   order=['R', 'P', 'F1'], name_of_table='ortho_table')
+    #
+    # Utils.create_latex_cpm_table_list(variants=['FINAL_THR_75', 'FINAL_THR_5', 'FINAL_MARR_HILDRETH', 'SHEN_CASTAN'],
+    #                                   variants_public=['Laplace', 'LoG', 'Marr-Hildreth', 'Shen-Castan'],
+    #                                   sub_variants=[['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'],
+    #                                                 ['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'],
+    #                                                 ['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'],
+    #                                                 ['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7']],
+    #                                   sub_variants_pub=[['3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
+    #                                                     ['3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
+    #                                                     ['3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
+    #                                                     ['3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7']],
+    #                                   operators=['LAPLACE_V1', 'LAPLACE_V2', 'LAPLACE_V3', 'LAPLACE_V4', 'LAPLACE_V5'],
+    #                                   operators_pub=['V1', 'V2', 'V3', 'V4', 'V5'],
+    #                                   inputs=['GREY', 'GREY', 'S_1_8_THR_0_3_GREY', ''], levels=['L0', 'L0', 'L0', 'L0', 'L0'],
+    #                                   order=['R', 'P', 'F1'], name_of_table='laplace_table')
