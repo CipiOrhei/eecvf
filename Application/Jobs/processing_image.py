@@ -407,9 +407,11 @@ def do_image_crop(param_list: list = None) -> bool:
     # noinspection PyPep8Naming
     PORT_IN_END_HEIGHT = 5
     # noinspection PyPep8Naming
-    PORT_OUT_IMG_POS = 6
+    PORT_OUT_RESIZE_POS = 6
+    # noinspection PyPep8Naming
+    PORT_OUT_IMG_POS = 7
 
-    if len(param_list) != 7:
+    if len(param_list) != 8:
         log_error_to_console("IMAGE CROP JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
         return False
     else:
@@ -423,7 +425,10 @@ def do_image_crop(param_list: list = None) -> bool:
                 s_h = int(param_list[PORT_IN_START_HEIGHT] / 100 * p_in_image.arr.shape[0])
                 e_h = int(param_list[PORT_IN_END_HEIGHT] / 100 * p_in_image.arr.shape[0])
 
-                p_out.arr[s_h:e_h, s_w:e_w] = p_in_image.arr[s_h:e_h, s_w:e_w]
+                if param_list[PORT_OUT_RESIZE_POS] is True:
+                    p_out.arr[:] = p_in_image.arr[s_h:e_h, s_w:e_w]
+                else:
+                    p_out.arr[s_h:e_h, s_w:e_w] = p_in_image.arr[s_h:e_h, s_w:e_w]
 
                 p_out.set_valid()
             except BaseException as error:

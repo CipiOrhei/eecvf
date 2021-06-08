@@ -305,7 +305,7 @@ def do_number_edge_pixels(port_input_name: str,
 
 def do_image_crop_job(port_input_name: str,
                       start_width_percentage: int, end_width_percentage: int, start_height_percentage: int, end_height_percentage: int,
-                      port_output_name: str = None,
+                      port_output_name: str = None, with_resize: bool = False, new_height: int = 0, new_width: int = 0,
                       wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
     """
     Creates a cropped image according to the specified ratios.
@@ -316,6 +316,7 @@ def do_image_crop_job(port_input_name: str,
     :param start_height_percentage: percent from the image on the top where the cropped image to start
     :param end_height_percentage: percent from the image on the bottom where the cropped image to start
     :param port_output_name: name of output port to use
+    :param with_resize: if new image should be resized.
     :param is_rgb: if the output ports is rgb, 3 channels
     :param level: On what pyramid level of image you want this job to run
     :return: output image port name
@@ -325,12 +326,23 @@ def do_image_crop_job(port_input_name: str,
     if port_output_name is None:
         port_output_name = 'CROPPED_' + port_input_name
 
-    output_raw_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
-    output_raw_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
+    if with_resize is True:
+        if is_rgb is True:
+            new_size = (new_height, new_width, 3)
+        else:
+            new_size = (new_height, new_width)
+
+        level = PYRAMID_LEVEL.add_level(size=new_size)
+
+        output_raw_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+        output_raw_port_size = transform_port_size_lvl(lvl=new_size, rgb=is_rgb)
+    else:
+        output_raw_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+        output_raw_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
 
     input_port_list = [input_raw_port_name]
     main_func_list = [input_raw_port_name, wave_offset, start_width_percentage, end_width_percentage,
-                      start_height_percentage, end_height_percentage, output_raw_port_name]
+                      start_height_percentage, end_height_percentage, with_resize, output_raw_port_name]
 
     output_port_list = [(output_raw_port_name, output_raw_port_size, 'B', True)]
 
@@ -4863,7 +4875,7 @@ def do_thinning_guo_hall_image_job(port_input_name: str,
 
 
 def do_edge_label_job(port_input_name: str,
-                      port_output_name: str = None, connectivity: int = 8,
+                      port_output_name: str = None, port_output_label_name: str = None, connectivity: int = 8,
                       wave_offset: int = 0, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
     """
     4-connected pixels are neighbors to every pixel that touches one of their edges or corners.
@@ -4874,6 +4886,7 @@ def do_edge_label_job(port_input_name: str,
     :param port_input_name: name of input port
     :param connectivity: 8 or 4 for 8-way or 4-way connectivity respectively
     :param port_output_name: name of output port
+    :param port_output_label_name: name of output port label
     :param level: pyramid level to calculate at
     :param wave_offset: port wave offset. If 0 it is in current wave.
     :return: None
@@ -4881,14 +4894,18 @@ def do_edge_label_job(port_input_name: str,
     input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
 
     if port_output_name is None:
-        port_output_name = 'EDGE_LABELED_' + str(connectivity) + '_' + port_input_name
+        port_output_name = 'EDGE_LABELED_RGB_' + str(connectivity) + '_' + port_input_name
+        port_output_label_name = 'EDGE_LABELED_' + str(connectivity) + '_' + port_input_name
 
-    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
-    output_port_size = transform_port_size_lvl(lvl=level, rgb=True)
+    output_port_name_rgb = transform_port_name_lvl(name=port_output_name, lvl=level)
+    output_port_size_rgb = transform_port_size_lvl(lvl=level, rgb=True)
+
+    output_port_name = transform_port_name_lvl(name=port_output_label_name, lvl=level)
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=False)
 
     input_port_list = [input_port_name]
-    main_func_list = [input_port_name, wave_offset, connectivity, output_port_name]
-    output_port_list = [(output_port_name, output_port_size, 'B', True)]
+    main_func_list = [input_port_name, wave_offset, connectivity, output_port_name_rgb, output_port_name]
+    output_port_list = [(output_port_name_rgb, output_port_size_rgb, 'B', True), (output_port_name, output_port_size, 'B', True)]
 
     job_name = job_name_create(action='Connected Line Labeling', input_list=input_port_list, wave_offset=[wave_offset], level=level)
 

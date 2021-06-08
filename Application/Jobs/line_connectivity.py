@@ -8,7 +8,7 @@ from Application.Frame.transferJobPorts import get_port_from_wave
 from Utils.log_handler import log_to_file, log_error_to_console
 
 
-def process_edge_map(edge_map: Port.arr, port_name_output: Port.arr, connectivity: int):
+def process_edge_map(edge_map: Port.arr, port_name_output: Port.arr, port_name_labels_output: Port.arr, connectivity: int):
     """
     # http://homepages.inf.ed.ac.uk/rbf/CVonline/LOCAL_COPIES/MORSE/connectivity.pdf
     :param edge_map : bitmap of edges
@@ -17,6 +17,7 @@ def process_edge_map(edge_map: Port.arr, port_name_output: Port.arr, connectivit
     :return number of labels, average number of pixels per label, number of edges
     """
     p_out = get_port_from_wave(name=port_name_output)
+    p_out_labels = get_port_from_wave(name=port_name_labels_output)
     # threshold image to be sure that all edges have 255 value
     ret, edge_map = cv2.threshold(src=edge_map, thresh=1, maxval=255, type=cv2.THRESH_BINARY)
     edge_map = np.uint8(edge_map)
@@ -35,6 +36,9 @@ def process_edge_map(edge_map: Port.arr, port_name_output: Port.arr, connectivit
     p_out.arr[label_hue == 0] = 0
 
     p_out.set_valid()
+
+    p_out_labels.arr[:] = labels
+    p_out_labels.set_valid()
 
     nr_edge_pixels = np.count_nonzero(labels)
 
@@ -70,8 +74,10 @@ def create_edge_label_map(param_list: list = None) -> bool:
     PORT_CONNECTIVITY_POS = 2
     # noinspection PyPep8Naming
     PORT_OUT_POS = 3
+    # noinspection PyPep8Naming
+    PORT_OUT_LABELS_POS = 4
 
-    if len(param_list) != 4:
+    if len(param_list) != 5:
         log_error_to_console("EDGE LABEL JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
         return False
     else:
@@ -79,7 +85,7 @@ def create_edge_label_map(param_list: list = None) -> bool:
 
         if p_in_1.is_valid() is True:
             try:
-                nr_edge, average_px_edge, nr_edge_px = process_edge_map(edge_map=p_in_1.arr, port_name_output=param_list[PORT_OUT_POS],
+                nr_edge, average_px_edge, nr_edge_px = process_edge_map(edge_map=p_in_1.arr, port_name_output=param_list[PORT_OUT_POS], port_name_labels_output=param_list[PORT_OUT_LABELS_POS],
                                                                         connectivity=param_list[PORT_CONNECTIVITY_POS])
                 log_to_file(str(nr_edge))
                 log_to_file(str(average_px_edge))
