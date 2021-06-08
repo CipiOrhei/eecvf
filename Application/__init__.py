@@ -158,6 +158,7 @@ from Application.Config.job_create import do_thinning_guo_hall_image_job
 # Line/edge connectivity jobs
 ########################################################################################################################
 from Application.Config.job_create import do_edge_label_job
+from Application.Jobs.line_connectivity import do_line_theta_filtering_job
 ########################################################################################################################
 # Value manipulations
 ########################################################################################################################

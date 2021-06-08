@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 # noinspection PyPackageRequirements
 import cv2
@@ -6,6 +8,10 @@ from Application.Frame.global_variables import JobInitStateReturn
 from Application.Frame.port import Port
 from Application.Frame.transferJobPorts import get_port_from_wave
 from Utils.log_handler import log_to_file, log_error_to_console
+
+from Application.Config.create_config import jobs_dict, create_dictionary_element
+from config_main import PYRAMID_LEVEL
+from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create, get_module_name_from_file
 
 
 def process_edge_map(edge_map: Port.arr, port_name_output: Port.arr, port_name_labels_output: Port.arr, connectivity: int):
@@ -103,3 +109,148 @@ def create_edge_label_map(param_list: list = None) -> bool:
             return False
 
         return True
+
+
+# define a init function, function that will be executed at the begging of the wave
+def init_func_global() -> JobInitStateReturn:
+    """
+    Init function for the job.
+    Remember this function is called before the framework gets pictures.
+    :return: INIT or NOT_INIT state for the job
+    """
+    return JobInitStateReturn(True)
+
+
+# define a main function, function that will be executed at the begging of the wave
+def main_func_line_filtering(param_list: list = None) -> bool:
+    """
+    Main function for {job} calculation job.
+    :param param_list: Param needed to respect the following list:
+                       [enumerate list]
+    :return: True if the job executed OK.
+    """
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE = 1
+    # noinspection PyPep8Naming
+    PORT_IN_THETA = 2
+    # noinspection PyPep8Naming
+    PORT_IN_DEVIATION = 3
+    # noinspection PyPep8Naming
+    PORT_OUTPUT_LINE = 4
+    # noinspection PyPep8Naming
+    PORT_OUTPUT_LINE_IMG = 5
+
+    # verify that the number of parameters are OK.
+    if len(param_list) != 6:
+        log_error_to_console("LINE FILTERING JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
+        return False
+    else:
+        # get needed ports
+        p_in = get_port_from_wave(name=param_list[PORT_IN_POS], wave_offset=param_list[PORT_IN_WAVE])
+
+        p_out_lines = get_port_from_wave(name=param_list[PORT_OUTPUT_LINE])
+        p_out_lines_img = get_port_from_wave(name=param_list[PORT_OUTPUT_LINE_IMG])
+
+        # check if port's you want to use are valid
+        if p_in.is_valid() is True:
+            try:
+                value = math.tan(math.radians(param_list[PORT_IN_THETA]))
+                grade = param_list[PORT_IN_DEVIATION]
+                min_value = value - math.radians(grade)
+                max_value = value + math.radians(grade)
+
+                line_idx = 0
+
+                for line in p_in.arr:
+                    start_point = line[0]
+                    end_point = [0,0]
+                    idx = 0
+                    if line[idx][0] == 0 and line[idx][1] == 0:
+                        break
+
+                    while True:
+                        if line[idx][0] == 0 and line[idx][1] == 0:
+                            break
+                        end_point = line[idx]
+                        idx += 1
+
+                    line_slope = (end_point[0] - start_point[0]) / (end_point[1] - start_point[1])
+                    # print('line_slope', line_slope)
+                    # print('min_value', min_value)
+                    # print('max_value', max_value)
+
+                    if min_value < line_slope < max_value :
+                    # if True:
+                        p_out_lines.arr[line_idx][:] = line
+
+                        for el in p_out_lines.arr[line_idx]:
+                            p_out_lines_img.arr[el[0], el[1]] = 255
+
+                        line_idx += 1
+                    # print(line)
+
+                p_out_lines.set_valid()
+                p_out_lines_img.set_valid()
+            except BaseException as error:
+                log_error_to_console("LINE FILTERING JOB NOK: ", str(error))
+                pass
+        else:
+            return False
+
+        return True
+
+
+def do_line_theta_filtering_job(port_input_name: str, theta_value, deviation_theta = 10,
+                                nr_lines: int = 50, nr_pt_line:int = 50,
+                                port_output: str = None, port_img_output: str = None,
+                                level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
+    """
+    Filters lines accordingly to a theta value. 0 for horizontal
+    :param port_input_name:  One or several input ports
+    :param theta_value:  theta value
+    :param deviation_theta:  accepted deviation of theta value
+    :param nr_lines:  number of lines to keep at the end
+    :param nr_pt_line:  number of points per lines to keep at the end
+    :param port_output: port of lines
+    :param port_img_output: port of image of lines kept
+    :param level: Level of input port, please correlate with each input port name parameter
+    :param wave_offset: wave of input port, please correlate with each input port name parameter
+    :return: Name of output port or ports
+    """
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    if port_img_output is None:
+        port_output = '{name}_{theta}_{theta_value}_{theta_procent}_{theta_p_value}_{Input}'.format(name='LINE_FILTERING',
+                                                                                                    theta='T', theta_value=theta_value.__str__().replace('.', '_'),
+                                                                                                    theta_procent='D', theta_p_value=deviation_theta,
+                                                                                                    Input=port_input_name)
+        port_img_output = '{name}_{theta}_{theta_value}_{theta_procent}_{theta_p_value}_{Input}'.format(name='LINE_FILTERING_IMG',
+                                                                                                    theta='T', theta_value=theta_value.__str__().replace('.', '_'),
+                                                                                                    theta_procent='D', theta_p_value=deviation_theta,
+                                                                                                    Input=port_input_name)
+
+    output_port_line_img_name = transform_port_name_lvl(name=port_img_output, lvl=level)
+    output_port_line_img_size = transform_port_size_lvl(lvl=level, rgb=False)
+
+    port_line_output_name = transform_port_name_lvl(name=port_output, lvl=level)
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, theta_value, deviation_theta, port_line_output_name, output_port_line_img_name]
+    output_port_list = [(port_line_output_name, "(" + str(nr_lines) + "," + str(nr_pt_line) + ", 2)", 'H', False),
+                        (output_port_line_img_name, output_port_line_img_size, 'B', True)]
+
+    job_name = job_name_create(action='LINE FILTERING', input_list=input_port_list, wave_offset=[wave_offset], level=level)
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  init_func_name='init_func_global', init_func_param=None,
+                                  main_func_name='main_func_line_filtering',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output, port_img_output

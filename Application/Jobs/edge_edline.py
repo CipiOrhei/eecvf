@@ -455,7 +455,7 @@ def main_ed_line_mod_func(port_list: list = None) -> bool:
 
                 for edge_id in range(len(edges)):
                     tmp_edge = np.array(edges[edge_id])
-                    p_out_edges.arr[edge_id][:len(tmp_edge)] = tmp_edge
+                    p_out_edges.arr[edge_id][:len(tmp_edge),:] = tmp_edge
 
                 p_out_edges.set_valid()
 
@@ -463,7 +463,8 @@ def main_ed_line_mod_func(port_list: list = None) -> bool:
 
                 for line_id in range(len(lines)):
                     tmp_line = np.array(lines[line_id])
-                    p_out_lines.arr[line_id][:len(tmp_line)] = tmp_line
+
+                    p_out_lines.arr[line_id][:len(tmp_line), :] = tmp_line
 
                     for el in tmp_line:
                         p_out_map_lines.arr[el[0], el[1]] = 255
@@ -559,7 +560,7 @@ def do_edge_drawing_job(port_input_name: str,
     input_port_list = [input_port_name]
     main_func_list = [input_port_name, wave_offset, do_smoothing, gaussian_kernel_size, gaussian_sigma, gradient_thr, anchor_thr,
                       scan_interval, output_port_edges_name, output_port_edge_map_name]
-    output_port_list = [(output_port_edges_name, "(" + str(max_edges) + "," + str(max_points_edge) + ", 2)", 'B', False),
+    output_port_list = [(output_port_edges_name, "(" + str(max_edges) + "," + str(max_points_edge) + ", 2)", 'H', False),
                         (output_port_edge_map_name, output_port_edge_map_size, 'B', True)]
 
     job_name = job_name_create(action='Edge Drawing', input_list=input_port_list, wave_offset=[wave_offset], level=level)
@@ -630,7 +631,7 @@ def do_edge_drawing_mod_job(port_input_name: str, operator: str,
     input_port_list = [input_port_name]
     main_func_list = [input_port_name, wave_offset, kernel_x, kernel_y, gradient_thr, anchor_thr,
                       scan_interval, output_port_edges_name, output_port_edge_map_name]
-    output_port_list = [(output_port_edges_name, "(" + str(max_edges) + "," + str(max_points_edge) + ", 2)", 'B', False),
+    output_port_list = [(output_port_edges_name, "(" + str(max_edges) + "," + str(max_points_edge) + ", 2)", 'H', False),
                         (output_port_edge_map_name, output_port_edge_map_size, 'B', True)]
 
     job_name = job_name_create(action='Edge Drawing Modified', input_list=input_port_list, wave_offset=[wave_offset], level=level)
@@ -723,9 +724,9 @@ def do_ed_lines_job(port_input_name: str, min_line_length: int,
                       output_port_edges_name, output_port_edge_map_name,
                       output_port_lines_name, output_port_line_img_name]
 
-    output_port_list = [(output_port_edges_name, "(" + str(max_edges) + "," + str(max_points_edge) + ", 2)", 'B', False),
+    output_port_list = [(output_port_edges_name, "(" + str(max_edges) + "," + str(max_points_edge) + ", 2)", 'H', False),
                         (output_port_edge_map_name, output_port_edge_map_size, 'B', True),
-                        (output_port_lines_name, "(" + str(max_lines) + "," + str(max_points_line) + ", 2)", 'B', False),
+                        (output_port_lines_name, "(" + str(max_lines) + "," + str(max_points_line) + ", 2)", 'H', False),
                         (output_port_line_img_name, output_port_line_img_size, 'B', True)]
 
     job_name = job_name_create(action='Ed_Lines', input_list=input_port_list, wave_offset=[wave_offset], level=level)
@@ -820,9 +821,9 @@ def do_ed_lines_mod_job(port_input_name: str, min_line_length: int, operator: st
                       output_port_edges_name, output_port_edge_map_name,
                       output_port_lines_name, output_port_line_img_name]
 
-    output_port_list = [(output_port_edges_name, "(" + str(max_edges) + "," + str(max_points_edge) + ", 2)", 'B', False),
+    output_port_list = [(output_port_edges_name, "(" + str(max_edges) + "," + str(max_points_edge) + ", 2)", 'H', False),
                         (output_port_edge_map_name, output_port_edge_map_size, 'B', True),
-                        (output_port_lines_name, "(" + str(max_lines) + "," + str(max_points_line) + ", 2)", 'B', False),
+                        (output_port_lines_name, "(" + str(max_lines) + "," + str(max_points_line) + ", 2)", 'H', False),
                         (output_port_line_img_name, output_port_line_img_size, 'B', True)]
 
     job_name = job_name_create(action='Ed_Lines', input_list=input_port_list, wave_offset=[wave_offset], level=level)
