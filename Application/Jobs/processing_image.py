@@ -938,8 +938,8 @@ def do_blending_images_job(port_input_name_1: str, port_input_name_2: str,
 
     if port_img_output is None:
         port_img_output = '{name}_A_{alpha_value}_{Input1}_AND_B_{beta_value}_{Input2}'.format(name='IMG_BLEND',
-                                                                                               alpha_value=alpha.__str__().replace('.', '_'),
-                                                                                               beta_value=beta.__str__().replace('.', '_'),
+                                                                                               alpha_value=alpha.__str__().replace('.', '_')[0:4],
+                                                                                               beta_value=beta.__str__().replace('.', '_')[0:4],
                                                                                                Input1=input_port_name_1,
                                                                                                Input2=input_port_name_2)
 

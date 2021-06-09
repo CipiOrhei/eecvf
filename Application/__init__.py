@@ -203,3 +203,8 @@ if CUDA_GPU:
     from Application.Config.job_create import do_u_net_semseg
     from Application.Config.job_create import do_vgg_u_net_semseg
     from Application.Config.job_create import do_semseg_base_job
+
+############################################################################################################################################
+# Speed-bump jobs
+############################################################################################################################################
+from Application.Jobs.sb_detection import do_sb_detection_from_lines_job

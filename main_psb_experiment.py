@@ -235,7 +235,7 @@ def main():
     dilated_semseg = Application.do_image_morphological_dilation_job(port_input_name=semseg, kernel_size=7, input_iteration=2)
 
     croped_filtered = Application.do_image_crop_job(port_input_name=dilated_semseg, is_rgb=False,
-                                  start_width_percentage=0, end_width_percentage=100, start_height_percentage=50, end_height_percentage=100)
+                                                    start_width_percentage=0, end_width_percentage=100, start_height_percentage=50, end_height_percentage=100)
 
     # edge = Application.do_first_order_derivative_operators(port_input_name=grey, operator=CONFIG.FILTERS.PREWITT_5x5)
     # filtered = Application.do_matrix_intersect_job(port_input_name=edge, port_input_mask=croped_filtered)
@@ -243,19 +243,25 @@ def main():
     # thin_edge = Application.do_thinning_guo_hall_image_job(port_input_name=thr_edge)
     # labeled = Application.do_edge_label_job(port_input_name=thin_edge)
 
-    filtered = Application.do_matrix_intersect_job(port_input_name=grey, port_input_mask=croped_filtered)
-    Application.do_ed_lines_mod_job(port_input_name=filtered, min_line_length=30, gradient_thr=20, anchor_thr=5,
-                                    operator=CONFIG.FILTERS.ORHEI_3x3,
+    filtered_grey = Application.do_gaussian_blur_image_job(port_input_name=grey, sigma=1.4)
+    filtered = Application.do_matrix_intersect_job(port_input_name=filtered_grey, port_input_mask=croped_filtered)
+    Application.do_ed_lines_mod_job(port_input_name=filtered, min_line_length=40, gradient_thr=10, anchor_thr=5,
+                                    line_fit_err_thr=1,
+                                    operator=CONFIG.FILTERS.ORHEI_DILATED_7x7,
+                                    max_edges=5000, max_points_edge=1000,
+                                    max_lines=5000, max_points_line=1000,
                                     port_edges_name_output='EDGES', port_edge_map_name_output='EDGE_IMG',
                                     port_lines_name_output='LINES', port_lines_img_output='LINES_IMG')
 
-    horizontal_line, horizontal_line_img = Application.do_line_theta_filtering_job(port_input_name='LINES', theta_value=0, deviation_theta=0.005, nr_lines=5000, nr_pt_line=500)
+    horizontal_line, horizontal_line_img = Application.do_line_theta_filtering_job(port_input_name='LINES', theta_value=0, deviation_theta=0.005, nr_lines=5000, nr_pt_line=1000)
 
+    sb_lines, sb_img = Application.do_sb_detection_from_lines_job(port_input_name=horizontal_line)
     final = Application.do_blending_images_job(port_input_name_1='RAW', port_input_name_2=horizontal_line_img, alpha=0.7)
+    final_2 = Application.do_blending_images_job(port_input_name_1='RAW', port_input_name_2=sb_img, alpha=0.7)
 
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
-    Application.configure_show_pictures(ports_to_show=[final + '_L0'], time_to_show=10)
+    Application.configure_show_pictures(ports_to_show=[final + '_L0', final_2 + '_L0'], time_to_show=10)
     Application.run_application()
 
     Utils.close_files()
