@@ -54,15 +54,19 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
     # noinspection PyPep8Naming
     PORT_IN_WAVE = 1
     # noinspection PyPep8Naming
-    PORT_IN_MIN_GAP = 2
+    PORT_IN_MIN_GAP_HORIZONTAL = 2
     # noinspection PyPep8Naming
-    PORT_IN_MAX_GAP = 3
+    PORT_IN_MAX_GAP_HORIZONTAL = 3
     # noinspection PyPep8Naming
-    PORT_OUT_IMG_POS = 4
+    PORT_IN_MIN_GAP_VERTICAL = 4
     # noinspection PyPep8Naming
-    PORT_OUT_POS = 5
+    PORT_IN_MAX_GAP_VERTICAL = 5
+    # noinspection PyPep8Naming
+    PORT_OUT_IMG_POS = 6
+    # noinspection PyPep8Naming
+    PORT_OUT_POS = 7
     # verify that the number of parameters are OK.
-    if len(param_list) != 6:
+    if len(param_list) != 8:
         log_error_to_console("SB FROM LINES JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
         return False
     else:
@@ -76,8 +80,6 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
         if port_in.is_valid() is True:
             # try:
             if True:
-                    min_gap = param_list[PORT_IN_MIN_GAP]
-                    max_gap = param_list[PORT_IN_MAX_GAP]
                     line_idx = 0
                     lines = list()
 
@@ -96,22 +98,31 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
 
                         lines.append([start_point, end_point])
 
+                    line_used = np.zeros(len(lines))
+                    boxes = list()
+                    for i in range(len(lines)):
+                        min_overlap = lines[i][len(lines[i]) - 1][0] - lines[i][0][0] // 2
+                        for j in range(len(lines) - 1, i, -1):
+                            vertical_gap = (lines[j][0][1] + lines[j][len(lines[j]) - 1][1]) // 2 - (lines[i][0][1] + lines[j][len(lines[i]) - 1][1]) // 2  # gap between lines. compute mean value of first and last y of line
+                            overlap = lines[i][0][0] - lines[j][len(lines[j]) - 1][0]
 
+                            if overlap >= min_overlap and param_list[PORT_IN_MIN_GAP_HORIZONTAL] <= min_overlap <= param_list[PORT_IN_MAX_GAP_HORIZONTAL] and line_used[j] == 0\
+                                and param_list[PORT_IN_MIN_GAP_VERTICAL] <= vertical_gap <= param_list[PORT_IN_MAX_GAP_VERTICAL]:
+                                line_used[j] = 1
 
-                    # line_used = np.zeros(len(lines))
-                    # for i in range(len(lines)):
-                    #     min_overlap = lines[i][len(lines[i]) - 1][0] - lines[i][0][0] // 2
-                    #     for j in range(len(lines) - 1, i, -1):
-                    #         vertical_gap = (lines[j][0][1] + lines[j][len(lines[j]) - 1][1]) // 2 - (lines[i][0][1] + lines[j][len(lines[i]) - 1][1]) // 2  # gap between lines. compute mean value of first and last y of line
-                    #         overlap = lines[i][0][0] - lines[j][len(lines[j]) - 1][0]
-                    #
-                    #         if overlap >= min_overlap and min_gap <= min_overlap <= max_gap and line_used[j] == 0:
-                    #             line_used[j] = 1
-                    #             # new box between line i and j'
+                                boxes.append([lines[i][0], lines[j][len(lines[j]) - 1]])
+
+                                # new box between line i and j'
 
                     # p_out.arr = lines
                     log_to_file(p_out.arr.__str__())
                     p_out.set_valid()
+
+
+                    for box in boxes:
+                        start = (box[0][1], box[0][0])
+                        end = (box[1][1], box[1][0])
+                        cv2.rectangle(p_out_img.arr, start, end, (255,0,255), 2)
 
                     for el in lines:
                         start = (el[0][1], el[0][0])
@@ -133,7 +144,8 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
 ############################################################################################################################################
 
 def do_sb_detection_from_lines_job(port_input_name: str,
-                                   min_gap_lines: int = 10, max_gap_lines: int = 50, nr_sb: int = 1,
+                                   min_gap_horizontal_lines: int = 10, max_gap_horizontal_lines: int = 50, min_gap_vertical_lines: int = 1, max_gap_vertical_lines: int = 5,
+                                   nr_sb: int = 1,
                                    port_img_output: str = None, port_detection_output: str = None,
                                    level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
     """
@@ -149,15 +161,19 @@ def do_sb_detection_from_lines_job(port_input_name: str,
     input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
 
     if port_img_output is None:
-        port_img_output = '{name}_MIN_GAP_{min_g}_MAX_GAP_{max_g}_{Input}'.format(name='SB_LINES_IMG',
-                                                                                  min_g=min_gap_lines.__str__().replace('.', '_'),
-                                                                                  max_g=max_gap_lines.__str__().replace('.', '_'),
-                                                                                  Input=port_input_name)
+        port_img_output = '{name}_MIN_HG_{min_g_h}_MAX_HG_{max_g_h}_MIN_VG_{min_g_v}_MAX_HG_{max_g_v}_{Input}'.format(name='SB_LINES_IMG',
+                                                                                                                      min_g_h=min_gap_horizontal_lines.__str__().replace('.', '_'),
+                                                                                                                      max_g_h=max_gap_horizontal_lines.__str__().replace('.', '_'),
+                                                                                                                      min_g_v=min_gap_vertical_lines.__str__().replace('.', '_'),
+                                                                                                                      max_g_v=max_gap_vertical_lines.__str__().replace('.', '_'),
+                                                                                                                      Input=port_input_name)
 
-        port_detection_output = '{name}_MIN_GAP_{min_g}_MAX_GAP_{max_g}_{Input}'.format(name='SB_LINES',
-                                                                                        min_g=min_gap_lines.__str__().replace('.', '_'),
-                                                                                        max_g=max_gap_lines.__str__().replace('.', '_'),
-                                                                                        Input=port_input_name)
+        port_detection_output = '{name}_MIN_HG_{min_g_h}_MAX_HG_{max_g_h}_MIN_VG_{min_g_v}_MAX_HG_{max_g_v}_{Input}'.format(name='SB_LINES',
+                                                                                                                      min_g_h=min_gap_horizontal_lines.__str__().replace('.', '_'),
+                                                                                                                      max_g_h=max_gap_horizontal_lines.__str__().replace('.', '_'),
+                                                                                                                      min_g_v=min_gap_vertical_lines.__str__().replace('.', '_'),
+                                                                                                                      max_g_v=max_gap_vertical_lines.__str__().replace('.', '_'),
+                                                                                                                      Input=port_input_name)
 
     # size can be custom as needed
     port_img_output_name = transform_port_name_lvl(name=port_detection_output, lvl=level)
@@ -166,7 +182,7 @@ def do_sb_detection_from_lines_job(port_input_name: str,
     port_output_name = transform_port_name_lvl(name=port_img_output, lvl=level)
 
     input_port_list = [input_port_name]
-    main_func_list = [input_port_name, wave_offset, min_gap_lines, max_gap_lines, port_img_output_name, port_output_name]
+    main_func_list = [input_port_name, wave_offset, min_gap_horizontal_lines, max_gap_horizontal_lines, min_gap_vertical_lines, max_gap_vertical_lines, port_img_output_name, port_output_name]
     output_port_list = [(port_img_output_name, port_img_output_name_size, 'B', True),
                         (port_output_name, "(" + str(nr_sb) + ", 2, 2)", 'H', False)]
 

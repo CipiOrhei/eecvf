@@ -245,9 +245,9 @@ def main():
 
     filtered_grey = Application.do_gaussian_blur_image_job(port_input_name=grey, sigma=1.4)
     filtered = Application.do_matrix_intersect_job(port_input_name=filtered_grey, port_input_mask=croped_filtered)
-    Application.do_ed_lines_mod_job(port_input_name=filtered, min_line_length=40, gradient_thr=10, anchor_thr=5,
+    Application.do_ed_lines_mod_job(port_input_name=filtered, min_line_length=50, gradient_thr=10, anchor_thr=5,
                                     line_fit_err_thr=1,
-                                    operator=CONFIG.FILTERS.ORHEI_DILATED_7x7,
+                                    operator=CONFIG.FILTERS.ORHEI_DILATED_5x5,
                                     max_edges=5000, max_points_edge=1000,
                                     max_lines=5000, max_points_line=1000,
                                     port_edges_name_output='EDGES', port_edge_map_name_output='EDGE_IMG',
@@ -255,7 +255,10 @@ def main():
 
     horizontal_line, horizontal_line_img = Application.do_line_theta_filtering_job(port_input_name='LINES', theta_value=0, deviation_theta=0.005, nr_lines=5000, nr_pt_line=1000)
 
-    sb_lines, sb_img = Application.do_sb_detection_from_lines_job(port_input_name=horizontal_line)
+    sb_lines, sb_img = Application.do_sb_detection_from_lines_job(port_input_name=horizontal_line,
+                                                                  min_gap_horizontal_lines=1, max_gap_horizontal_lines=50,
+                                                                  min_gap_vertical_lines=1, max_gap_vertical_lines=50)
+
     final = Application.do_blending_images_job(port_input_name_1='RAW', port_input_name_2=horizontal_line_img, alpha=0.7)
     final_2 = Application.do_blending_images_job(port_input_name_1='RAW', port_input_name_2=sb_img, alpha=0.7)
 
