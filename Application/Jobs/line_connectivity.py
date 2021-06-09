@@ -188,6 +188,7 @@ def main_func_line_filtering(param_list: list = None) -> bool:
                         end_point = line[idx]
                         idx += 1
 
+
                     line_slope = (end_point[0] - start_point[0]) / (end_point[1] - start_point[1])
 
                     if min_value < line_slope < max_value:

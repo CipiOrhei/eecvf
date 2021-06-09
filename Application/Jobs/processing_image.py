@@ -19,6 +19,13 @@ from Application.Config.util import transform_port_name_lvl, transform_port_size
 Module handles single image jobs for the APPL block.
 """
 
+############################################################################################################################################
+# Internal functions
+############################################################################################################################################
+
+############################################################################################################################################
+# Init functions
+############################################################################################################################################
 
 def init_func_global(param_list: list = None) -> JobInitStateReturn:
     """
@@ -39,6 +46,10 @@ def init_func() -> JobInitStateReturn:
     """
     return JobInitStateReturn(True)
 
+
+############################################################################################################################################
+# Main functions
+############################################################################################################################################
 
 def median_calculation(param_list: list = None) -> bool:
     """
@@ -788,6 +799,64 @@ def resize_main(param_list: list = None) -> bool:
         return True
 
 
+def main_func_blend(param_list: list = None) -> bool:
+    """
+    Blending 2 images using opencv
+    :param param_list: Param needed to respect the following list:
+                       [input_port_name_1, wave_offset_1, input_port_name_2, wave_offset_2, alpha, beta, port_img_output_name]
+    :return: True if the job executed OK.
+    """
+    # noinspection PyPep8Naming
+    PORT_IN_IMG_1_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_1_WAVE = 1
+    # noinspection PyPep8Naming
+    PORT_IN_IMG_2_POS = 2
+    # noinspection PyPep8Naming
+    PORT_IN_2_WAVE = 3
+    # noinspection PyPep8Naming
+    PORT_IN_ALPHA = 4
+    # noinspection PyPep8Naming
+    PORT_IN_BETA = 5
+    # noinspection PyPep8Naming
+    PORT_OUT_IMG_POS = 6
+
+    if len(param_list) != 7:
+        log_error_to_console("IMG BLEND JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
+        return False
+    else:
+        p_in_image_1 = get_port_from_wave(name=param_list[PORT_IN_IMG_1_POS], wave_offset=param_list[PORT_IN_1_WAVE])
+        p_in_image_2 = get_port_from_wave(name=param_list[PORT_IN_IMG_2_POS], wave_offset=param_list[PORT_IN_2_WAVE])
+        p_out = get_port_from_wave(name=param_list[PORT_OUT_IMG_POS])
+
+        if p_in_image_1.is_valid() is True and p_in_image_2.is_valid():
+            try:
+                if len(p_in_image_1.arr.shape) == 2:
+                    img_1 = cv2.cvtColor(p_in_image_1.arr.copy(), cv2.COLOR_GRAY2RGB)
+                else:
+                    img_1 = p_in_image_1.arr.copy()
+
+                if len(p_in_image_2.arr.shape) == 2:
+                    img_2 = cv2.cvtColor(p_in_image_2.arr.copy(), cv2.COLOR_GRAY2RGB)
+                else:
+                    img_2 = p_in_image_2.arr.copy()
+
+                new_img = cv2.addWeighted(src1=img_1, alpha=param_list[PORT_IN_ALPHA], src2=img_2, beta=param_list[PORT_IN_BETA], gamma=0.0)
+                p_out.arr[:] = new_img
+                p_out.set_valid()
+            except BaseException as error:
+                log_error_to_console("IMG BLEND IMAGE JOB NOK: ", str(error))
+                pass
+        else:
+            return False
+
+        return True
+
+
+############################################################################################################################################
+# Job create functions
+############################################################################################################################################
+
 def do_resize_image_job(port_input_name: str,
                         new_width, new_height, interpolation=cv2.INTER_CUBIC, new_scale_width=0, new_scale_height=0,
                         port_output_name: str = None,
@@ -838,6 +907,63 @@ def do_resize_image_job(port_input_name: str,
     jobs_dict.append(d)
 
     return port_output_name
+
+
+def do_blending_images_job(port_input_name_1: str, port_input_name_2: str,
+                           alpha: float, beta: float = None,
+                           port_img_output: str = None,
+                           level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset_1: int = 0, wave_offset_2: int = 0) -> str:
+    """
+    Image blending of two images
+    :param port_input_name_1: Port name of first image
+    :param port_input_name_2: Port name of first image
+    :param alpha: Alpha value for blending
+    :param beta: Beta value for blending
+    :param port_img_output: Port name of output image
+    :param level: Level of input port, please correlate with each input port name parameter
+    :param wave_offset_1: wave of input port 1, please correlate with each input port name parameter
+    :param wave_offset_2: wave of input port 2, please correlate with each input port name parameter
+    :return: Name of output port or ports
+    """
+    # Do this for each input port this function has
+    input_port_name_1 = transform_port_name_lvl(name=port_input_name_1, lvl=level)
+    input_port_name_2 = transform_port_name_lvl(name=port_input_name_2, lvl=level)
+
+    if alpha < 0 or alpha > 1:
+        log_error_to_console('ALPHA VALUE NOT OK IN IMG BLEND JOB')
+        return
+
+    if beta is None:
+        beta = 1.0 - alpha
+
+    if port_img_output is None:
+        port_img_output = '{name}_A_{alpha_value}_{Input1}_AND_B_{beta_value}_{Input2}'.format(name='IMG_BLEND',
+                                                                                               alpha_value=alpha.__str__().replace('.', '_'),
+                                                                                               beta_value=beta.__str__().replace('.', '_'),
+                                                                                               Input1=input_port_name_1,
+                                                                                               Input2=input_port_name_2)
+
+    # size can be custom as needed
+    port_img_output_name = transform_port_name_lvl(name=port_img_output, lvl=level)
+    port_img_output_name_size = transform_port_size_lvl(lvl=level, rgb=True)
+
+    input_port_list = [input_port_name_1, input_port_name_2]
+    main_func_list = [input_port_name_1, wave_offset_1, input_port_name_2, wave_offset_2, alpha, beta, port_img_output_name]
+    output_port_list = [(port_img_output_name, port_img_output_name_size, 'B', True)]
+
+    job_name = job_name_create(action='IMG_BLEND', input_list=input_port_list, wave_offset=[wave_offset_1, wave_offset_2], level=level)
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  init_func_name='init_func', init_func_param=None,
+                                  main_func_name='main_func_blend',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_img_output
 
 
 if __name__ == "__main__":

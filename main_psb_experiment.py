@@ -244,17 +244,18 @@ def main():
     # labeled = Application.do_edge_label_job(port_input_name=thin_edge)
 
     filtered = Application.do_matrix_intersect_job(port_input_name=grey, port_input_mask=croped_filtered)
-    Application.do_ed_lines_mod_job(port_input_name=filtered, min_line_length=30, gradient_thr=30, anchor_thr=5,
+    Application.do_ed_lines_mod_job(port_input_name=filtered, min_line_length=30, gradient_thr=20, anchor_thr=5,
                                     operator=CONFIG.FILTERS.ORHEI_3x3,
                                     port_edges_name_output='EDGES', port_edge_map_name_output='EDGE_IMG',
                                     port_lines_name_output='LINES', port_lines_img_output='LINES_IMG')
 
     horizontal_line, horizontal_line_img = Application.do_line_theta_filtering_job(port_input_name='LINES', theta_value=0, deviation_theta=0.005, nr_lines=5000, nr_pt_line=500)
 
+    final = Application.do_blending_images_job(port_input_name_1='RAW', port_input_name_2=horizontal_line_img, alpha=0.7)
 
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
-    Application.configure_show_pictures(ports_to_show=[horizontal_line_img + '_L0'], time_to_show=10)
+    Application.configure_show_pictures(ports_to_show=[final + '_L0'], time_to_show=10)
     Application.run_application()
 
     Utils.close_files()

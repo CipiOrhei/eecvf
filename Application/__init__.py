@@ -50,6 +50,7 @@ from Application.Config.job_create import do_contrast_brightness_change_image_jo
 from Application.Config.job_create import do_gamma_correction_image_job
 from Application.Config.job_create import do_pixelate_image_job
 from Application.Jobs.processing_image import do_resize_image_job
+from Application.Jobs.processing_image import do_blending_images_job
 ########################################################################################################################
 # Image blurring jobs
 ########################################################################################################################
