@@ -1,5 +1,7 @@
 import math
 
+# noinspection PyPackageRequirements
+from typing import Tuple
 import numpy as np
 # noinspection PyPackageRequirements
 import cv2
@@ -13,6 +15,10 @@ from Application.Config.create_config import jobs_dict, create_dictionary_elemen
 from config_main import PYRAMID_LEVEL
 from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create, get_module_name_from_file
 
+
+############################################################################################################################################
+# Internal functions
+############################################################################################################################################
 
 def process_edge_map(edge_map: Port.arr, port_name_output: Port.arr, port_name_labels_output: Port.arr, connectivity: int):
     """
@@ -50,6 +56,9 @@ def process_edge_map(edge_map: Port.arr, port_name_output: Port.arr, port_name_l
 
     return num_labels, nr_edge_pixels / num_labels, nr_edge_pixels
 
+############################################################################################################################################
+# Init functions
+############################################################################################################################################
 
 def init_edge_label(param_list: list = None) -> JobInitStateReturn:
     """
@@ -63,6 +72,19 @@ def init_edge_label(param_list: list = None) -> JobInitStateReturn:
 
     return JobInitStateReturn(True)
 
+
+# define a init function, function that will be executed at the begging of the wave
+def init_func_global() -> JobInitStateReturn:
+    """
+    Init function for the job.
+    Remember this function is called before the framework gets pictures.
+    :return: INIT or NOT_INIT state for the job
+    """
+    return JobInitStateReturn(True)
+
+############################################################################################################################################
+# Main functions
+############################################################################################################################################
 
 def create_edge_label_map(param_list: list = None) -> bool:
     """
@@ -111,16 +133,6 @@ def create_edge_label_map(param_list: list = None) -> bool:
         return True
 
 
-# define a init function, function that will be executed at the begging of the wave
-def init_func_global() -> JobInitStateReturn:
-    """
-    Init function for the job.
-    Remember this function is called before the framework gets pictures.
-    :return: INIT or NOT_INIT state for the job
-    """
-    return JobInitStateReturn(True)
-
-
 # define a main function, function that will be executed at the begging of the wave
 def main_func_line_filtering(param_list: list = None) -> bool:
     """
@@ -165,7 +177,7 @@ def main_func_line_filtering(param_list: list = None) -> bool:
 
                 for line in p_in.arr:
                     start_point = line[0]
-                    end_point = [0,0]
+                    end_point = [0, 0]
                     idx = 0
                     if line[idx][0] == 0 and line[idx][1] == 0:
                         break
@@ -177,19 +189,14 @@ def main_func_line_filtering(param_list: list = None) -> bool:
                         idx += 1
 
                     line_slope = (end_point[0] - start_point[0]) / (end_point[1] - start_point[1])
-                    # print('line_slope', line_slope)
-                    # print('min_value', min_value)
-                    # print('max_value', max_value)
 
-                    if min_value < line_slope < max_value :
-                    # if True:
+                    if min_value < line_slope < max_value:
                         p_out_lines.arr[line_idx][:] = line
 
                         for el in p_out_lines.arr[line_idx]:
                             p_out_lines_img.arr[el[0], el[1]] = 255
 
                         line_idx += 1
-                    # print(line)
 
                 p_out_lines.set_valid()
                 p_out_lines_img.set_valid()
@@ -202,10 +209,14 @@ def main_func_line_filtering(param_list: list = None) -> bool:
         return True
 
 
-def do_line_theta_filtering_job(port_input_name: str, theta_value, deviation_theta = 10,
-                                nr_lines: int = 50, nr_pt_line:int = 50,
+############################################################################################################################################
+# Job create functions
+############################################################################################################################################
+
+def do_line_theta_filtering_job(port_input_name: str, theta_value: int, deviation_theta: float = 10,
+                                nr_lines: int = 50, nr_pt_line: int = 50,
                                 port_output: str = None, port_img_output: str = None,
-                                level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
+                                level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> Tuple[str, str]:
     """
     Filters lines accordingly to a theta value. 0 for horizontal
     :param port_input_name:  One or several input ports
@@ -227,13 +238,12 @@ def do_line_theta_filtering_job(port_input_name: str, theta_value, deviation_the
                                                                                                     theta_procent='D', theta_p_value=deviation_theta,
                                                                                                     Input=port_input_name)
         port_img_output = '{name}_{theta}_{theta_value}_{theta_procent}_{theta_p_value}_{Input}'.format(name='LINE_FILTERING_IMG',
-                                                                                                    theta='T', theta_value=theta_value.__str__().replace('.', '_'),
-                                                                                                    theta_procent='D', theta_p_value=deviation_theta,
-                                                                                                    Input=port_input_name)
+                                                                                                        theta='T', theta_value=theta_value.__str__().replace('.', '_'),
+                                                                                                        theta_procent='D', theta_p_value=deviation_theta,
+                                                                                                        Input=port_input_name)
 
     output_port_line_img_name = transform_port_name_lvl(name=port_img_output, lvl=level)
     output_port_line_img_size = transform_port_size_lvl(lvl=level, rgb=False)
-
     port_line_output_name = transform_port_name_lvl(name=port_output, lvl=level)
 
     input_port_list = [input_port_name]
@@ -254,3 +264,7 @@ def do_line_theta_filtering_job(port_input_name: str, theta_value, deviation_the
     jobs_dict.append(d)
 
     return port_output, port_img_output
+
+if __name__ == "__main__":
+    # If you want to run something stand-alone
+    pass

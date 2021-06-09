@@ -12,6 +12,13 @@ from Application.Config.util import transform_port_name_lvl, transform_port_size
 Module handles DESCRIPTION OF THE MODULE jobs for the APPL block.
 """
 
+############################################################################################################################################
+# Internal functions
+############################################################################################################################################
+
+############################################################################################################################################
+# Init functions
+############################################################################################################################################
 
 # define a init function, function that will be executed at the begging of the wave
 def init_func_global() -> JobInitStateReturn:
@@ -23,6 +30,10 @@ def init_func_global() -> JobInitStateReturn:
     log_to_file('DATA YOU NEED TO SAVE EVERY FRAME IN CSV')
     return JobInitStateReturn(True)
 
+
+############################################################################################################################################
+# Main functions
+############################################################################################################################################
 
 # define a main function, function that will be executed at the begging of the wave
 def main_func(param_list: list = None) -> bool:
@@ -61,12 +72,15 @@ def main_func(param_list: list = None) -> bool:
 
         return True
 
+############################################################################################################################################
+# Job create functions
+############################################################################################################################################
 
-def do_user_inteface_job(port_input_name: str,
-                         # specific parameters
-                         param_value = 0,
-                         port_img_output: str = None,
-                         level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
+def do_user_interface_job(port_input_name: str,
+                          # specific parameters
+                          param_value = 0,
+                          port_img_output: str = None,
+                          level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
     """
     User-interface of {job}
     Add details of job
