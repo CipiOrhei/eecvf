@@ -3,6 +3,7 @@ Logs
 /Application/Config/json/new_config.json
 /MachineLearning/model_weights
 /TestData/data_road
+/TestData/psb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

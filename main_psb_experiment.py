@@ -156,7 +156,6 @@ def main_training_label(height, width):
 
     Utils.close_files()
 
-
 def train_model(height, width):
     MachineLearning.set_image_input_folder('Logs/ml_results/TRAIN_INPUT')
     MachineLearning.set_label_input_folder('Logs/ml_results/TRAIN_LABEL')
@@ -164,7 +163,7 @@ def train_model(height, width):
     MachineLearning.set_label_validate_folder('Logs/ml_results/VAL_LABEL')
     MachineLearning.clear_model_trained()
     MachineLearning.do_semseg_base(model="vgg_unet", input_height=height, input_width=width, n_classes=2, epochs=15,
-                                   verify_dataset=False, steps_per_epoch=30, val_steps_per_epoch=18, optimizer_name='adam', batch_size=8)
+                                   verify_dataset=False, steps_per_epoch=60, val_steps_per_epoch=18, optimizer_name='adam', batch_size=8)
 
     # Application.set_input_image_folder('TestData/TMBuD/img/TEST/png')
     # Application.set_output_image_folder('Logs/application_results_semseg_iou')
@@ -219,33 +218,41 @@ def prepare_psb_data(set, w_org, h_org):
 
 def main():
     Application.set_output_image_folder('Logs/application')
-    Application.set_input_image_folder('Logs/application_input/RESIZED_1280x320_CROPPED_RAW_LC1')
+    # Application.set_input_image_folder('Logs/application_input/RESIZED_1280x320_CROPPED_RAW_LC1')
+    Application.set_input_image_folder('TestData/psb/intersect')
     Application.delete_folder_appl_out()
 
     class_names = ["NON-ROAD", "ROAD"]
     COLORS = [(0, 0, 255), (255, 0, 255)]
 
-    Application.do_get_image_job(port_output_name='RAW')
-    grey = Application.do_grayscale_transform_job(port_input_name='RAW')
-
-    semseg = Application.do_semseg_base_job(port_input_name='RAW', model='vgg_unet', number_of_classes=2,
-                                   save_img_augmentation=True, save_overlay=True, save_legend_in_image=True,
-                                   list_class_name=class_names, list_colors_to_use=COLORS)
-
-    dilated_semseg = Application.do_image_morphological_dilation_job(port_input_name=semseg, kernel_size=7, input_iteration=2)
-
-    croped_filtered = Application.do_image_crop_job(port_input_name=dilated_semseg, is_rgb=False,
-                                                    start_width_percentage=0, end_width_percentage=100, start_height_percentage=50, end_height_percentage=100)
-
+    # old approach
     # edge = Application.do_first_order_derivative_operators(port_input_name=grey, operator=CONFIG.FILTERS.PREWITT_5x5)
     # filtered = Application.do_matrix_intersect_job(port_input_name=edge, port_input_mask=croped_filtered)
     # thr_edge = Application.do_image_threshold_job(port_input_name=filtered, input_value=50, input_threshold_type=CONFIG.THRESHOLD_CONFIG.THR_BINARY)
     # thin_edge = Application.do_thinning_guo_hall_image_job(port_input_name=thr_edge)
     # labeled = Application.do_edge_label_job(port_input_name=thin_edge)
 
-    filtered_grey = Application.do_gaussian_blur_image_job(port_input_name=grey, sigma=1.4)
-    filtered = Application.do_matrix_intersect_job(port_input_name=filtered_grey, port_input_mask=croped_filtered)
-    Application.do_ed_lines_mod_job(port_input_name=filtered, min_line_length=50, gradient_thr=10, anchor_thr=5,
+    Application.do_get_image_job(port_output_name='RAW')
+    grey = Application.do_grayscale_transform_job(port_input_name='RAW')
+
+    # semseg = Application.do_semseg_base_job(port_input_name='RAW', model='vgg_unet', number_of_classes=2,
+    #                                save_img_augmentation=True, save_overlay=True, save_legend_in_image=True,
+    #                                list_class_name=class_names, list_colors_to_use=COLORS)
+    # dilated_semseg = Application.do_image_morphological_dilation_job(port_input_name=semseg, kernel_size=7, input_iteration=2)
+    # croped_filtered = Application.do_image_crop_job(port_input_name=dilated_semseg, is_rgb=False,
+    #                                                 start_width_percentage=0, end_width_percentage=100, start_height_percentage=50, end_height_percentage=100)
+    # filtered_grey = Application.do_gaussian_blur_image_job(port_input_name=grey, sigma=2)
+    # filtered = Application.do_matrix_intersect_job(port_input_name=filtered_grey, port_input_mask=croped_filtered)
+    # Application.do_ed_lines_mod_job(port_input_name=filtered, min_line_length=20, gradient_thr=10, anchor_thr=5,
+    #                                 line_fit_err_thr=1,
+    #                                 operator=CONFIG.FILTERS.ORHEI_DILATED_5x5,
+    #                                 max_edges=5000, max_points_edge=1000,
+    #                                 max_lines=5000, max_points_line=1000,
+    #                                 port_edges_name_output='EDGES', port_edge_map_name_output='EDGE_IMG',
+    #                                 port_lines_name_output='LINES', port_lines_img_output='LINES_IMG')
+
+    # comment this to switch back
+    Application.do_ed_lines_mod_job(port_input_name=grey, min_line_length=20, gradient_thr=10, anchor_thr=5,
                                     line_fit_err_thr=1,
                                     operator=CONFIG.FILTERS.ORHEI_DILATED_5x5,
                                     max_edges=5000, max_points_edge=1000,
@@ -264,7 +271,8 @@ def main():
 
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
-    Application.configure_show_pictures(ports_to_show=[final + '_L0', final_2 + '_L0'], time_to_show=10)
+    # Application.configure_show_pictures(ports_to_show=[final + '_L0', final_2 + '_L0'], time_to_show=10)
+    Application.configure_show_pictures(ports_to_show=[final_2 + '_L0'], time_to_show=10)
     Application.run_application()
 
     Utils.close_files()
@@ -273,7 +281,7 @@ def main():
 if __name__ == "__main__":
     w = 640
     h = 160
-    set = 'TestData/psb/set4'
+    set = 'TestData/psb/set_fina'
 
     w_org = w * 2
     h_org = h * 2
