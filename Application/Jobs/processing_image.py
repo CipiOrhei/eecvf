@@ -437,7 +437,7 @@ def do_image_crop(param_list: list = None) -> bool:
                 e_h = int(param_list[PORT_IN_END_HEIGHT] / 100 * p_in_image.arr.shape[0])
 
                 if param_list[PORT_OUT_RESIZE_POS] is True:
-                    p_out.arr[:] = p_in_image.arr[s_h:e_h, s_w:e_w]
+                    p_out.arr = p_in_image.arr[s_h:e_h, s_w:e_w]
                 else:
                     p_out.arr[s_h:e_h, s_w:e_w] = p_in_image.arr[s_h:e_h, s_w:e_w]
 

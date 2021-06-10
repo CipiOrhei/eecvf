@@ -15,6 +15,7 @@ import cv2
 Module handles DESCRIPTION OF THE MODULE jobs for the APPL block.
 """
 
+
 ############################################################################################################################################
 # Internal functions
 ############################################################################################################################################
@@ -37,6 +38,10 @@ def init_func_global(param) -> JobInitStateReturn:
 ############################################################################################################################################
 # Main functions
 ############################################################################################################################################
+
+## filter lines
+def mean_y_line(line):
+    return (line[0][1] + line[1][1]) // 2
 
 # define a main function, function that will be executed at the begging of the wave
 def main_func_sb_from_lines(param_list: list = None) -> bool:
@@ -80,23 +85,69 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
         if port_in.is_valid() is True:
             # try:
             if True:
-                    line_idx = 0
-                    lines = list()
+                line_idx = 0
+                lines = list()
+                # transform from lines with multiple points in line with 2 points
+                # print('_________________________________________________________________')
+                # print('input port: ', port_in.arr)
+                for tmp_line in range(len(port_in.arr)):
+                    start_point = port_in.arr[tmp_line][0]
+                    end_point = [0, 0]
+                    idx = 0
+                    if port_in.arr[tmp_line][idx][0] == 0 and port_in.arr[tmp_line][idx][1] == 0:
+                        break
 
-                    for tmp_line in port_in.arr:
-                        start_point = tmp_line[0]
-                        end_point = [0, 0]
-                        idx = 0
-                        if tmp_line[idx][0] == 0 and tmp_line[idx][1] == 0:
+                    while True:
+                        if port_in.arr[tmp_line][idx][0] == 0 and port_in.arr[tmp_line][idx][1] == 0:
                             break
+                        end_point = port_in.arr[tmp_line][idx]
+                        idx += 1
+                    lines.append([start_point, end_point])
 
-                        while True:
-                            if tmp_line[idx][0] == 0 and tmp_line[idx][1] == 0:
-                                break
-                            end_point = tmp_line[idx]
-                            idx += 1
+                print('input port: ', port_in.arr)
+                    # tmp_lines = lines.copy()
+                    # show lines obtain at this step with red
+                    # for el in tmp_lines:
+                    #     start = (el[0][1], el[0][0])
+                    #     end = (el[1][1], el[1][0])
+                    #     cv2.line(p_out_img.arr, start, end, (0, 0, 255), 2)
 
-                        lines.append([start_point, end_point])
+                    # join
+                    # for i in range(len(lines)):
+                i = 0
+                j = len(lines) - 1
+                # print('_____________')
+                # print('start lines: ', lines)
+                while i < j:
+                    t = len(lines)
+                    j = len(lines) - 1
+                    while j > i:
+                    # for j in range(i + 1, len(lines)):  # i + 1??
+                        print('lines= ', lines)
+                        print('len(lines)= ', len(lines))
+                        print('i=',i, ' j=', j)
+                        horizontal_gap = lines[j][0][0] - lines[i][1][0]
+                        vertical_gap = np.abs(mean_y_line(lines[i]) - mean_y_line(lines[j]))
+                        if ((0 <= horizontal_gap <= param_list[PORT_IN_MAX_GAP_HORIZONTAL]) or 0 > horizontal_gap)  and vertical_gap <= param_list[PORT_IN_MAX_GAP_VERTICAL]:
+                            # merge line i and j (append lines)
+                            lines[i][1][0] = lines[j][1][0]  # line i is ending where line j in ending
+                            lines[i][1][1] = mean_y_line(lines[j])
+                            # lines.remove(lines[j])
+                            # del lines[j]
+                            lines.pop(j)
+                            i -= 1
+                            break
+                        j -= 1
+                    if t == len(lines):
+                        i += 1
+
+                    ## end filter lines
+                    # show lines obtain at this step with red
+                    for el in lines:
+                        start = (el[0][1], el[0][0])
+                        end = (el[1][1], el[1][0])
+                        cv2.line(p_out_img.arr, start, end, (255, 0, 0), 2)
+
 
                     line_used = np.zeros(len(lines))
                     boxes = list()
@@ -106,8 +157,8 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
                             vertical_gap = (lines[j][0][1] + lines[j][len(lines[j]) - 1][1]) // 2 - (lines[i][0][1] + lines[j][len(lines[i]) - 1][1]) // 2  # gap between lines. compute mean value of first and last y of line
                             overlap = lines[i][0][0] - lines[j][len(lines[j]) - 1][0]
 
-                            if overlap >= min_overlap and param_list[PORT_IN_MIN_GAP_HORIZONTAL] <= min_overlap <= param_list[PORT_IN_MAX_GAP_HORIZONTAL] and line_used[j] == 0\
-                                and param_list[PORT_IN_MIN_GAP_VERTICAL] <= vertical_gap <= param_list[PORT_IN_MAX_GAP_VERTICAL]:
+                            if overlap >= min_overlap and param_list[PORT_IN_MIN_GAP_HORIZONTAL] <= min_overlap <= param_list[PORT_IN_MAX_GAP_HORIZONTAL] and line_used[j] == 0 \
+                                    and param_list[PORT_IN_MIN_GAP_VERTICAL] <= vertical_gap <= param_list[PORT_IN_MAX_GAP_VERTICAL]:
                                 line_used[j] = 1
 
                                 boxes.append([lines[i][0], lines[j][len(lines[j]) - 1]])
@@ -118,16 +169,15 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
                     log_to_file(p_out.arr.__str__())
                     p_out.set_valid()
 
-
                     for box in boxes:
                         start = (box[0][1], box[0][0])
                         end = (box[1][1], box[1][0])
-                        cv2.rectangle(p_out_img.arr, start, end, (255,0,255), 2)
+                        cv2.rectangle(p_out_img.arr, start, end, (255, 0, 255), 2)
 
-                    for el in lines:
-                        start = (el[0][1], el[0][0])
-                        end = (el[1][1], el[1][0])
-                        cv2.line(p_out_img.arr, start, end, (0,0,255), 2)
+                    # for el in lines:
+                    #     start = (el[0][1], el[0][0])
+                    #     end = (el[1][1], el[1][0])
+                    #     cv2.line(p_out_img.arr, start, end, (0, 0, 255), 2)
 
                     p_out_img.set_valid()
 
@@ -138,6 +188,7 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
             return False
 
         return True
+
 
 ############################################################################################################################################
 # Job create functions
@@ -169,11 +220,11 @@ def do_sb_detection_from_lines_job(port_input_name: str,
                                                                                                                       Input=port_input_name)
 
         port_detection_output = '{name}_MIN_HG_{min_g_h}_MAX_HG_{max_g_h}_MIN_VG_{min_g_v}_MAX_HG_{max_g_v}_{Input}'.format(name='SB_LINES',
-                                                                                                                      min_g_h=min_gap_horizontal_lines.__str__().replace('.', '_'),
-                                                                                                                      max_g_h=max_gap_horizontal_lines.__str__().replace('.', '_'),
-                                                                                                                      min_g_v=min_gap_vertical_lines.__str__().replace('.', '_'),
-                                                                                                                      max_g_v=max_gap_vertical_lines.__str__().replace('.', '_'),
-                                                                                                                      Input=port_input_name)
+                                                                                                                            min_g_h=min_gap_horizontal_lines.__str__().replace('.', '_'),
+                                                                                                                            max_g_h=max_gap_horizontal_lines.__str__().replace('.', '_'),
+                                                                                                                            min_g_v=min_gap_vertical_lines.__str__().replace('.', '_'),
+                                                                                                                            max_g_v=max_gap_vertical_lines.__str__().replace('.', '_'),
+                                                                                                                            Input=port_input_name)
 
     # size can be custom as needed
     port_img_output_name = transform_port_name_lvl(name=port_detection_output, lvl=level)
