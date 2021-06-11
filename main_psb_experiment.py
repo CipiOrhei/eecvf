@@ -261,10 +261,10 @@ def main():
     #                                 port_lines_name_output='LINES', port_lines_img_output='LINES_IMG')
 
     horizontal_line, horizontal_line_img = Application.do_line_theta_filtering_job(port_input_name='LINES', theta_value=0,
-                                                                                   deviation_theta=10, nr_lines=5000, nr_pt_line=1000)
+                                                                                   deviation_theta=15, nr_lines=5000, nr_pt_line=1000)
 
     sb_lines, sb_img, debug_1, debug_2, debug_3 = Application.do_sb_detection_from_lines_job(port_input_name=horizontal_line,
-                                                                  min_gap_horizontal_lines=1, max_gap_horizontal_lines=100, min_gap_vertical_lines=1, max_gap_vertical_lines=5,
+                                                                  min_gap_horizontal_lines=1, max_gap_horizontal_lines=200, min_gap_vertical_lines=1, max_gap_vertical_lines=5,
                                                                   min_gap_horizontal_boxes=1, max_gap_horizontal_boxes=100, min_gap_vertical_boxes=1, max_gap_vertical_boxes=5,
                                                                   min_line_legth=50,
                                                                   debug=True
