@@ -20,6 +20,21 @@ Module handles DESCRIPTION OF THE MODULE jobs for the APPL block.
 # Internal functions
 ############################################################################################################################################
 
+## filter lines
+def mean_y_line(line):
+    return int((line[0][0] + line[1][0]) // 2)
+
+
+def slope(line):
+    try:
+        return (np.abs(int(line[1][0]) - int(line[0][0])) / (int(line[1][1]) - int(line[0][1])))
+    except Exception:
+        return 100
+
+
+def isHorizontal(slope):
+    return -10 <= slope <= 10
+
 ############################################################################################################################################
 # Init functions
 ############################################################################################################################################
@@ -38,22 +53,6 @@ def init_func_global(param) -> JobInitStateReturn:
 ############################################################################################################################################
 # Main functions
 ############################################################################################################################################
-
-## filter lines
-def mean_y_line(line):
-    return int((line[0][0] + line[1][0]) // 2)
-
-
-def slope(line):
-    try:
-        return (np.abs(int(line[1][0]) - int(line[0][0])) / (int(line[1][1]) - int(line[0][1])))
-    except Exception:
-        return 100
-
-
-def isHorizontal(slope):
-    return -10 <= slope <= 10
-
 
 # define a main function, function that will be executed at the begging of the wave
 def main_func_sb_from_lines(param_list: list = None) -> bool:
@@ -331,7 +330,10 @@ def do_sb_detection_from_lines_job(port_input_name: str,
 
     jobs_dict.append(d)
 
-    return port_img_output, port_detection_output
+    if debug:
+        return port_img_output, port_detection_output, port_debug_1_output, port_debug_2_output, port_debug_3_output
+    else:
+        return port_img_output, port_detection_output
 
 
 if __name__ == "__main__":
