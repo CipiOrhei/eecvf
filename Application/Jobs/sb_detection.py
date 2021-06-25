@@ -20,20 +20,32 @@ Module handles DESCRIPTION OF THE MODULE jobs for the APPL block.
 # Internal functions
 ############################################################################################################################################
 
-## filter lines
+def draw_line(image, line):
+    start_point = (line[0][0], line[0][1])
+    end_point = (line[1][0], line[1][1])
+
+    color = (0, 255, 0)
+
+    image2 = cv2.line(image, start_point, end_point, color, 2)
+    return image2
+
+
 def mean_y_line(line):
-    return int((line[0][0] + line[1][0]) // 2)
+    return (line[0][0] + line[1][0]) // 2
 
 
 def slope(line):
     try:
-        return (np.abs(int(line[1][0]) - int(line[0][0])) / (int(line[1][1]) - int(line[0][1])))
+        return (np.abs(line[1][0] - line[0][0])) / (line[1][1] - line[0][1])
     except Exception:
         return 100
 
 
 def isHorizontal(slope):
-    return -10 <= slope <= 10
+    return -5 <= slope <= 5
+
+def gap(line1, line2):
+    return line2[0][0] - line1[0][1]
 
 ############################################################################################################################################
 # Init functions
@@ -119,11 +131,11 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
         if port_in.is_valid() is True:
             # try:
             if True:
-                lines = list()
+                lines = []
 
                 # transform from lines with multiple points in line with 2 points
                 for tmp_line in range(len(port_in.arr)):
-                    start_point = port_in.arr[tmp_line][0]
+                    start_point = [port_in.arr[tmp_line][0][0], port_in.arr[tmp_line][0][1]]
                     end_point = [0, 0]
                     idx = 0
                     if port_in.arr[tmp_line][idx][0] == 0 and port_in.arr[tmp_line][idx][1] == 0:
@@ -132,9 +144,10 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
                     while True:
                         if port_in.arr[tmp_line][idx][0] == 0 and port_in.arr[tmp_line][idx][1] == 0:
                             break
-                        end_point = port_in.arr[tmp_line][idx]
+                        end_point = [port_in.arr[tmp_line][idx][0], port_in.arr[tmp_line][idx][1]]
                         idx += 1
-                    lines.append([start_point, end_point])
+                    # lines.append([start_point, end_point])
+                    lines.append([end_point, start_point])
 
                 if param_list[PORT_IS_DEBUG]:
                     for el in lines:
@@ -145,6 +158,9 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
                 # merge lines
                 i = 0
                 n = len(lines)
+                max_horizontal_gap = param_list[PORT_IN_MAX_GAP_HORIZONTAL]
+                min_horizontal_gap = param_list[PORT_IN_MIN_GAP_HORIZONTAL]
+                max_vertical_gap = param_list[PORT_IN_MAX_GAP_VERTICAL]
                 while i < n:
                     current_line = lines[i]
                     current_line_slope = slope(current_line)
@@ -153,11 +169,12 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
                         current_tmp_line = lines[j]
                         current_tmp_line_slope = slope(current_tmp_line)
                         horizontal_gap = current_tmp_line[0][1] - current_line[0][1]
+
                         if isHorizontal(current_line_slope) and isHorizontal(current_tmp_line_slope) and \
-                                np.abs(mean_y_line(current_line) - mean_y_line(current_tmp_line)) <= param_list[PORT_IN_MAX_GAP_VERTICAL] and \
-                                ((0 <= horizontal_gap <= param_list[PORT_IN_MAX_GAP_HORIZONTAL]) or 0 > horizontal_gap):
+                                np.abs(mean_y_line(current_line) - mean_y_line(current_tmp_line)) <= max_vertical_gap and \
+                                ((max_horizontal_gap >= horizontal_gap > min_horizontal_gap) or min_horizontal_gap > horizontal_gap > -max_horizontal_gap):
                             lines[i][1][1] = current_tmp_line[1][1]
-                            lines[i][1][0] = current_tmp_line[0][0]
+                            lines[i][1][0] = mean_y_line(current_tmp_line)
                             lines.pop(j)
                             j -= 1
                             n -= 1
@@ -169,6 +186,7 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
                 i = 0
                 while i < n:
                     line_len = np.abs(int(lines[i][0][1]) - int(lines[i][1][1]))
+                    # print(line_len)
                     if line_len < min_line_length:
                         lines.pop(i)
                         i = 0
@@ -177,8 +195,8 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
 
                 if param_list[PORT_IS_DEBUG]:
                     for el in lines:
-                        start = (el[0][1], el[0][0])
-                        end = (el[1][1], el[1][0])
+                        start = (el[1][1], el[1][0])
+                        end = (el[0][1], el[0][0])
                         cv2.line(p_out_img_debug_2.arr, start, end, (0, 0, 255), 1)
 
                 ## end filter lines
@@ -189,8 +207,8 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
                 #     cv2.line(p_out_img.arr, start, end, (255, 0, 0), 2)
                 #
                 #
-                line_used = np.zeros(len(lines))
                 boxes = list()
+                line_used = np.zeros(len(lines))
                 for i in range(len(lines)):
                     min_overlap = lines[i][len(lines[i]) - 1][1] - lines[i][0][1] // 2
                     # min_overlap = 150
@@ -199,7 +217,7 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
                             vertical_gap = (lines[j][0][0] + lines[j][len(lines[j]) - 1][0]) // 2 - (lines[i][0][0] + lines[j][len(lines[i]) - 1][0]) // 2  # gap between lines. compute mean value of first and last y of line
                             overlap = lines[i][0][1] - lines[j][len(lines[j]) - 1][1]
 
-                            if overlap >= min_overlap and line_used[j] == 0 and 10 <= vertical_gap <= 50:
+                            if overlap >= min_overlap and line_used[j] == 0 and param_list[PORT_IN_MIN_GAP_VERTICAL_BOXES] <= vertical_gap <= param_list[PORT_IN_MAX_GAP_VERTICAL_BOXES]:
                                 line_used[i] = 1
                                 line_used[j] = 1
 
@@ -210,7 +228,6 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
 
                                 boxes.append([[top, left], [bottom, right]])
                                 break
-                                # new box between line i and j'
 
                 if param_list[PORT_IS_DEBUG]:
                     p_out_img_debug_3.arr = p_out_img_debug_2.arr.copy()
