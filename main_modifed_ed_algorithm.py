@@ -9,7 +9,7 @@ import config_main as CONFIG
 # noinspection PyUnresolvedReferences
 import Utils
 
-def main_sablon():
+def main_diff_operators():
     """
     Main function of framework Please look in example_main for all functions
     you can use
@@ -22,7 +22,7 @@ def main_sablon():
     Application.do_get_image_job(port_output_name='RAW')
     Application.do_grayscale_transform_job(port_input_name='RAW', port_output_name='GRAY_RAW')
 
-    list = []
+    list_to_eval_edge = []
 
     first_order_edge = [
         CONFIG.FILTERS.SOBEL_3x3
@@ -37,30 +37,37 @@ def main_sablon():
 
     for edge in first_order_edge:
         for kernel_gaus in [9]:
-            for grad_thr in [50]:
+            for grad_thr in [40, 50]:
                 for anc_thr in [10]:
                     for sc_int in [1]:
                         blur = Application.do_gaussian_blur_image_job(port_input_name='GRAY_RAW', kernel_size=kernel_gaus, sigma=0)
                         e3, e4 = Application.do_edge_drawing_mod_job(port_input_name=blur, operator=edge,
                                                                      gradient_thr=grad_thr, anchor_thr=anc_thr, scan_interval=sc_int,
                                                                      max_edges=100, max_points_edge=100)
-                        list.append(e3 + '_L0')
+                        list_to_eval_edge.append(e3 + '_L0')
 
 
     Application.create_config_file()
-    Application.configure_save_pictures(ports_to_save=list, job_name_in_port=True)
+    Application.configure_save_pictures(ports_to_save=list_to_eval_edge, job_name_in_port=True)
     # Application.configure_show_pictures(ports_to_show=list, time_to_show=0)
 
     Application.run_application()
 
-    # Benchmarking.run_FOM_benchmark(input_location='Logs/appl_temp/',
-    #                                gt_location='TestData/BSR/BSDS500/data/groundTruth/test_img',
-    #                                raw_image='TestData/BSR/BSDS500/data/images/test',
-    #                                jobs_set=list)
-    # Benchmarking.run_PSNR_benchmark(input_location='Logs/appl_temp/',
-    #                                gt_location='TestData/BSR/BSDS500/data/groundTruth/test_img',
-    #                                raw_image='TestData/BSR/BSDS500/data/images/test',
-    #                                jobs_set=list)
+    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/test',
+                                                raw_image='TestData/BSR/BSDS500/data/images/test',
+                                                jobs_set=list_to_eval_edge, do_thinning=False)
+
+    Utils.plot_first_cpm_results(prefix='EDGE_DRAWING_MOD_', level='L0', order_by='f1', name='edge_natural_list',
+                                 list_of_data=list_to_eval_edge, number_of_series=50,
+                                 inputs=[''], self_contained_list=True, set_legend_left=False,
+                                 suffix_to_cut_legend='_S_0_GRAY_RAW_L0',
+                                 replace_list=[('EDGE_DRAWING_MOD_THR_', 'TG='), ('_ANC_THR_', ' TA='), ('_SCAN_', ' SI='),
+                                               ('_SOBEL_3x3_', ' Sobel'), ('_PREWITT_3x3_', ' Prewitt'), ('_SCHARR_3x3_', ' Scharr'),
+                                               ('_KROON_3x3_', ' Kroon'), ('_KITCHEN_3x3_', ' Kitchen'), ('_ORHEI_3x3_', ' Orhei'),
+                                               ('_KAYYALI_3x3_', ' Kayyali'),('_KIRSCH_3x3_', ' Kirsch'), ('GAUSS_BLUR_K_9', ''),],
+                                 save_plot=True, show_plot=False, set_all_to_legend=False)
+
     Utils.close_files()
 
 def main():
@@ -70,19 +77,15 @@ def main():
     """
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/test')
     Application.set_output_image_folder('Logs/appl_temp_2')
-    # Application.delete_folder_appl_out()
-    # Benchmarking.delete_folder_benchmark_out()
+
+    Application.delete_folder_appl_out()
+    Benchmarking.delete_folder_benchmark_out()
 
     Application.do_get_image_job(port_output_name='RAW')
     Application.do_grayscale_transform_job(port_input_name='RAW', port_output_name='GRAY_RAW')
 
     smoothing_list = list()
     edge_to_evaluate = list()
-
-    # for kernel_size in [3, 5]:
-    #         median_output_name = 'MEDIAN_K_' + str(kernel_size)
-    #         Application.do_median_blur_job(port_input_name='GRAY_RAW', kernel_size=kernel_size, port_output_name=median_output_name)
-    #         smoothing_list.append(median_output_name)
 
     for kernel_size in [9]:
             median_output_name = 'GAUSS_K_' + str(kernel_size)
@@ -140,28 +143,82 @@ def main():
 
     Application.run_application()
 
-    # Benchmarking.run_FOM_benchmark(input_location='Logs/application_results',
-    #                                gt_location='Logs/appl_temp/EDGE_DRAWING_MOD_THR_50_ANC_THR_10_SCAN_1_SOBEL_3x3_GAUSS_BLUR_K_9_S_0_GRAY_RAW_L0',
-    #                                # gt_location='TestData/BSR/BSDS500/data/groundTruth/test_img',
-    #                                raw_image='TestData/BSR/BSDS500/data/images/test',
-    #                                jobs_set=edge_to_evaluate)
-    # Benchmarking.run_PSNR_benchmark(input_location='Logs/application_results',
-    #                                gt_location='Logs/appl_temp/EDGE_DRAWING_MOD_THR_50_ANC_THR_10_SCAN_1_SOBEL_3x3_GAUSS_BLUR_K_9_S_0_GRAY_RAW_L0',
-    #                                raw_image='TestData/BSR/BSDS500/data/images/test',
-    #                                jobs_set=edge_to_evaluate)
+    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/test',
+                                                raw_image='TestData/BSR/BSDS500/data/images/test',
+                                                jobs_set=edge_to_evaluate, do_thinning=False)
 
-    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/test',
-    #                                             raw_image='TestData/BSR/BSDS500/data/images/test',
-    #                                             jobs_set=edge_to_evaluate, do_thinning=False)
+    Utils.plot_first_cpm_results(prefix='EDGE_DRAWING_MOD_', level='L0', order_by='f1', name='new_approach',
+                                 list_of_data=edge_to_evaluate, number_of_series=20,
+                                 inputs=[''], self_contained_list=True, set_legend_left=False,
+                                 # suffix_to_cut_legend='_S_0_GRAY_RAW_L0',
+                                 replace_list=[('ED_2', ''), ('0_5_0_567_GAUSS_K_', ' GK='), ('_SCAN_', ' SI='),('_L0', ''),
+                                               ('_SOBEL_3x3_', ' Sobel'), ('_PREWITT_3x3_', ' Prewitt'), ('_SCHARR_3x3_', ' Scharr'),
+                                               ('_KROON_3x3_', ' Kroon'), ('_KITCHEN_3x3_', ' Kitchen'), ('_ORHEI_3x3_', ' Orhei'),
+                                               ('_KAYYALI_3x3_', ' Kayyali'),('_KIRSCH_3x3_', ' Kirsch'), ('GAUSS_BLUR_K_9', '')
+                                               ],
+                                 save_plot=True, show_plot=False, set_all_to_legend=False)
 
-    # Utils.create_latex_fom_table(number_decimal=3, number_of_series=15)
-    # print('_______')
-    # Utils.create_latex_fom_table(number_decimal=3, number_of_series=15, data='PSNR')
+    Utils.close_files()
+
+
+def main_sobel_parsing():
+    """
+    Main function of framework Please look in example_main for all functions
+    you can use
+    """
+    Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/test')
+
+    Application.delete_folder_appl_out()
+    Benchmarking.delete_folder_benchmark_out()
+
+    Application.do_get_image_job(port_output_name='RAW')
+    Application.do_grayscale_transform_job(port_input_name='RAW', port_output_name='GRAY_RAW')
+
+    list = []
+
+    first_order_edge = [
+        CONFIG.FILTERS.SOBEL_3x3
+    ]
+
+    for edge in first_order_edge:
+        for kernel_gaus in [3, 5, 7, 9]:
+            for grad_thr in [10,  30, 40, 50, 60, 70, 90, 110, 130, 150]:
+                for anc_thr in [10, 20, 30, 40, 60]:
+                    for sc_int in [1, 3, 5]:
+                        blur = Application.do_gaussian_blur_image_job(port_input_name='GRAY_RAW', kernel_size=kernel_gaus, sigma=0)
+                        e3, e4 = Application.do_edge_drawing_mod_job(port_input_name=blur, operator=edge,
+                                                                     gradient_thr=grad_thr, anchor_thr=anc_thr, scan_interval=sc_int,
+                                                                     max_edges=100, max_points_edge=100)
+                        list.append(e3 + '_L0')
+
+
+    Application.create_config_file()
+    Application.configure_save_pictures(ports_to_save=list)
+    # Application.configure_show_pictures(ports_to_show=list, time_to_show=0)
+
+    Application.run_application()
+
+    # Do bsds benchmarking
+    # Be ware not to activate job_name_in_port in Application.configure_save_pictures
+    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/test',
+                                                raw_image='TestData/BSR/BSDS500/data/images/test',
+                                                jobs_set=list, do_thinning=False)
+
+    Utils.plot_first_cpm_results(prefix='EDGE_DRAWING_MOD_', level='L0', order_by='f1', name='edge_sobel_thr_finding_natural',
+                                 list_of_data=list, number_of_series=25,
+                                 inputs=[''], self_contained_list=True, set_legend_left=False,
+                                 suffix_to_cut_legend='_S_0_GRAY_RAW_L0',
+                                 replace_list=[('EDGE_DRAWING_MOD_THR_', 'TG='), ('_ANC_THR_', ' TA='), ('_SCAN_', ' SI='), ('_SOBEL_3x3_GAUSS_BLUR_K_', ' GK=')],
+                                 save_plot=True, show_plot=False, set_all_to_legend=False)
 
     Utils.close_files()
 
 
 if __name__ == "__main__":
-    # main_sablon()
+    main_sobel_parsing()
+    Utils.reopen_files()
+    main_diff_operators()
+    Utils.reopen_files()
     main()

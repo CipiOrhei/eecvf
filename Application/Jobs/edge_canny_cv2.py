@@ -38,7 +38,7 @@ def calc_threshold(config: int = CANNY_CONFIG.FIX_THRESHOLD, val: int = 0) -> tu
 
     elif config == CANNY_CONFIG.OTSU_HALF:
         # http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.403.5666&rep=rep1&type=pdf#page=120
-        return int(val * 0.5), val
+        return int(val * 0.5), int(val)
 
     elif config == CANNY_CONFIG.OTSU_MEDIAN_SIGMA or CANNY_CONFIG.MEDIAN_SIGMA:
         # https://www.pyimagesearch.com/2015/04/06/zero-parameter-automatic-canny-edge-detection-with-python-and-opencv/

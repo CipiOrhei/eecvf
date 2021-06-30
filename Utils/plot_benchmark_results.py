@@ -298,8 +298,8 @@ def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: li
     plt.set_cmap('Greens')
     plt.box(on=True)
     plt.grid(b=True, linestyle='--')
-    plt.xticks(ticks=[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], fontsize=10)
-    plt.yticks(ticks=[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], fontsize=10)
+    plt.xticks(ticks=[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], fontsize=14)
+    plt.yticks(ticks=[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], fontsize=14)
     plt.ylim(ymin=0)  # this line
     plt.xlim(xmin=0)  # this line
     plt.xlabel(xlabel='Recall', fontsize=15)
@@ -351,9 +351,9 @@ def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: li
     fig.set_size_inches(15, 15)
 
     if set_legend_left is True:
-        plt.legend(fancybox=True, fontsize='medium', loc='center left', bbox_to_anchor=(1, 0.5))
+        plt.legend(fancybox=True, fontsize='x-large', loc='center left', bbox_to_anchor=(1, 0.5))
     else:
-        plt.legend(fancybox=True, fontsize='medium', loc='best')
+        plt.legend(fancybox=True, fontsize='x-large', loc='best')
 
     if save_plot is True:
         plt.savefig(os.path.join(save_location, '{}.jpg'.format(name)), bbox_inches='tight')
