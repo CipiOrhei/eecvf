@@ -1,7 +1,7 @@
 from config_main import CUDA_GPU
-########################################################################################################################
+############################################################################################################################################
 # service jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.create_config import create_config_file
 from Application.Config.service_job_create import set_input_image_folder
 from Application.Config.service_job_create import set_input_image_from_txt_folder
@@ -17,22 +17,22 @@ from Application.Config.service_job_create import create_list_ports_start_with_w
 from Application.Config.service_job_create import create_folder_from_list_ports
 from Application.Config.service_job_create import create_folders_from_list_ports
 from .run_appl import run_application
-########################################################################################################################
+############################################################################################################################################
 # Input jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_get_image_job
 from Application.Config.job_create import do_get_image_from_txt_job
 from Application.Config.job_create import do_get_satellite_image_job
 from Application.Config.job_create import do_get_video_job
 from Application.Config.job_create import do_get_video_capture_job
-########################################################################################################################
+############################################################################################################################################
 # Pyramid level processing jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_pyramid_level_down_job
 from Application.Config.job_create import do_pyramid_level_up_job
-########################################################################################################################
+############################################################################################################################################
 # Image processing jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_max_pixel_image_job
 from Application.Config.job_create import do_median_pixel_image_job
 from Application.Config.job_create import do_mean_pixel_image_job
@@ -51,9 +51,9 @@ from Application.Config.job_create import do_gamma_correction_image_job
 from Application.Config.job_create import do_pixelate_image_job
 from Application.Jobs.processing_image import do_resize_image_job
 from Application.Jobs.processing_image import do_blending_images_job
-########################################################################################################################
+############################################################################################################################################
 # Image blurring jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_gaussian_blur_image_job
 from Application.Config.job_create import do_median_blur_job
 from Application.Config.job_create import do_mean_blur_job
@@ -67,9 +67,9 @@ from Application.Config.job_create import do_sharpen_filter_job
 from Application.Config.job_create import do_unsharp_filter_job
 from Application.Config.job_create import do_isef_filter_job
 from Application.Config.job_create import do_motion_blur_filter_job
-########################################################################################################################
+############################################################################################################################################
 # Image morphology jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_image_morphological_erosion_job
 from Application.Config.job_create import do_image_morphological_dilation_job
 from Application.Config.job_create import do_image_morphological_open_job
@@ -80,22 +80,22 @@ from Application.Config.job_create import do_image_morphological_black_hat_job
 from Application.Config.job_create import do_morphological_hit_and_miss_transformation_job
 from Application.Config.job_create import do_image_morphological_cv2_job
 from Application.Config.job_create import do_morphological_thinning_job
-########################################################################################################################
+############################################################################################################################################
 # Kernel processing jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_kernel_convolution_job
 from Application.Config.job_create import do_deriche_kernel_convolution_job
 from Application.Config.job_create import do_kernel_cross_convolution_job
 from Application.Config.job_create import do_kernel_frei_chen_convolution_job
 from Application.Config.job_create import do_kernel_navatia_babu_convolution_job
-########################################################################################################################
+############################################################################################################################################
 # edge detection - magnitude gradient jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_gradient_magnitude_job
 from Application.Config.job_create import do_first_order_derivative_operators
-########################################################################################################################
+############################################################################################################################################
 # edge detection - directional gradient jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_gradient_magnitude_cross_job
 from Application.Config.job_create import do_gradient_navatia_babu_job
 from Application.Config.job_create import do_gradient_frei_chen_job
@@ -106,9 +106,9 @@ from Application.Config.job_create import do_kirsch_3x3_cross_job
 from Application.Config.job_create import do_robinson_3x3_cross_job
 from Application.Config.job_create import do_robinson_modified_3x3_cross_job
 from Application.Config.job_create import do_prewitt_3x3_cross_job
-########################################################################################################################
+############################################################################################################################################
 # edge detection - Canny jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_canny_from_kernel_convolution_job
 from Application.Config.job_create import do_canny_config_job
 from Application.Config.job_create import do_canny_fix_threshold_job
@@ -118,9 +118,9 @@ from Application.Config.job_create import do_canny_otsu_median_sigma_job
 from Application.Config.job_create import do_canny_median_sigma_job
 from Application.Config.job_create import do_canny_mean_sigma_job
 from Application.Config.job_create import do_deriche_canny_job
-########################################################################################################################
+############################################################################################################################################
 # edge detection - second derivative
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_laplacian_pyramid_from_img_diff_job
 from Application.Config.job_create import do_laplacian_from_img_diff_job
 from Application.Config.job_create import do_laplace_job
@@ -132,41 +132,41 @@ from Application.Config.job_create import do_shen_castan_job
 from Application.Config.job_create import do_marr_hildreth_job
 from Application.Config.job_create import do_dog_job
 from Application.Config.job_create import do_dob_job
-########################################################################################################################
+############################################################################################################################################
 # edge detection algorithms
-########################################################################################################################
+############################################################################################################################################
 from Application.Jobs.edge_edline import do_edge_drawing_job
 from Application.Jobs.edge_edline import do_edge_drawing_mod_job
-########################################################################################################################
+############################################################################################################################################
 # line/shape detection
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_hough_lines_job
 from Application.Jobs.edge_edline import do_ed_lines_job
 from Application.Jobs.edge_edline import do_ed_lines_mod_job
 from Application.Config.job_create import do_hough_circle_job
-########################################################################################################################
+############################################################################################################################################
 # Image threshold jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_otsu_job
 from Application.Jobs.thresholding_image import do_multi_otsu_job
 from Application.Config.job_create import do_image_threshold_job
 from Application.Config.job_create import do_image_adaptive_threshold_job
-########################################################################################################################
+############################################################################################################################################
 # Skeletonization/thinning jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_thinning_guo_hall_image_job
-########################################################################################################################
+############################################################################################################################################
 # Line/edge connectivity jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_edge_label_job
 from Application.Jobs.line_connectivity import do_line_theta_filtering_job
-########################################################################################################################
+############################################################################################################################################
 # Value manipulations
-########################################################################################################################
+############################################################################################################################################
 from Application.Jobs.value_manipulating import do_value_manipulation_job
-########################################################################################################################
+############################################################################################################################################
 # Multiple image jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Config.job_create import do_matrix_difference_job
 from Application.Config.job_create import do_matrix_difference_1_px_offset_job
 from Application.Config.job_create import do_matrix_sum_job
@@ -175,22 +175,26 @@ from Application.Config.job_create import do_matrix_bitwise_or_job
 from Application.Config.job_create import do_matrix_bitwise_or_4_job
 from Application.Config.job_create import do_matrix_bitwise_xor_job
 from Application.Config.job_create import do_matrix_intersect_job
-########################################################################################################################
+############################################################################################################################################
 # Augmentation jobs
-########################################################################################################################
+############################################################################################################################################
 from Application.Jobs.image_augmentation import do_class_correlation
+############################################################################################################################################
+# Texture jobs
+############################################################################################################################################
+from Application.Jobs.grey_comatrix import do_glcm_job
 ############################################################################################################################################
 # Feature jobs
 ############################################################################################################################################
 from Application.Jobs.feature_detection import do_sift_job
-########################################################################################################################
+############################################################################################################################################
 # Deinterlacing jobs
-########################################################################################################################
+############################################################################################################################################
 if CUDA_GPU:
     from Application.Jobs.deinterlacing import do_deep_video_deinterlacing
-########################################################################################################################
+############################################################################################################################################
 # U-Net jobs
-########################################################################################################################
+############################################################################################################################################
 if CUDA_GPU:
     from Application.Config.job_create import do_u_net_edge
 ############################################################################################################################################

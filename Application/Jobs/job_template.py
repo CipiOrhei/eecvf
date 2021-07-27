@@ -108,11 +108,14 @@ def do_user_interface_job(port_input_name: str,
 
     # size can be custom as needed
     port_img_output_name = transform_port_name_lvl(name=port_img_output, lvl=level)
-    #     port_des_output_name_size = '({nr_kp}, 128)'.format(nr_kp=number_features)
+    # new_size = (new_height, new_width)
+    # level = PYRAMID_LEVEL.add_level(size=new_size)
+    # port_des_output_name_size = '({nr_kp}, 128)'.format(nr_kp=number_features)
     port_img_output_name_size = transform_port_size_lvl(lvl=level, rgb=True)
 
     input_port_list = [input_port_name]
     main_func_list = [input_port_name, wave_offset, param_value, port_img_output_name]
+    # ['port name', 'port size', 'port type', 'is image']
     output_port_list = [(port_img_output_name, port_img_output_name_size, 'B', True)]
 
     job_name = job_name_create(action='JOB_NAME', input_list=input_port_list, wave_offset=[wave_offset], level=level)
