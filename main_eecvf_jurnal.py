@@ -24,7 +24,7 @@ def prepare_LabelMe_dataset(height, width):
     :param width: width of image to train
     :return: None
     """
-    Application.set_input_image_folder(r'c:\repos\eecvf\TestData\building_labels_database\LabelMeFacade\labels')
+    Application.set_input_image_folder('TestData/building_labels_database/LabelMeFacade/labels')
     Application.set_output_image_folder('Logs/LabelMeFacade/labels')
     Application.do_get_image_job(port_output_name='RAW')
     #                VARIOUS      BUILDING        CAR            DOOR          PAVEMENT         ROAD           SKY       VEGETATION      WINDOW
