@@ -15,11 +15,22 @@ and dependencies.
 
 If you are using the code/data provided here in a publication, please consider citing our papers.
 
+    @article{orhei2021end,
+      title={End-To-End Computer Vision Framework: An Open-Source Platform for Research and Education},
+      author={Orhei, Ciprian and Vert, Silviu and Mocofan, Muguras and Vasiu, Radu},
+      journal={Sensors},
+      volume={21},
+      number={11},
+      pages={3691},
+      year={2021},
+      publisher={Multidisciplinary Digital Publishing Institute}
+    }
+
     @inproceedings{orhei2020end,
-      title={End-to-End Computer Vision Framework},
-      author={Orhei, Ciprian and Mocofan, Muguras and Vert, Silviu and Vasiu, Radu},
-      booktitle={2020 International Symposium on Electronics and Telecommunications (ISETC)},
-      pages={1--4},
-      year={2020},
-      organization={IEEE}
+        title={End-to-End Computer Vision Framework},
+        author={Orhei, Ciprian and Mocofan, Muguras and Vert, Silviu and Vasiu, Radu},
+        booktitle={2020 International Symposium on Electronics and Telecommunications (ISETC)},
+        pages={1--4},
+        year={2020},
+        organization={IEEE}
     }
