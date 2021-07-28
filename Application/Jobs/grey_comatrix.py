@@ -161,42 +161,49 @@ def main_func(param_list: list = None) -> bool:
                     contrast = skimage.feature.greycoprops(output, 'contrast')
                     p_out_contrast.arr[:] = contrast[-1][-1]
                     log_to_file(p_out_contrast.arr[0].__str__())
+                    p_out_contrast.set_valid()
 
                 if param_list[PORT_IN_DIS]:
                     p_out_dissimilarity = get_port_from_wave(name=param_list[PORT_IN_DIS_NAME])
                     dissimilarity = skimage.feature.greycoprops(output, 'dissimilarity')
                     p_out_dissimilarity.arr[:] = dissimilarity[-1][-1]
                     log_to_file(p_out_dissimilarity.arr[0].__str__())
+                    p_out_dissimilarity.set_valid()
 
                 if param_list[PORT_IN_HOM]:
                     p_out_homogeneity = get_port_from_wave(name=param_list[PORT_IN_HOM_NAME])
                     homogeneity = skimage.feature.greycoprops(output, 'homogeneity')
                     p_out_homogeneity.arr[:] = homogeneity[-1][-1]
                     log_to_file(p_out_homogeneity.arr[0].__str__())
+                    p_out_homogeneity.set_valid()
 
                 if param_list[PORT_IN_ASM]:
                     p_out_asm = get_port_from_wave(name=param_list[PORT_IN_ASM_NAME])
                     asm = skimage.feature.greycoprops(output, 'ASM')
                     p_out_asm.arr[:] = asm[-1][-1]
                     log_to_file(p_out_asm.arr[0].__str__())
+                    p_out_asm.set_valid()
 
                 if param_list[PORT_IN_ENE]:
                     p_out_energy = get_port_from_wave(name=param_list[PORT_IN_ENE_NAME])
                     energy = skimage.feature.greycoprops(output, 'energy')
                     p_out_energy.arr[:] = energy[-1][-1]
                     log_to_file(p_out_energy.arr[0].__str__())
+                    p_out_energy.set_valid()
 
                 if param_list[PORT_IN_COR]:
                     p_out_correlation = get_port_from_wave(name=param_list[PORT_IN_COR_NAME])
                     correlation = skimage.feature.greycoprops(output, 'correlation')
                     p_out_correlation.arr[:] = correlation[-1][-1]
                     log_to_file(p_out_correlation.arr[0].__str__())
+                    p_out_correlation.set_valid()
 
                 if param_list[PORT_IN_ENT]:
                     p_out_entropy = get_port_from_wave(name=param_list[PORT_IN_ENT_NAME])
                     entropy = skimage.measure.shannon_entropy(output)
                     p_out_entropy.arr[:] = entropy
                     log_to_file(p_out_entropy.arr[0].__str__())
+                    p_out_entropy.set_valid()
 
 
                 port_out.set_valid()
@@ -288,6 +295,9 @@ def do_glcm_job(port_input_name: str,
     else:
         output_port_list = [(port_img_output_name, port_img_output_name_size, 'h', True)]
 
+    init_param_list = [calculate_contrast, calculate_dissimilarity, calculate_homogeneity, calculate_ASM,
+                       calculate_energy, calculate_correlation, calculate_entropy, port_img_output_name]
+
     port_img_output_name = transform_port_name_lvl(name=port_img_output + '_CON', lvl=level)
     output_port_list.append((port_img_output_name, "1", 'f', False))
     main_func_list.append(port_img_output_name)
@@ -316,10 +326,7 @@ def do_glcm_job(port_input_name: str,
     output_port_list.append((port_img_output_name, "1", 'f', False))
     main_func_list.append(port_img_output_name)
 
-    init_param_list = [calculate_contrast, calculate_dissimilarity, calculate_homogeneity, calculate_ASM,
-                       calculate_energy, calculate_correlation, calculate_entropy, port_img_output_name]
-
-    job_name = job_name_create(action='GLCM', input_list=input_port_list, wave_offset=[wave_offset], level=level)
+    job_name = job_name_create(action='GLCM D=' + distance.__str__() + ' A=' + angles.__str__(), input_list=input_port_list, wave_offset=[wave_offset], level=level)
 
     d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
                                   job_name=job_name,
