@@ -13,11 +13,10 @@ import Utils
 
 def main_get_img_from_movie():
     Application.set_input_video(r'c:\repos\pattern_movies\texturi_dinamice\649f510.avi')
+    Application.set_output_image_folder('Logs/input_data')
 
     Application.delete_folder_appl_out()
     Benchmarking.delete_folder_benchmark_out()
-
-    Application.set_output_image_folder('Logs/input_data')
 
     Application.do_get_video_job(port_output_name='RAW')
     frame_0, frame_1 = Application.do_deep_video_deinterlacing(port_input_name='RAW')
@@ -28,7 +27,7 @@ def main_get_img_from_movie():
 
     Utils.close_files()
 
-def main():
+def main(t):
     Application.set_input_image_folder('Logs/input_data/DEEP_DEINTERLACE_FRAME_1_L0')
     Application.set_output_image_folder('Logs/process_data')
 
@@ -81,17 +80,19 @@ def main():
     for el in range(len(list_to_plot)):
         list_to_plot[el] += '_LC0'
 
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='CONTRAST', title='649f510')
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='DISSIMILARITY', title='649f510')
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='HOMOGENEITY', title='649f510')
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='ASM', title='649f510')
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='ENERGY', title='649f510')
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='CORRELATION', title='649f510')
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='ENTROPY', title='649f510')
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='CONTRAST', title='649f510', table_number=t)
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='DISSIMILARITY', title='649f510', table_number=t)
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='HOMOGENEITY', title='649f510', table_number=t)
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='ASM', title='649f510', table_number=t)
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='ENERGY', title='649f510', table_number=t)
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='CORRELATION', title='649f510', table_number=t)
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='ENTROPY', title='649f510', table_number=t)
 
     Utils.close_files()
 
 
 if __name__ == "__main__":
-    # main_get_img_from_movie()
-    main()
+    main_get_img_from_movie()
+    Utils.reopen_files()
+    # if we run the movie->img transformation set t=2 else t=1
+    main(t=2)

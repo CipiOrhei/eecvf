@@ -70,9 +70,9 @@ def save_pict_to_file() -> None:
                     if name is None:
                         # noinspection PyUnresolvedReferences
                         if config_main.APPL_SAVE_JOB_NAME:
-                            cv2.imwrite(img_location + '/' + str(global_var_handler.FRAME) + '_' + port.get_name() + extension, port.arr)
+                            cv2.imwrite(img_location + '/' + '{:08d}'.format(global_var_handler.FRAME) + '_' + port.get_name() + extension, port.arr)
                         else:
-                            cv2.imwrite(img_location + '/' + str(global_var_handler.FRAME) + extension, port.arr)
+                            cv2.imwrite(img_location + '/' + '{:08d}'.format(global_var_handler.FRAME) + extension, port.arr)
                     else:
                         name = name.split('.')[0] + extension
                         if config_main.APPL_SAVE_JOB_NAME:
