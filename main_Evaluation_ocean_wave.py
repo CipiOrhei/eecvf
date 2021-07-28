@@ -11,8 +11,8 @@ import config_main as CONFIG
 import Utils
 
 
-def main_get_img_from_movie():
-    Application.set_input_video(r'c:\repos\pattern_movies\texturi_dinamice\649f510.avi')
+def main_get_img_from_movie(video):
+    Application.set_input_video(video)
     Application.set_output_image_folder('Logs/input_data')
 
     Application.delete_folder_appl_out()
@@ -27,7 +27,7 @@ def main_get_img_from_movie():
 
     Utils.close_files()
 
-def main(t):
+def main(t, title):
     Application.set_input_image_folder('Logs/input_data/DEEP_DEINTERLACE_FRAME_1_L0')
     Application.set_output_image_folder('Logs/process_data')
 
@@ -41,7 +41,7 @@ def main(t):
                                                 calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
                                                 calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
 
-    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[1], angles=[np.pi],
+    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[1], angles=[np.pi/2],
                                                 calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
                                                 calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
 
@@ -53,7 +53,7 @@ def main(t):
                                                 calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
                                                 calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
 
-    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[2], angles=[np.pi],
+    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[2], angles=[np.pi/2],
                                                 calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
                                                 calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
 
@@ -65,7 +65,7 @@ def main(t):
                                                 calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
                                                 calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
 
-    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[4], angles=[np.pi],
+    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[4], angles=[np.pi/2],
                                                 calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
                                                 calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
 
@@ -80,19 +80,19 @@ def main(t):
     for el in range(len(list_to_plot)):
         list_to_plot[el] += '_LC0'
 
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='CONTRAST', title='649f510', table_number=t)
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='DISSIMILARITY', title='649f510', table_number=t)
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='HOMOGENEITY', title='649f510', table_number=t)
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='ASM', title='649f510', table_number=t)
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='ENERGY', title='649f510', table_number=t)
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='CORRELATION', title='649f510', table_number=t)
-    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='ENTROPY', title='649f510', table_number=t)
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='CONTRAST', title=title, table_number=t)
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='DISSIMILARITY', title=title, table_number=t)
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='HOMOGENEITY', title=title, table_number=t)
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='ASM', title=title, table_number=t)
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='ENERGY', title=title, table_number=t)
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='CORRELATION', title=title, table_number=t)
+    Utils.plot_GLCM_data(port_list=list_to_plot, caracteristic='ENTROPY', title=title, table_number=t)
 
     Utils.close_files()
 
 
 if __name__ == "__main__":
-    main_get_img_from_movie()
+    main_get_img_from_movie(video=r'c:\repos\pattern_movies\texturi_dinamice\649f510.avi')
     Utils.reopen_files()
     # if we run the movie->img transformation set t=2 else t=1
-    main(t=2)
+    main(t=2, title='649f510')

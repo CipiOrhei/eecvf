@@ -166,7 +166,7 @@ def plot_GLCM_data(port_list: list, caracteristic: str, title: str,
         return
 
     if name_to_save is None:
-        name_to_save = caracteristic.lower()
+        name_to_save = title + '_' + caracteristic.lower()
 
     if y_plot_name is None:
         y_plot_name = caracteristic
