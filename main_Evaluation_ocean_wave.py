@@ -27,8 +27,26 @@ def main_get_img_from_movie(video):
 
     Utils.close_files()
 
-def main(t, title):
+
+def create_other_directions():
     Application.set_input_image_folder('Logs/input_data/DEEP_DEINTERLACE_FRAME_1_L0')
+    Application.set_output_image_folder('Logs/process_cube')
+
+    Application.delete_folder_appl_out()
+    Benchmarking.delete_folder_benchmark_out()
+
+    Application.do_get_image_job(port_output_name='RAW')
+    grey = Application.do_grayscale_transform_job(port_input_name='RAW')
+    Application.create_image_cube(port_input_name='RAW', is_rgb=True, location_to_save='Logs/process_cube')
+
+    Application.create_config_file()
+    Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
+    Application.run_application()
+    Utils.close_files()
+
+
+def main(t, input, title):
+    Application.set_input_image_folder(input)
     Application.set_output_image_folder('Logs/process_data')
 
     Application.delete_folder_appl_out()
@@ -94,5 +112,11 @@ def main(t, title):
 if __name__ == "__main__":
     main_get_img_from_movie(video=r'c:\repos\pattern_movies\texturi_dinamice\649f510.avi')
     Utils.reopen_files()
+    create_other_directions()
+    Utils.reopen_files()
     # if we run the movie->img transformation set t=2 else t=1
-    main(t=2, title='649f510')
+    main(t=3, input='Logs/input_data/DEEP_DEINTERLACE_FRAME_1_L0', title='649f510_front_to_back')
+    Utils.reopen_files()
+    main(t=4, input='Logs/process_cube/COLUMN_SLICING_IMG_CUBE_RAW_L0', title='649f510_left_to_right')
+    Utils.reopen_files()
+    main(t=5, input='Logs/process_cube/LINE_SLICING_IMG_CUBE_RAW_L0', title='649f510_top_to_botton')

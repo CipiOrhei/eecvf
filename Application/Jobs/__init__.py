@@ -21,6 +21,7 @@ import Application.Jobs.processing_multiple_images
 import Application.Jobs.edge_edline
 import Application.Jobs.feature_detection
 import Application.Jobs.grey_comatrix
+import Application.Jobs.image_cube
 if CUDA_GPU:
     import Application.Jobs.u_net
     import Application.Jobs.semseg
