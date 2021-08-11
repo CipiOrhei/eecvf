@@ -248,7 +248,7 @@ def plot_cpm_results(list_of_data: list, inputs: list, prefix: str = '', level: 
 def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: list = [''], prefix: str = '', level: str = 'L0',
                            self_contained_list: bool = False, number_decimal: int = 3, show_input: bool = False, show_level: bool = False,
                            order_by: str = None, name: str = 'PCM_results', save_location: str = 'Logs/',
-                           replace_list: list = None,
+                           replace_list: list = None, font_size_labels: int = 14,
                            prefix_to_cut_legend = None, suffix_to_cut_legend=None, set_legend_left = False, set_all_to_legend = False,
                            show_plot: bool = False, save_plot: bool = False):
     """
@@ -266,6 +266,11 @@ def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: li
     :param show_input: add input to series name
     :param show_level: add level to series name
     :param order_by: order the plots by the f1 score
+    :param font_size_labels: size of label font
+    :param prefix_to_cut_legend: string to cut at de beginning
+    :param suffix_to_cut_legend: string to cut at de ending
+    :param set_legend_left: set legend to the left of the image
+    :param set_all_to_legend: set R-P-F1 to legend
     :param name: name to save
     :param save_location: where to save the plot
     :param show_plot: shot the plot
@@ -302,9 +307,9 @@ def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: li
     plt.yticks(ticks=[0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], fontsize=14)
     plt.ylim(ymin=0)  # this line
     plt.xlim(xmin=0)  # this line
-    plt.xlabel(xlabel='Recall', fontsize=15)
-    plt.ylabel(ylabel='Precision', fontsize=15)
-    plt.title(label='F1-measure', fontsize=15)
+    plt.xlabel(xlabel='Recall', fontsize=font_size_labels)
+    plt.ylabel(ylabel='Precision', fontsize=font_size_labels)
+    plt.title(label='F1-measure', fontsize=font_size_labels)
 
     to_plot = []
     for data in list_of_data:
