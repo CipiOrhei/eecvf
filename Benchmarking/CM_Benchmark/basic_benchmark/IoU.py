@@ -14,6 +14,27 @@ https://en.wikipedia.org/wiki/Jaccard_index
 """
 
 
+def sb_iou(box1, box2) -> float:
+    x1, y1, x2, y2 = box1[0][0], box1[0][1], box1[1][0], box1[1][1]
+    x3, y3, x4, y4 = box2[0][0], box2[0][1], box2[1][0], box2[1][1]
+    x_inter1 = max(x1, x3)
+    y_inter1 = max(y1, y3)
+    x_inter2 = min(x2, x4)
+    y_inter2 = min(y2, y4)
+    width_inter = abs(x_inter2 - x_inter1)
+    height_inter = abs(y_inter2 - y_inter1)
+    area_inter = width_inter * height_inter
+    width_box1 = abs(x2 - x1)
+    height_box1 = abs(y2- y1)
+    width_box2 = abs(x4 - x3)
+    height_box2 = abs(y4 - y3)
+    area_box1 = width_box1 * height_box1
+    area_box2 = width_box2 * height_box2
+    area_union = area_box1 + area_box2 - area_inter
+    iou = area_inter / area_union
+    return iou
+
+
 def mean_iou(labels, predictions, unknown_class, number_classes) -> list:
     """
     Calculate the IoU for one images. It returns a list of:
