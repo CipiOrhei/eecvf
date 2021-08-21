@@ -55,37 +55,37 @@ def main(t, input, title):
     Application.do_get_image_job(port_output_name='RAW')
     grey = Application.do_grayscale_transform_job(port_input_name='RAW')
     list_to_plot = list()
-    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[1], angles=[0],
-                                                calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
-                                                calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
-
-    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[1], angles=[np.pi/2],
-                                                calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
-                                                calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
-
-    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[1], angles=[np.pi/4],
-                                                calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
-                                                calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
-
-    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[2], angles=[0],
-                                                calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
-                                                calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
-
-    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[2], angles=[np.pi/2],
-                                                calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
-                                                calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
-
-    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[2], angles=[np.pi/4],
-                                                calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
-                                                calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
-
-    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[4], angles=[0],
-                                                calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
-                                                calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
-
-    list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[4], angles=[np.pi/2],
-                                                calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
-                                                calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
+    # list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[1], angles=[0],
+    #                                             calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
+    #                                             calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
+    #
+    # list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[1], angles=[np.pi/2],
+    #                                             calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
+    #                                             calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
+    #
+    # list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[1], angles=[np.pi/4],
+    #                                             calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
+    #                                             calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
+    #
+    # list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[2], angles=[0],
+    #                                             calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
+    #                                             calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
+    #
+    # list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[2], angles=[np.pi/2],
+    #                                             calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
+    #                                             calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
+    #
+    # list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[2], angles=[np.pi/4],
+    #                                             calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
+    #                                             calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
+    #
+    # list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[4], angles=[0],
+    #                                             calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
+    #                                             calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
+    #
+    # list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[4], angles=[np.pi/2],
+    #                                             calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
+    #                                             calculate_ASM=True, calculate_energy=True, calculate_correlation=True, calculate_entropy=True))
 
     list_to_plot.append(Application.do_glcm_job(port_input_name=grey, distance=[4], angles=[np.pi / 4],
                                                 calculate_contrast=True, calculate_dissimilarity=True, calculate_homogeneity=True,
@@ -93,6 +93,7 @@ def main(t, input, title):
 
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
+    Application.configure_show_pictures('GLCM_D_4_A_0_7853981633974483_LC0')
     Application.run_application()
 
     for el in range(len(list_to_plot)):
@@ -110,13 +111,15 @@ def main(t, input, title):
 
 
 if __name__ == "__main__":
-    main_get_img_from_movie(video=r'c:\repos\pattern_movies\texturi_dinamice\649f510.avi')
+    # video_name = '649g230'
+    # main_get_img_from_movie(video=r'c:\repos\pattern_movies\texturi_dinamice\{}.avi'.format(video_name))
+    # Utils.reopen_files()
+    # create_other_directions()
     Utils.reopen_files()
-    create_other_directions()
-    Utils.reopen_files()
-    # if we run the movie->img transformation set t=2 else t=1
-    main(t=3, input='Logs/input_data/DEEP_DEINTERLACE_FRAME_1_L0', title='649f510_front_to_back')
-    Utils.reopen_files()
-    main(t=4, input='Logs/process_cube/COLUMN_SLICING_IMG_CUBE_RAW_L0', title='649f510_left_to_right')
-    Utils.reopen_files()
-    main(t=5, input='Logs/process_cube/LINE_SLICING_IMG_CUBE_RAW_L0', title='649f510_top_to_botton')
+    # # if we run the movie->img transformation set t=2 else t=1
+    # main(t=3, input='Logs/input_data/DEEP_DEINTERLACE_FRAME_1_L0', title='649f510_front_to_back')
+    main(t=1, input=r'c:\repos\eecvf\TestData\tmp', title='649f510_front_to_back')
+    # Utils.reopen_files()
+    # main(t=4, input='Logs/process_cube/COLUMN_SLICING_IMG_CUBE_RAW_L0', title='649f510_left_to_right')
+    # Utils.reopen_files()
+    # main(t=5, input='Logs/process_cube/LINE_SLICING_IMG_CUBE_RAW_L0', title='649f510_top_to_botton')
