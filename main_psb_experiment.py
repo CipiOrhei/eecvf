@@ -264,6 +264,10 @@ def main():
     Application.configure_show_pictures(ports_to_show=[final + '_L0', final_2 + '_L0'], time_to_show=10)
     Application.run_application()
 
+    Benchmarking.run_SB_IoU_benchmark(input_location='Logs/application_results',
+                                      gt_location='TestData/SB/',
+                                      jobs_set=list())
+
     Utils.close_files()
 
 
