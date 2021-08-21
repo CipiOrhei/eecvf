@@ -6,3 +6,4 @@ from Benchmarking.Config.create_benchmark_job import set_image_set
 from Benchmarking.Config.create_benchmark_job import run_PSNR_benchmark
 from Benchmarking.Config.create_benchmark_job import run_FOM_benchmark
 from Benchmarking.Config.create_benchmark_job import run_IoU_benchmark
+from Benchmarking.Config.create_benchmark_job import run_SB_IoU_benchmark
