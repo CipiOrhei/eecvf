@@ -54,6 +54,9 @@ def run_SB_benchmark_IoU() -> None:
             if not os.path.exists(results_path):
                 os.makedirs(results_path)
 
+            out = open(os.path.join(results_path, set_image + '.log'), "w+")
+            out.write('Per image (#, IoU):\n')
+
             ground_truth = dict()
             json_files = [f for f in os.listdir(config_main.BENCHMARK_GT_LOCATION) if os.path.isfile(os.path.join(config_main.BENCHMARK_GT_LOCATION, f))]
 
@@ -63,9 +66,25 @@ def run_SB_benchmark_IoU() -> None:
                 f.close()
 
                 try:
-                    ground_truth[data["asset"]["name"]] = data["regions"]["points"]
+                    ground_truth[data["asset"]["name"]] = data["regions"][0]["points"]
                 except KeyError as e:
                     log_error_to_console('BENCHMARK SB IoU NOK: Key Not Found', e.__str__())
+
+            log_benchmark_info_to_console("Ground truth loaded successfully")
+
+            gt_boxes = list()
+            for key, value in ground_truth.items():
+                gt_boxes.append([[value[3]['x'], value[3]['y']], [value[1]['x'], value[1]['y']]])
+
+            # TODO: Read data from algorithm
+
+            iou = list()
+            for box in gt_boxes:
+                iou.append(sb_iou(box1=box, box2=box))
+
+            # write to log
+            for result in iou:
+                out.write(str(result) + "\n")
 
             # Here read json from algorithm
             for file in config_main.BENCHMARK_SAMPLE_NAMES:

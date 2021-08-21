@@ -289,4 +289,7 @@ if __name__ == "__main__":
     # Utils.reopen_files()
     # prepare_psb_data(set=set, w_org=w_org, h_org=h_org)
     # Utils.reopen_files()
-    main()
+	# main()
+    Benchmarking.run_SB_IoU_benchmark(input_location='Logs/application_results',
+                                      gt_location='TestData/SB/',
+                                      jobs_set=[""])
