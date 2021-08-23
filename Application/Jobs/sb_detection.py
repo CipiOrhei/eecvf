@@ -1,13 +1,16 @@
 # import what you need
+import os.path
 
-from Application.Frame.global_variables import JobInitStateReturn
+from Application.Frame.global_variables import JobInitStateReturn, global_var_handler
 from Application.Frame.transferJobPorts import get_port_from_wave
 from Utils.log_handler import log_to_console, log_to_file, log_error_to_console
+import config_main as CONFIG
 
 from Application.Config.create_config import jobs_dict, create_dictionary_element
 from config_main import PYRAMID_LEVEL
 from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create, get_module_name_from_file
 
+import json
 import numpy as np
 import cv2
 
@@ -238,6 +241,48 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
                         cv2.rectangle(p_out_img_debug_3.arr, start, end, (255, 0, 255), 2)
 
                 p_out_img.set_valid()
+
+                json_dict = dict()
+                json_dict["asset"] = dict([
+                    ("format", CONFIG.APPl_SAVE_PICT_EXTENSION),
+                    ("name", CONFIG.APPL_INPUT_IMG_DIR[global_var_handler.FRAME]),
+                    # {"path": os.path.join(CONFIG.APPL_INPUT_IMG_DIR, CONFIG.APPL_INPUT_IMG_DIR[CONFIG.APPL_NR_WAVES - 1])},
+                    ("path", ""),
+                    ("size", dict([("width", float(p_out_img.arr.shape[0])), ("height", float(p_out_img.arr.shape[1]))]))])
+
+                region_list = list()
+                for box in boxes:
+                    height_rectangle = float(abs(box[1][0] - box[0][0]))
+                    length_rectangle = float(abs(box[1][1] - box[0][1]))
+                    d = dict([
+                        ("id", ""),
+                        ("type","RECTANGLE"),
+                        ("tags", ["speedbump"]),
+                        ("boundingBox", dict([("height",height_rectangle), ("width", length_rectangle),
+                                             ("left", float(box[0][1])), ("top",float(box[0][0]))])),
+                        ("points", [
+                            dict([("x", float(box[0][1])), ("y", float(box[0][0]))]),
+                            dict([("x", float(box[0][1] + length_rectangle)), ("y", float(box[0][0]))]),
+                            dict([("x", float(box[1][1])), ("y", float(box[1][0]))]),
+                            dict([("x", float(box[0][1])), ("y", float(box[0][0]) + height_rectangle)])
+                                 ])])
+
+                    region_list.append(d)
+                json_dict["regions"] = region_list
+                # print(json_dict)
+
+                location = os.path.join(os.getcwd(), CONFIG.APPL_SAVE_LOCATION, p_out_img_debug_3.name)
+
+                if not os.path.exists(os.path.join(os.getcwd(), location)):
+                    os.makedirs(location)
+
+                file_name = os.path.join(location, CONFIG.APPL_INPUT_IMG_DIR[global_var_handler.FRAME].split('.')[0] + '.json')
+                file = open(file_name, 'w')
+                print(json_dict)
+                data_to_write = json.dumps(json_dict, indent=2)
+                file.write(data_to_write)
+                file.close()
+
 
                 if param_list[PORT_IS_DEBUG]:
                     p_out_img_debug_1.set_valid()
