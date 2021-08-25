@@ -292,4 +292,4 @@ if __name__ == "__main__":
 	# main()
     Benchmarking.run_SB_IoU_benchmark(input_location='Logs/application_results',
                                       gt_location='TestData/SB/',
-                                      jobs_set=[""])
+                                      jobs_set=["SB_BOXES_LHG_1_300_LVG_1_10_BHG_1_50_BVG_10_50_MIN_LINE_70_LINE_FILTERING_T_0_D_5_LINES_L0"])

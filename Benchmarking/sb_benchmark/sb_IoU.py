@@ -73,22 +73,33 @@ def run_SB_benchmark_IoU() -> None:
             log_benchmark_info_to_console("Ground truth loaded successfully")
 
             gt_boxes = list()
+            algo_boxes = list()
             for key, value in ground_truth.items():
-                gt_boxes.append([[value[3]['x'], value[3]['y']], [value[1]['x'], value[1]['y']]])
+                try:
+                    f = open(os.path.join(config_main.APPL_SAVE_LOCATION + '/' + set_image, key), encoding='utf8')
+                    data = json.load(f)
+                    f.close()
 
-            # TODO: Read data from algorithm
+                    try:
+                        points = data["regions"][0]["points"]
+                        algo_boxes.append([[points[3]['x'], points[3]['y']], [points[1]['x'], points[1]['y']]])
+                        gt_boxes.append([[value[3]['x'], value[3]['y']], [value[1]['x'], value[1]['y']]])
+                    except KeyError as e:
+                        log_error_to_console('BENCHMARK SB IoU NOK', e.__str__())
+                except FileNotFoundError as ex:
+                    log_error_to_console('BENCHMARK SB IoU NOK', ex.__str__())
 
             iou = list()
-            for box in gt_boxes:
-                iou.append(sb_iou(box1=box, box2=box))
+            for i in range(len(gt_boxes)):
+                iou.append(sb_iou(box1=gt_boxes[i], box2=algo_boxes[i]))
 
             # write to log
             for result in iou:
                 out.write(str(result) + "\n")
+            out.close()
 
-            # Here read json from algorithm
-            for file in config_main.BENCHMARK_SAMPLE_NAMES:
-                pass
+            # for file in config_main.BENCHMARK_SAMPLE_NAMES:
+              # pass
 
         except Exception as ex:
             log_error_to_console('BENCHMARK SB IoU NOK', ex.__str__())
