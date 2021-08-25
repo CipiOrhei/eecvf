@@ -76,26 +76,35 @@ def run_SB_benchmark_IoU() -> None:
             algo_boxes = list()
             for key, value in ground_truth.items():
                 try:
-                    f = open(os.path.join(config_main.APPL_SAVE_LOCATION + '/' + set_image, key), encoding='utf8')
+                    path = os.path.join(config_main.APPL_SAVE_LOCATION + '/' + set_image, ''.join(key.split(".")[0]) + ".json")
+                    f = open(path, encoding='utf8')
                     data = json.load(f)
                     f.close()
 
                     try:
                         points = data["regions"][0]["points"]
-                        algo_boxes.append([[points[3]['x'], points[3]['y']], [points[1]['x'], points[1]['y']]])
+                        algo_boxes.append([[points[0]['x'], points[0]['y']], [points[2]['x'], points[2]['y']]])
                         gt_boxes.append([[value[3]['x'], value[3]['y']], [value[1]['x'], value[1]['y']]])
-                    except KeyError as e:
-                        log_error_to_console('BENCHMARK SB IoU NOK', e.__str__())
+                    except Exception as e:
+                        # log_error_to_console('BENCHMARK SB IoU NOK KeyError', e.__str__())
+                        pass
                 except FileNotFoundError as ex:
-                    log_error_to_console('BENCHMARK SB IoU NOK', ex.__str__())
-
+                    log_error_to_console('BENCHMARK SB IoU NOK FileNotFoundError', ex.__str__())
+            log_benchmark_info_to_console("Data loaded successfully")
             iou = list()
             for i in range(len(gt_boxes)):
-                iou.append(sb_iou(box1=gt_boxes[i], box2=algo_boxes[i]))
+                iou.append(sb_iou(box1=algo_boxes[i], box2=gt_boxes[i]))
 
             # write to log
+            iou_mean = 0
+            iou_nr = 0
             for result in iou:
-                out.write(str(result) + "\n")
+                if int(result >= 0):
+                    out.write(str(result) + "\n")
+                    iou_mean += int(result)
+                    iou_nr += 1
+            iou_mean = iou_mean / iou_nr
+            out.write("Mean: " + str(iou_mean))
             out.close()
 
             # for file in config_main.BENCHMARK_SAMPLE_NAMES:

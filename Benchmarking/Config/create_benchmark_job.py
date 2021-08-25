@@ -162,7 +162,7 @@ def run_IoU_benchmark(input_location: str, gt_location: str, class_list_name: li
 
 
 # noinspection PyPep8Naming
-def run_SB_IoU_benchmark(input_location: str, gt_location: str, jobs_set: list):
+def run_SB_IoU_benchmark(input_location: str, gt_location: str, jobs_set: list, raw_image: str):
     """
 
     :param input_location: location of algorithm images
@@ -180,6 +180,7 @@ def run_SB_IoU_benchmark(input_location: str, gt_location: str, jobs_set: list):
     set_gt_location(gt_location)
     set_input_location(input_location)
     job_set(jobs_set)
+    set_image_set(raw_image)
 
     run_SB_benchmark_IoU()
 
