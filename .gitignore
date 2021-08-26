@@ -4,6 +4,8 @@ Logs
 /MachineLearning/model_weights
 /TestData/data_road
 /TestData/psb
+/TestData/SB_LABELS
+/TestData/BSR
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

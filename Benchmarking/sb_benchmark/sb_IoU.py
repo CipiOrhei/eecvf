@@ -44,10 +44,23 @@ def run_SB_benchmark_IoU() -> None:
     """
     log_setup_info_to_console("BENCHMARKING SB IoU")
 
+    ground_truth = dict()
+    json_files = [f for f in os.listdir(config_main.BENCHMARK_GT_LOCATION) if os.path.isfile(os.path.join(config_main.BENCHMARK_GT_LOCATION, f))]
+
+    try:
+        for json_file in json_files:
+            f = open(os.path.join(config_main.BENCHMARK_GT_LOCATION, json_file))
+            data = json.load(f)
+            f.close()
+            ground_truth[(data["asset"]["name"]).split('.')[0]] = data["regions"][0]["points"]
+    except KeyError as e:
+        log_error_to_console('BENCHMARK SB IoU NOK: Key Not Found', e.__str__())
+
     for set_image in config_main.BENCHMARK_SETS:
         log_benchmark_info_to_console('Current set: {}'.format(set_image))
 
-        try:
+        # try:
+        if True:
             # Write results to disk
             results_path = os.path.join(os.getcwd(), config_main.BENCHMARK_RESULTS, 'SB_IoU')
 
@@ -57,61 +70,54 @@ def run_SB_benchmark_IoU() -> None:
             out = open(os.path.join(results_path, set_image + '.log'), "w+")
             out.write('Per image (#, IoU):\n')
 
-            ground_truth = dict()
-            json_files = [f for f in os.listdir(config_main.BENCHMARK_GT_LOCATION) if os.path.isfile(os.path.join(config_main.BENCHMARK_GT_LOCATION, f))]
+            iou_mean = 0
+            iou_nr = 0
 
-            for json_file in json_files:
-                f = open(os.path.join(config_main.BENCHMARK_GT_LOCATION, json_file))
-                data = json.load(f)
-                f.close()
-
+            for file in config_main.BENCHMARK_SAMPLE_NAMES:
+                # TODO Adapt to name changes of json
+                gt_boxes = list()
+                algo_boxes = list()
                 try:
-                    ground_truth[data["asset"]["name"]] = data["regions"][0]["points"]
-                except KeyError as e:
-                    log_error_to_console('BENCHMARK SB IoU NOK: Key Not Found', e.__str__())
-
-            log_benchmark_info_to_console("Ground truth loaded successfully")
-
-            gt_boxes = list()
-            algo_boxes = list()
-            for key, value in ground_truth.items():
-                try:
-                    path = os.path.join(config_main.APPL_SAVE_LOCATION + '/' + set_image, ''.join(key.split(".")[0]) + ".json")
+                    print("DEBUG DATA: FILE ", file)
+                    # get data from json of predicted boxes
+                    path = os.path.join(config_main.APPL_SAVE_LOCATION + '/' + set_image, ''.join(file + ".json"))
                     f = open(path, encoding='utf8')
                     data = json.load(f)
                     f.close()
+                    # add gt_boxes
 
-                    try:
-                        points = data["regions"][0]["points"]
-                        algo_boxes.append([[points[0]['x'], points[0]['y']], [points[2]['x'], points[2]['y']]])
-                        gt_boxes.append([[value[3]['x'], value[3]['y']], [value[1]['x'], value[1]['y']]])
-                    except Exception as e:
-                        # log_error_to_console('BENCHMARK SB IoU NOK KeyError', e.__str__())
-                        pass
-                except FileNotFoundError as ex:
-                    log_error_to_console('BENCHMARK SB IoU NOK FileNotFoundError', ex.__str__())
-            log_benchmark_info_to_console("Data loaded successfully")
-            iou = list()
-            for i in range(len(gt_boxes)):
-                iou.append(sb_iou(box1=algo_boxes[i], box2=gt_boxes[i]))
+                    if file in ground_truth.keys():
+                        gt_boxes.append([[ground_truth[file][3]['x'], ground_truth[file][3]['y']], [ground_truth[file][1]['x'], ground_truth[file][1]['y']]])
+                    else:
+                        gt_boxes = [[[0, 0], [0, 0]]]
+                    # add algo_boxes
+                    for box in range(len(data['regions'])):
+                        algo_boxes.append([[data["regions"][box]["points"][0]['x'], data["regions"][box]["points"][0]['y']], [data["regions"][box]["points"][2]['x'], data["regions"][box]["points"][2]['y']]])
+                    print("DEBUG DATA: gt_boxes ", gt_boxes)
+                    print("DEBUG DATA: algo_boxes ", algo_boxes)
+                except Exception as e:
+                    gt_boxes = [[[0,0],[0,0]]]
+                    algo_boxes = [[[0,0],[0,0]]]
+                    pass
+                # this works on the presumption that we have only one gt box
+                tmp_iou = [0.000]
+                for i in range(len(algo_boxes)):
+                    tmp_iou.append(sb_iou(box1=algo_boxes[i], box2=gt_boxes[0]))
 
-            # write to log
-            iou_mean = 0
-            iou_nr = 0
-            for result in iou:
-                if int(result >= 0):
-                    out.write(str(result) + "\n")
-                    iou_mean += int(result)
-                    iou_nr += 1
-            iou_mean = iou_mean / iou_nr
-            out.write("Mean: " + str(iou_mean))
+                iou = max(tmp_iou)
+                log_benchmark_info_to_console('IoU: {:<20s} \t {:s}\n'.format(file, str(iou)))
+                out.write('IoU: {:<20s} \t {:s}\n'.format(file, str(iou)))
+                iou_mean += iou
+                iou_nr += 1
+
+            avg_iou = iou_mean / iou_nr
+
+            out.write("Mean: " + str(avg_iou))
             out.close()
+            log_benchmark_info_to_console('IoU: {:<20s} \t {:s}\n'.format(set_image, str(avg_iou)))
 
-            # for file in config_main.BENCHMARK_SAMPLE_NAMES:
-              # pass
-
-        except Exception as ex:
-            log_error_to_console('BENCHMARK SB IoU NOK', ex.__str__())
+        # except Exception as ex:
+        #     log_error_to_console('BENCHMARK SB IoU NOK', ex.__str__())
 
 
 if __name__ == "__main__":

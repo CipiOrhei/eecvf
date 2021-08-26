@@ -214,7 +214,7 @@ def main():
     Application.set_output_image_folder('Logs/application')
     Application.set_input_image_folder('Logs/application_input/RESIZED_1280x320_CROPPED_RAW_LC1')
     # Application.set_input_image_folder('TestData/psb/_set_fina')
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
 
     class_names = ["NON-ROAD", "ROAD"]
     COLORS = [(0, 0, 255), (255, 0, 255)]
@@ -257,7 +257,7 @@ def main():
     horizontal_line, horizontal_line_img = Application.do_line_theta_filtering_job(port_input_name='LINES', theta_value=0,
                                                                                    deviation_theta=5, nr_lines=5000, nr_pt_line=1000)
 
-    sb_lines, sb_img, debug_1, debug_2, debug_3 = Application.do_sb_detection_from_lines_job(port_input_name=horizontal_line,
+    sb_img, sb_lines, debug_1, debug_2, debug_3 = Application.do_sb_detection_from_lines_job(port_input_name=horizontal_line,
                                                                   min_gap_horizontal_lines=1, max_gap_horizontal_lines=300, min_gap_vertical_lines=1, max_gap_vertical_lines=10,
                                                                   min_gap_horizontal_boxes=1, max_gap_horizontal_boxes=50, min_gap_vertical_boxes=10, max_gap_vertical_boxes=50,
                                                                   min_line_legth=70,
@@ -272,11 +272,12 @@ def main():
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
     # Application.configure_show_pictures(ports_to_show=['LINES_IMG_L0', horizontal_line_img + '_L0', debug_2 + '_L0', final_2 + '_L0'], time_to_show=1000)
     # Application.configure_show_pictures(ports_to_show=[final_2 + '_L0'], time_to_show=1000)
-    Application.run_application()
+    # Application.run_application()
 
-    Benchmarking.run_SB_IoU_benchmark(input_location='Logs/application_results',
-                                      gt_location='TestData/SB/',
-                                      jobs_set=list())
+    Benchmarking.run_SB_IoU_benchmark(input_location='Logs/application',
+                                      gt_location='TestData/psb/set_final_gt_json',
+                                      raw_image='TestData/psb/_set_fina',
+                                      jobs_set=[debug_3 + '_L0'])
 
     Utils.close_files()
 
@@ -295,8 +296,8 @@ if __name__ == "__main__":
     # Utils.reopen_files()
     # main_training_label(width=w, height=h)
     # Utils.reopen_files()
-    train_model(width=w, height=h)
+    # train_model(width=w, height=h)
     # Utils.reopen_files()
     # prepare_psb_data(set=set, w_org=w_org, h_org=h_org)
     # Utils.reopen_files()
-    # main()
+    main()
