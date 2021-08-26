@@ -24,7 +24,7 @@ def prepare_dataset():
     KITTI_LABELS_2 = [(0, 0, 0), (0, 0, 0), (255, 0, 255)]
     KITTI_LABELS_CORRELATION = [0, 0, 1]
 
-    Application.do_class_correlation(port_input_name='RAW', port_output_name='NEW_LABELS_PNG', class_list_in=KITTI_LABELS, class_list_out=KITTI_LABELS_2)
+    # Application.do_class_correlation(port_input_name='RAW', port_output_name='NEW_LABELS_PNG', class_list_in=KITTI_LABELS, class_list_out=KITTI_LABELS_2)
     Application.do_class_correlation(port_input_name='RAW', port_output_name='LABELS', class_list_in=KITTI_LABELS, class_list_out=KITTI_LABELS_CORRELATION)
 
     Application.create_config_file()
@@ -162,40 +162,34 @@ def train_model(height, width):
     MachineLearning.set_image_validate_folder('Logs/ml_results/VAL_INPUT')
     MachineLearning.set_label_validate_folder('Logs/ml_results/VAL_LABEL')
     MachineLearning.clear_model_trained()
-    MachineLearning.do_semseg_base(model="vgg_unet", input_height=height, input_width=width, n_classes=2, epochs=15,
+    MachineLearning.do_semseg_base(model="vgg_unet", input_height=height, input_width=width, n_classes=2, epochs=30,
                                    verify_dataset=False, steps_per_epoch=60, val_steps_per_epoch=18, optimizer_name='adam', batch_size=8)
 
-    # Application.set_input_image_folder('TestData/TMBuD/img/TEST/png')
-    # Application.set_output_image_folder('Logs/application_results_semseg_iou')
-    # Application.delete_folder_appl_out()
-    # Application.do_get_image_job(port_output_name='RAW')
-    # class_names = ["UNKNOWN", "BUILDING", "DOOR", "WINDOW", "SKY", "VEGETATION", "GROUND", "NOISE"]
-    #
-    # BACKGROUND = (0, 0, 0)
-    # SKY = (255, 0, 0)
-    # VEGETATION = (0, 255, 0)
-    # BUILDING = (125, 125, 0)
-    # WINDOW = (0, 255, 255)
-    # GROUND = (125, 125, 125)
-    # NOISE = (0, 0, 255)
-    # DOOR = (0, 125, 125)
-    #
-    # COLORS = [BACKGROUND, BUILDING, DOOR, WINDOW, SKY, VEGETATION, GROUND, NOISE]
-    # Application.do_semseg_base_job(port_input_name='RAW', model='vgg_unet', number_of_classes=8, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
-    #                                save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
+    # MachineLearning.do_semseg_base(model="resnet50_segnet", input_height=height, input_width=width, n_classes=2, epochs=30,
+    #                                verify_dataset=False, steps_per_epoch=60, val_steps_per_epoch=18, optimizer_name='adam', batch_size=4)
+
+    Application.set_input_image_folder('TestData/psb/evaluate_semseg/img')
+    Application.set_output_image_folder('Logs/application_results_semseg_iou')
+    Application.delete_folder_appl_out()
+    Application.do_get_image_job(port_output_name='RAW')
+
+    class_names = ["NON_ROAD", "ROAD"]
+    COLORS = [(0, 0, 255), (255, 0, 0)]
+    Application.do_semseg_base_job(port_input_name='RAW', model='vgg_unet', number_of_classes=2, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
+                                   save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
     # Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=8, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
     #                                save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
     #
-    # Application.create_config_file()
-    # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
-    # Application.run_application()
+    Application.create_config_file()
+    Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
+    Application.run_application()
     #
-    # Benchmarking.run_IoU_benchmark(input_location='Logs/application_results_semseg_iou/', gt_location='TestData/TMBuD/label/TEST/png',
-    #                                raw_image='TestData/TMBuD/img/TEST/png',
-    #                                jobs_set=['SEMSEG_VGG_UNET_RAW_L0', 'SEMSEG_RESNET50_SEGNET_RAW_L0'],
-    #                                class_list_name=class_names, unknown_class=0,
-    #                                is_rgb_gt=True, show_only_set_mean_value=True,
-    #                                class_list_rgb_value=[0, 87, 110, 225, 29, 149, 125, 76])
+    Benchmarking.run_IoU_benchmark(input_location='Logs/application_results_semseg_iou/', gt_location='TestData/psb/evaluate_semseg/gt',
+                                   raw_image='TestData/psb/evaluate_semseg/img',
+                                   jobs_set=['SEMSEG_VGG_UNET_RAW_L0'],
+                                   class_list_name=class_names, unknown_class=0,
+                                   is_rgb_gt=True, show_only_set_mean_value=True,
+                                   class_list_rgb_value=[76, 105])
 
     Utils.close_files()
 
@@ -219,7 +213,7 @@ def prepare_psb_data(set, w_org, h_org):
 def main():
     Application.set_output_image_folder('Logs/application')
     Application.set_input_image_folder('Logs/application_input/RESIZED_1280x320_CROPPED_RAW_LC1')
-    # Application.set_input_image_folder('TestData/psb/intersect')
+    # Application.set_input_image_folder('TestData/psb/_set_fina')
     Application.delete_folder_appl_out()
 
     class_names = ["NON-ROAD", "ROAD"]
@@ -245,7 +239,7 @@ def main():
     filtered = Application.do_matrix_intersect_job(port_input_name=filtered_grey, port_input_mask=croped_filtered)
     Application.do_ed_lines_mod_job(port_input_name=filtered, min_line_length=10, gradient_thr=10, anchor_thr=5,
                                     line_fit_err_thr=1,
-                                    operator=CONFIG.FILTERS.ORHEI_DILATED_5x5,
+                                    operator=CONFIG.FILTERS.ORHEI_DILATED_7x7,
                                     max_edges=5000, max_points_edge=1000,
                                     max_lines=5000, max_points_line=1000,
                                     port_edges_name_output='EDGES', port_edge_map_name_output='EDGE_IMG',
@@ -286,7 +280,7 @@ def main():
 if __name__ == "__main__":
     w = 640
     h = 160
-    set = 'TestData/psb/set_fina'
+    set = 'TestData/psb/_set_fina'
 
     w_org = w * 2
     h_org = h * 2
@@ -297,8 +291,8 @@ if __name__ == "__main__":
     # Utils.reopen_files()
     # main_training_label(width=w, height=h)
     # Utils.reopen_files()
-    # train_model(width=w, height=h)
+    train_model(width=w, height=h)
     # Utils.reopen_files()
     # prepare_psb_data(set=set, w_org=w_org, h_org=h_org)
     # Utils.reopen_files()
-    main()
+    # main()
