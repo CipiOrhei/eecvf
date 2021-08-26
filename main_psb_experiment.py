@@ -264,6 +264,10 @@ def main():
     Application.configure_show_pictures(ports_to_show=[final + '_L0', final_2 + '_L0'], time_to_show=10)
     Application.run_application()
 
+    Benchmarking.run_SB_IoU_benchmark(input_location='Logs/application_results',
+                                      gt_location='TestData/SB/',
+                                      jobs_set=list())
+
     Utils.close_files()
 
 
@@ -285,4 +289,7 @@ if __name__ == "__main__":
     # Utils.reopen_files()
     # prepare_psb_data(set=set, w_org=w_org, h_org=h_org)
     # Utils.reopen_files()
-    main()
+	# main()
+    Benchmarking.run_SB_IoU_benchmark(input_location='Logs/application_results',
+                                      gt_location='TestData/SB/',
+                                      jobs_set=["SB_BOXES_LHG_1_300_LVG_1_10_BHG_1_50_BVG_10_50_MIN_LINE_70_LINE_FILTERING_T_0_D_5_LINES_L0"])

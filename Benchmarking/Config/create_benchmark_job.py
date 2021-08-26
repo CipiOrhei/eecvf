@@ -6,6 +6,7 @@ import config_main
 from Benchmarking.CM_Benchmark.basic_benchmark.fom import run_CM_benchmark_FOM
 from Benchmarking.CM_Benchmark.basic_benchmark.psnr import run_CM_benchmark_PSNR
 from Benchmarking.CM_Benchmark.basic_benchmark.IoU import run_CM_benchmark_IoU
+from Benchmarking.sb_benchmark.sb_IoU import run_SB_benchmark_IoU
 from Benchmarking.bsds500.verify import run_verify_boundry
 from Utils.log_handler import log_benchmark_info_to_console
 
@@ -158,6 +159,30 @@ def run_IoU_benchmark(input_location: str, gt_location: str, class_list_name: li
     job_set(jobs_set)
 
     run_CM_benchmark_IoU(class_list_name, unknown_class, is_rgb_gt, class_list_rgb_value, show_only_set_mean_value)
+
+
+# noinspection PyPep8Naming
+def run_SB_IoU_benchmark(input_location: str, gt_location: str, jobs_set: list, raw_image: str):
+    """
+
+    :param input_location: location of algorithm images
+    :param gt_location: location of gt images
+    :param class_list_name: list of name of classes
+    :param unknown_class: which class is used for unknown predicted pixels
+    :param is_rgb_gt: is the ground truth image is RGB colored
+    :param class_list_rgb_value: list of greyscale values of classes
+    :param raw_image: location of raw images
+    :param jobs_set: algo sets to evaluate
+    :param show_only_set_mean_value: show on console only the mean IoU for each set
+    :return: None
+    """
+
+    set_gt_location(gt_location)
+    set_input_location(input_location)
+    job_set(jobs_set)
+    set_image_set(raw_image)
+
+    run_SB_benchmark_IoU()
 
 
 if __name__ == "__main__":
