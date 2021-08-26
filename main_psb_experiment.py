@@ -214,7 +214,7 @@ def main():
     Application.set_output_image_folder('Logs/application')
     Application.set_input_image_folder('Logs/application_input/RESIZED_1280x320_CROPPED_RAW_LC1')
     # Application.set_input_image_folder('TestData/psb/_set_fina')
-    # Application.delete_folder_appl_out()
+    Application.delete_folder_appl_out()
 
     class_names = ["NON-ROAD", "ROAD"]
     COLORS = [(0, 0, 255), (255, 0, 255)]
@@ -272,7 +272,7 @@ def main():
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
     # Application.configure_show_pictures(ports_to_show=['LINES_IMG_L0', horizontal_line_img + '_L0', debug_2 + '_L0', final_2 + '_L0'], time_to_show=1000)
     # Application.configure_show_pictures(ports_to_show=[final_2 + '_L0'], time_to_show=1000)
-    # Application.run_application()
+    Application.run_application()
 
     Benchmarking.run_SB_IoU_benchmark(input_location='Logs/application',
                                       gt_location='TestData/psb/set_final_gt_json',

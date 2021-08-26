@@ -89,10 +89,12 @@ def run_SB_benchmark_IoU() -> None:
                     if file in ground_truth.keys():
                         gt_boxes.append([[ground_truth[file][3]['x'], ground_truth[file][3]['y']], [ground_truth[file][1]['x'], ground_truth[file][1]['y']]])
                     else:
-                        gt_boxes = [[[0, 0], [0, 0]]]
+                        gt_boxes = None
                     # add algo_boxes
                     for box in range(len(data['regions'])):
                         algo_boxes.append([[data["regions"][box]["points"][0]['x'], data["regions"][box]["points"][0]['y']], [data["regions"][box]["points"][2]['x'], data["regions"][box]["points"][2]['y']]])
+                    if len(algo_boxes) == 0:
+                        algo_boxes = None
                     print("DEBUG DATA: gt_boxes ", gt_boxes)
                     print("DEBUG DATA: algo_boxes ", algo_boxes)
                 except Exception as e:
@@ -101,10 +103,16 @@ def run_SB_benchmark_IoU() -> None:
                     pass
                 # this works on the presumption that we have only one gt box
                 tmp_iou = [0.000]
-                for i in range(len(algo_boxes)):
-                    tmp_iou.append(sb_iou(box1=algo_boxes[i], box2=gt_boxes[0]))
+                if gt_boxes == None and algo_boxes == None:
+                    tmp_iou = [1.00]
+                elif gt_boxes == None or algo_boxes == None:
+                    tmp_iou = [0.00]
+                else:
+                    for i in range(len(algo_boxes)):
+                        tmp_iou.append(sb_iou(box1=algo_boxes[i], box2=gt_boxes[0]))
 
                 iou = max(tmp_iou)
+
                 log_benchmark_info_to_console('IoU: {:<20s} \t {:s}\n'.format(file, str(iou)))
                 out.write('IoU: {:<20s} \t {:s}\n'.format(file, str(iou)))
                 iou_mean += iou
