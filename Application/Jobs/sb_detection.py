@@ -23,6 +23,26 @@ Module handles DESCRIPTION OF THE MODULE jobs for the APPL block.
 # Internal functions
 ############################################################################################################################################
 
+def sb_iou(box1, box2) -> float:
+    x1, y1, x2, y2 = box1[0][0], box1[0][1], box1[1][0], box1[1][1]
+    x3, y3, x4, y4 = box2[0][0], box2[0][1], box2[1][0], box2[1][1]
+    x_inter1 = max(x1, x3)
+    y_inter1 = max(y1, y3)
+    x_inter2 = min(x2, x4)
+    y_inter2 = min(y2, y4)
+    width_inter = abs(x_inter2 - x_inter1)
+    height_inter = abs(y_inter2 - y_inter1)
+    area_inter = width_inter * height_inter
+    width_box1 = abs(x2 - x1)
+    height_box1 = abs(y2- y1)
+    width_box2 = abs(x4 - x3)
+    height_box2 = abs(y4 - y3)
+    area_box1 = width_box1 * height_box1
+    area_box2 = width_box2 * height_box2
+    area_union = area_box1 + area_box2 - area_inter
+    iou = area_inter / area_union
+    return iou
+
 def draw_line(image, line):
     start_point = (line[0][0], line[0][1])
     end_point = (line[1][0], line[1][1])
@@ -231,6 +251,21 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
 
                                 boxes.append([[top, left], [bottom, right]])
                                 break
+
+                box_merge_threshold = 0.5
+                i = 0
+
+                while i < len(boxes)-1:
+                    if sb_iou(boxes[i], boxes[i+1]) >= box_merge_threshold:
+                        left_x = min(boxes[i][0][1], boxes[i+1][0][1])
+                        right_x = max(boxes[i][1][1], boxes[i+1][1][1])
+                        top_y = min(boxes[i][0][0], boxes[i+1][0][0])
+                        bottom_y = max(boxes[i][1][0], boxes[i+1][1][0])
+
+                        boxes[i] = [[left_x, top_y], [right_x, bottom_y]]
+                        boxes.pop(i+1)
+                        i = 0
+                    i += 1
 
                 if param_list[PORT_IS_DEBUG]:
                     p_out_img_debug_3.arr = p_out_img_debug_2.arr.copy()
