@@ -257,16 +257,16 @@ def main_func_sb_from_lines(param_list: list = None) -> bool:
 
                 while i < len(boxes)-1:
                     if sb_iou(boxes[i], boxes[i+1]) >= box_merge_threshold:
-                        left_x = min(boxes[i][0][1], boxes[i][0][1])
-                        right_x = max(boxes[i][1][1], boxes[i][1][1])
-                        top_y = min(boxes[i][0][0], boxes[i][0][0])
-                        bottom_y = max(boxes[i][1][0], boxes[i][1][0])
+                        left_x = min(boxes[i][0][1], boxes[i+1][0][1])
+                        right_x = max(boxes[i][1][1], boxes[i+1][1][1])
+                        top_y = min(boxes[i][0][0], boxes[i+1][0][0])
+                        bottom_y = max(boxes[i][1][0], boxes[i+1][1][0])
 
                         boxes[i] = [[left_x, top_y], [right_x, bottom_y]]
                         boxes.pop(i+1)
                         i = 0
                     i += 1
-                    
+
                 if param_list[PORT_IS_DEBUG]:
                     p_out_img_debug_3.arr = p_out_img_debug_2.arr.copy()
 
