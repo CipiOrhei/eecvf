@@ -57,7 +57,7 @@ def run_SB_benchmark_IoU() -> None:
         log_error_to_console('BENCHMARK SB IoU NOK: Key Not Found', e.__str__())
 
     for set_image in config_main.BENCHMARK_SETS:
-        log_benchmark_info_to_console('Current set: {}'.format(set_image))
+        # log_benchmark_info_to_console('Current set: {}'.format(set_image))
 
         # try:
         if True:
@@ -72,13 +72,19 @@ def run_SB_benchmark_IoU() -> None:
 
             iou_mean = 0
             iou_nr = 0
+            tp = 0
+            tn = 0
+            fp = 0
+            fp_m = 0
+            fn = 0
+            tp_m = 0
 
             for file in config_main.BENCHMARK_SAMPLE_NAMES:
                 # TODO Adapt to name changes of json
                 gt_boxes = list()
                 algo_boxes = list()
                 try:
-                    print("DEBUG DATA: FILE ", file)
+                    # print("DEBUG DATA: FILE ", file)
                     # get data from json of predicted boxes
                     path = os.path.join(config_main.APPL_SAVE_LOCATION + '/' + set_image, ''.join(file + ".json"))
                     f = open(path, encoding='utf8')
@@ -95,35 +101,61 @@ def run_SB_benchmark_IoU() -> None:
                         algo_boxes.append([[data["regions"][box]["points"][0]['x'], data["regions"][box]["points"][0]['y']], [data["regions"][box]["points"][2]['x'], data["regions"][box]["points"][2]['y']]])
                     if len(algo_boxes) == 0:
                         algo_boxes = None
-                    print("DEBUG DATA: gt_boxes ", gt_boxes)
-                    print("DEBUG DATA: algo_boxes ", algo_boxes)
+                    # print("DEBUG DATA: gt_boxes ", gt_boxes)
+                    # print("DEBUG DATA: algo_boxes ", algo_boxes)
                 except Exception as e:
-                    gt_boxes = [[[0,0],[0,0]]]
-                    algo_boxes = [[[0,0],[0,0]]]
+                    gt_boxes = None
+                    algo_boxes = None
+                    log_error_to_console('BENCHMARK SB IoU NOK', e.__str__())
                     pass
                 # this works on the presumption that we have only one gt box
                 tmp_iou = [0.000]
                 if gt_boxes == None and algo_boxes == None:
                     tmp_iou = [1.00]
-                elif gt_boxes == None or algo_boxes == None:
+                    tn += 1
+                elif gt_boxes == None and algo_boxes != None:
                     tmp_iou = [0.00]
+                    fp += 1
+                    fp_m += 1
+                elif gt_boxes != None and algo_boxes == None:
+                    tmp_iou = [0.00]
+                    fn += 1
                 else:
                     for i in range(len(algo_boxes)):
-                        tmp_iou.append(sb_iou(box1=algo_boxes[i], box2=gt_boxes[0]))
+                        tmp = 0.0
+                        try:
+                            tmp = sb_iou(box1=algo_boxes[i], box2=gt_boxes[0])
+                        except Exception as ex:
+                            log_error_to_console('BENCHMARK SB IoU NOK', ex.__str__())
+                            pass
+                        tmp_iou.append(tmp)
+                    if len(algo_boxes) != len(gt_boxes):
+                        fp += 1
+                    else:
+                        tp += 1
+
+                    tp_m += 1
 
                 iou = max(tmp_iou)
-
-                log_benchmark_info_to_console('IoU: {:<20s} \t {:s}\n'.format(file, str(iou)))
+                # log_benchmark_info_to_console('IoU: {:<20s} \t {:s}\n'.format(file, str(iou)))
                 out.write('IoU: {:<20s} \t {:s}\n'.format(file, str(iou)))
                 iou_mean += iou
                 iou_nr += 1
 
             avg_iou = iou_mean / iou_nr
-
             out.write("Mean: " + str(avg_iou))
-            out.close()
+            # out.close()
             log_benchmark_info_to_console('IoU: {:<20s} \t {:s}\n'.format(set_image, str(avg_iou)))
 
+            acc = (tp + tn) / (tp + tn + fp + fn)
+            out.write("Acc: " + str(acc))
+            log_benchmark_info_to_console('Acc: {:<20s} \t {:s}\n'.format(set_image, str(acc)))
+
+            acc_m = (tp_m + tn) / (tp_m + tn + fp_m + fn)
+            out.write("Acc_m: " + str(acc_m))
+            log_benchmark_info_to_console('Acc_m: {:<20s} \t {:s}\n'.format(set_image, str(acc_m)))
+
+            out.close()
         # except Exception as ex:
         #     log_error_to_console('BENCHMARK SB IoU NOK', ex.__str__())
 
