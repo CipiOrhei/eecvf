@@ -148,8 +148,14 @@ def run_SB_benchmark_IoU() -> None:
             log_benchmark_info_to_console('IoU: {:<20s} \t {:s}\n'.format(set_image, str(avg_iou)))
 
             acc = (tp + tn) / (tp + tn + fp + fn)
+            p = tp/(tp + fp)
+            r = tp/(tp + fn)
+            f1 = 2*p*r/(p+r)
             out.write("Acc: " + str(acc))
             log_benchmark_info_to_console('Acc: {:<20s} \t {:s}\n'.format(set_image, str(acc)))
+            log_benchmark_info_to_console('P: {:<20s} \t {:s}\n'.format(set_image, str(p)))
+            log_benchmark_info_to_console('R: {:<20s} \t {:s}\n'.format(set_image, str(r)))
+            log_benchmark_info_to_console('F1: {:<20s} \t {:s}\n'.format(set_image, str(f1)))
 
             acc_m = (tp_m + tn) / (tp_m + tn + fp_m + fn)
             out.write("Acc_m: " + str(acc_m))
