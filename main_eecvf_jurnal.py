@@ -12,7 +12,15 @@ import Utils
 import cv2
 
 """
-This module is an example to use the EECVF with video input stream.
+Code for paper:
+  title={End-To-End Computer Vision Framework: An Open-Source Platform for Research and Education},
+  author={Orhei, Ciprian and Vert, Silviu and Mocofan, Muguras and Vasiu, Radu},
+  journal={Sensors},
+  volume={21},
+  number={11},
+  pages={3691},
+  year={2021},
+  publisher={Multidisciplinary Digital Publishing Institute}
 """
 
 

@@ -11,6 +11,16 @@ import Utils
 
 import cv2
 
+"""
+Code for paper:
+  title={Speed bump detection based on line matching},
+  author={Sirbu, Cristina Laura and Tomoiu, Cristian and Fancsali-Boldizsar, Szilvia and Orhei, Ciprian},
+  booktitle={2021 IEEE 27nd International Symposium for Design and Technology in Electronic Packaging (SIITME)},
+  pages={--},
+  year={2021},
+  organization={IEEE}
+"""
+
 def prepare_dataset():
     """
     Please download http://www.cvlibs.net/datasets/kitti/eval_road.php for this experiment
@@ -308,8 +318,8 @@ def main():
                                                             final_2 = Application.do_blending_images_job(port_input_name_1='RAW', port_input_name_2=debug_3, alpha=0.7)
 
     Application.create_config_file()
-    # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
-    Application.configure_save_pictures(ports_to_save=list_to_eval, job_name_in_port=False)
+    Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
+    # Application.configure_save_pictures(ports_to_save=list_to_eval, job_name_in_port=False)
     # Application.configure_show_pictures(ports_to_show=['LINES_IMG_L0', horizontal_line_img + '_L0', debug_2 + '_L0', final_2 + '_L0'], time_to_show=1000)
     # Application.configure_show_pictures(ports_to_show=[final_2 + '_L0'], time_to_show=1000)
     Application.run_application()

@@ -9,6 +9,16 @@ import config_main as CONFIG
 # noinspection PyUnresolvedReferences
 import Utils
 
+"""
+This module contains the code used for the following paper:
+  title={An analysis of ED Line algorithm in urban street-view dataset},
+  author={Orhei, Ciprian and Muguras, Mocofan and Vert, Silviu and Vasiu, Radu},
+  booktitle={International Conference on Information and Software Technologies},
+  pages={--},
+  year={2021},
+  organization={Springer}
+"""
+
 
 def main_sobel_parsing_natural():
     """

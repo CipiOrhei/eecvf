@@ -9,6 +9,16 @@ import config_main as CONFIG
 # noinspection PyUnresolvedReferences
 import Utils
 
+"""
+Code for paper:
+  title={An automated threshold Edge Drawing algorithm},
+  author={Orhei, Ciprian and Mocofan, Muguras and Vert, Silviu and Vasiu, Radu},
+  booktitle={2021 43th international conference on telecommunications and signal processing (TSP)},
+  pages={--},
+  year={2021},
+  organization={IEEE}
+"""
+
 def main_diff_operators():
     """
     Main function of framework Please look in example_main for all functions

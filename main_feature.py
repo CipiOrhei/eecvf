@@ -8,6 +8,16 @@ import config_main as CONFIG
 # noinspection PyUnresolvedReferences
 import Utils
 
+"""
+Code for paper:
+  title={CBIR for urban building using A-KAZE features},
+  author={Orhei, Ciprian and Radu, Lucian and Mocofan, Muguras and Vert, Silviu and Vasiu, Radu},
+  booktitle={2021 IEEE 27nd International Symposium for Design and Technology in Electronic Packaging (SIITME)},
+  pages={--},
+  year={2021},
+  organization={IEEE}
+"""
+
 
 def main():
     """
