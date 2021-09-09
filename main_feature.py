@@ -34,9 +34,10 @@ def main():
     thr_image = Application.do_image_threshold_job(port_input_name='GRAY_RAW', input_value=150,
                                                    input_threshold_type=CONFIG.THRESHOLD_CONFIG.THR_BINARY, level=CONFIG.PYRAMID_LEVEL.LEVEL_0)
 
-    Application.do_sift_job(port_input_name='GRAY_RAW', mask_port_name=thr_image, level=CONFIG.PYRAMID_LEVEL.LEVEL_0)
-    Application.do_sift_job(port_input_name='GRAY_RAW', mask_port_name=None, level=CONFIG.PYRAMID_LEVEL.LEVEL_0)
-    Application.do_sift_job(port_input_name='GRAY_RAW', level=CONFIG.PYRAMID_LEVEL.LEVEL_1)
+    Application.do_a_kaze_job(port_input_name='GRAY_RAW', mask_port_name=thr_image, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
+                              descriptor_size=128)
+    Application.do_a_kaze_job(port_input_name='GRAY_RAW', mask_port_name=None, level=CONFIG.PYRAMID_LEVEL.LEVEL_0)
+    Application.do_a_kaze_job(port_input_name='GRAY_RAW', level=CONFIG.PYRAMID_LEVEL.LEVEL_1)
 
 
     Application.create_config_file()
