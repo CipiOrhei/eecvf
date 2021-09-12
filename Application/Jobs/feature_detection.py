@@ -371,8 +371,8 @@ def do_a_kaze_job(port_input_name: str, number_features: int = 512,
                       threshold, nr_octaves, nr_octave_layers, diffusivity,
                       mask_port_name, port_kp_output_name, port_des_output_name, port_img_output_name]
 
-    output_port_list = [(port_kp_output_name, port_kp_output_name_size, 'H', False),
-                        (port_des_output_name, port_des_output_name_size, 'H', False),
+    output_port_list = [(port_kp_output_name, port_kp_output_name_size, 'f', False),
+                        (port_des_output_name, port_des_output_name_size, 'f', False),
                         (port_img_output_name, port_img_output_name_size, 'B', True)]
 
     job_name = job_name_create(action='A-KAZE', input_list=input_port_list, wave_offset=[wave_offset], level=level)
