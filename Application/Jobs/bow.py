@@ -23,16 +23,40 @@ Module handles DESCRIPTION OF THE MODULE jobs for the APPL block.
 
 cluster_bow = dict()
 
+def flann_matching(des1,des2, comp_thr = 0.85):
+    FLANN_INDEX_KDTREE = 0
+    index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+    search_params = dict(checks=50)  # or pass empty dictionary
+    flann = cv2.FlannBasedMatcher(index_params, search_params)
+
+    des1 = np.float32(des1)
+    des2 = np.float32(des2)
+
+    matches = flann.knnMatch(des1, des2, k=2)
+    good = []
+
+    for i, (m, n) in enumerate(matches):
+        if m.distance < comp_thr * n.distance:
+            good.append([m])
+    percent = len(good)/len(des1) * 100
+
+    return percent
+
+
 class ZuBuD_BOW:
 
-    def __init__(self, name, dict_size):
+    def __init__(self, name, dict_size, is_from_file=False):
         self.name = name
         self.list_bows = dict()
         self.list_clustered_bows = dict()
+
         # creates bows for each object object0003.view03.png
         for i in range(1, 202):
             name_building_class = 'object{:04d}'.format(i)
-            self.list_bows[name_building_class] = cv2.BOWKMeansTrainer(dict_size)
+            if is_from_file is False:
+                self.list_bows[name_building_class] = cv2.BOWKMeansTrainer(dict_size)
+            else:
+                self.list_bows[name_building_class] = None
 
     def add(self, id, desc):
         desc = np.float32(desc)
@@ -59,6 +83,11 @@ class ZuBuD_BOW:
                 os.makedirs(location)
             location_np = os.path.join(location, key + '.txt')
             np.savetxt(location_np, self.list_clustered_bows[key])
+
+    def populate_from_npy_files(self, location, port):
+        for key in self.list_bows.keys():
+            dst_file = os.path.join(location,port,key + '.npy')
+            self.list_clustered_bows[key] = np.load(dst_file)
 
 
 
@@ -149,6 +178,82 @@ def bow_zubud_main_func(param_list: list = None) -> bool:
 
         return True
 
+
+def bow_zubud_flann_inquiry_main_func(param_list: list = None) -> bool:
+    """
+    Main function for ZuBuD BOW calculation job.
+    :param param_list: Param needed to respect the following list:
+                       [port to add, wave of input port, size of cluster, save to txt, save to npy, output ]
+    :return: True if the job executed OK.
+    """
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE = 1
+    # noinspection PyPep8Naming
+    PORT_IN_SAVED_TXT = 2
+    # noinspection PyPep8Naming
+    PORT_IN_SAVED_NPY = 3
+    # noinspection PyPep8Naming
+    PORT_IN_FLANN_THR = 4
+    # noinspection PyPep8Naming
+    PORT_IN_LOCATION_BOW = 5
+    # noinspection PyPep8Naming
+    PORT_IN_PORT_BOW = 6
+    # noinspection PyPep8Naming
+    PORT_OUT = 7
+    # verify that the number of parameters are OK.
+    if len(param_list) != 8:
+        log_error_to_console("ZuBuD_BOW_FLANN_INQUIRY JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
+        return False
+    else:
+        # get needed ports
+        port_in = get_port_from_wave(name=param_list[PORT_IN_POS], wave_offset=param_list[PORT_IN_WAVE])
+
+        global cluster_bow
+
+        port_out = get_port_from_wave(name=param_list[PORT_OUT])
+
+        # CHANGE IF NAME OF BOW CHANGES
+        size_dict = int(param_list[PORT_IN_PORT_BOW][10:13])
+
+        cluster_bow[param_list[PORT_IN_PORT_BOW]] = ZuBuD_BOW(name=param_list[PORT_IN_PORT_BOW], dict_size=size_dict, is_from_file=True)
+
+        if param_list[PORT_IN_SAVED_NPY]:
+            cluster_bow[param_list[PORT_IN_PORT_BOW]].populate_from_npy_files(location=param_list[PORT_IN_LOCATION_BOW], port=param_list[PORT_IN_PORT_BOW])
+
+        percent_class_dict = dict()
+        for key in cluster_bow[param_list[PORT_IN_PORT_BOW]].list_clustered_bows.keys():
+            try:
+                percent_class_dict[key] = flann_matching(des1=port_in.arr,
+                                                         des2=cluster_bow[param_list[PORT_IN_PORT_BOW]].list_clustered_bows[key],
+                                                         comp_thr=param_list[PORT_IN_FLANN_THR])
+            except:
+                percent_class_dict[key] = 0
+
+        percent_class_dict = dict(sorted(percent_class_dict.items(), key=lambda item: item[1], reverse=True))
+        # t = np.array(percent_class_dict.items())
+        t = np.array([[int(a[-4:]), float(x)] for a, x in percent_class_dict.items()])
+        port_out.arr[:] = t
+
+        file_to_save = os.path.join(config_main.APPL_SAVE_LOCATION, port_out.name)
+        if not os.path.exists(file_to_save):
+            os.makedirs(file_to_save)
+        location_np = os.path.join(file_to_save, global_var_handler.PICT_NAME.split('.')[0] + '.txt')
+        np.savetxt(fname=location_np, X=port_out.arr, fmt=['%3.0f', '%3.3f'])
+
+        # check if port's you want to use are valid
+        if port_in.is_valid() is True:
+            try:
+                pass
+            except BaseException as error:
+                log_error_to_console("ZuBuD_BOW JOB NOK: ", str(error))
+                pass
+        else:
+            return False
+
+        return True
+
 ############################################################################################################################################
 # Job create functions
 ############################################################################################################################################
@@ -200,6 +305,51 @@ def do_zubud_bow_job(port_to_add: str, dictionary_size: int,
     jobs_dict.append(d)
 
     return port_output
+
+
+def do_zubud_bow_inquiry_flann_job(port_to_inquiry: str, flann_thr: float, location_of_bow: str, bow_port: str,
+                                   saved_to_text: bool = False, saved_to_npy: bool = True,
+                                   port_out_name: str = None,
+                                   level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
+    """
+    Bag  of  Features  (BOF)  has  become  a  popular  approach in  CV  for  image  classification,  object  detection,  or  image retrieval.
+    The  name  comes  from  the  Bag  of  Words  (BOW)representation used in textual information retrieval
+    # https://www.cs.cmu.edu/~efros/courses/LBMV07/Papers/csurka-eccv-04.pdf
+    :param port_to_add:  Feature port to add to BOW
+    :param dictionary_size: size of cluster per class
+    :param save_to_text: if we want to save BOW clusters to txt files
+    :param save_to_npy: if we want to save BOW clusters to npy files
+    :param port_bow_list_output: output port with BOW
+    :param level: pyramid level to calculate at
+    :param wave_offset: wave of input port, please correlate with each input port name parameter
+    :return: Name of output port or ports
+    """
+    # Do this for each input port this function has
+    input_port_name = transform_port_name_lvl(name=port_to_inquiry, lvl=level)
+
+    if port_out_name is None:
+        port_out_name = 'ZuBuD_BOW_INQ_{Input}'.format(Input=port_to_inquiry)
+
+    port_img_output_name = transform_port_name_lvl(name=port_out_name, lvl=level)
+    port_des_output_name_size = '(201, 2)'
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, saved_to_text, saved_to_npy, flann_thr, location_of_bow, bow_port, port_img_output_name]
+    output_port_list = [(port_img_output_name, port_des_output_name_size, 'f', False)]
+
+    job_name = job_name_create(action='ZuBuD_BOW inquiry FLANN {thr}'.format(thr=flann_thr.__str__().replace('.','_')),
+                               input_list=input_port_list, wave_offset=[wave_offset], level=level)
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  init_func_name='init_func_global', init_func_param=None,
+                                  main_func_name='bow_zubud_flann_inquiry_main_func',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
 
 
 if __name__ == "__main__":
