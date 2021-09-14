@@ -147,7 +147,7 @@ def bow_zubud_main_func(param_list: list = None) -> bool:
             cluster_bow[port_out.name] = ZuBuD_BOW(name=port_in.name, dict_size=param_list[PORT_IN_DESC_SIZE])
 
         name = global_var_handler.PICT_NAME[:10]
-        cluster_bow[port_out.name].add(name, port_in.arr)
+        cluster_bow[port_out.name].add(name, np.float32(port_in.arr))
 
         if global_var_handler.NR_PICTURES - 1 == global_var_handler.FRAME:
             # only in last wave
@@ -349,6 +349,8 @@ def do_zubud_bow_inquiry_flann_job(port_to_inquiry: str, flann_thr: float, locat
                                   output_ports=output_port_list)
 
     jobs_dict.append(d)
+
+    return port_out_name
 
 
 

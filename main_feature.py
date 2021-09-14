@@ -25,9 +25,8 @@ def main_bow_create():
     """
     Main function of framework Please look in example_main for all functions you can use
     """
-    # Application.set_input_image_folder('TestData/smoke_test')
     Application.set_input_image_folder(r'c:/repos/ZuBud_dataset/png-ZuBuD')
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
 
     Application.do_get_image_job(port_output_name='RAW')
     grey = Application.do_grayscale_transform_job(port_input_name='RAW')
@@ -43,6 +42,8 @@ def main_bow_create():
     thr_list = [0.85]
     thr_akaze_list = [0.0012]
     dictionarySize_list = [400]
+
+    list_to_eval = list()
 
     for desc in desc_list:
         for diff in diff_list:
@@ -61,11 +62,11 @@ def main_bow_create():
                                     Application.create_config_file()
                                     # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save='ALL')
                                     Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save=[])
-                                    Application.run_application()
+                                    # Application.run_application()
 
                                     Application.set_input_image_folder(r'c:/repos/ZuBud_dataset/qimage')
                                     Application.set_output_image_folder('Logs/query_application')
-                                    Application.delete_folder_appl_out()
+                                    # Application.delete_folder_appl_out()
 
                                     Application.do_get_image_job(port_output_name='RAW')
                                     grey = Application.do_grayscale_transform_job(port_input_name='RAW')
@@ -74,14 +75,22 @@ def main_bow_create():
                                                                              descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff,
                                                                              threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes)
 
-                                    Application.do_zubud_bow_inquiry_flann_job(port_to_inquiry=des, flann_thr=thr, saved_to_npy=True,
-                                                                               location_of_bow='Logs/application_results',
-                                                                               bow_port=bow +'_L0')
+                                    final = Application.do_zubud_bow_inquiry_flann_job(port_to_inquiry=des, flann_thr=thr, saved_to_npy=True,
+                                                                                       location_of_bow='Logs/application_results',
+                                                                                       bow_port=bow +'_L0')
+
+                                    list_to_eval.append(final + '_L0')
 
                                     Application.create_config_file()
                                     # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save='ALL')
-                                    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save=[])
-                                    Application.run_application()
+                                    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save=[])
+                                    # Application.run_application()
+
+    Benchmarking.run_CBIR_ZuBuD_benchmark(input_location='Logs/query_application/',
+                                          gt_location=r'c:\repos\ZuBud_dataset\zubud_groundtruth.txt',
+                                          raw_image=r'c:/repos/ZuBud_dataset/qimage',
+                                          jobs_set=list_to_eval)
+
     Utils.close_files()
 
 

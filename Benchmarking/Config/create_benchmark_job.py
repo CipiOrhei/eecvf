@@ -7,6 +7,7 @@ from Benchmarking.CM_Benchmark.basic_benchmark.fom import run_CM_benchmark_FOM
 from Benchmarking.CM_Benchmark.basic_benchmark.psnr import run_CM_benchmark_PSNR
 from Benchmarking.CM_Benchmark.basic_benchmark.IoU import run_CM_benchmark_IoU
 from Benchmarking.sb_benchmark.sb_IoU import run_SB_benchmark_IoU
+from Benchmarking.cbir.zubud import run_cbir_Top1
 from Benchmarking.bsds500.verify import run_verify_boundry
 from Utils.log_handler import log_benchmark_info_to_console
 
@@ -183,6 +184,25 @@ def run_SB_IoU_benchmark(input_location: str, gt_location: str, jobs_set: list, 
     set_image_set(raw_image)
 
     run_SB_benchmark_IoU()
+
+
+# noinspection PyPep8Naming
+def run_CBIR_ZuBuD_benchmark(input_location: str, gt_location: str, jobs_set: list, raw_image: str):
+    """
+    Run Figure of Merit benchmark
+    W. K. Pratt, Digital Image Processing. New York: Wiley Interscience 1978
+    :param input_location: location of algorithm images
+    :param gt_location: location of gt images
+    :param raw_image: location of raw images
+    :param jobs_set: algo sets to evaluate
+    :return: None
+    """
+
+    set_input_location(input_location)
+    job_set(jobs_set)
+    set_image_set(raw_image)
+
+    run_cbir_Top1(gt_location)
 
 
 if __name__ == "__main__":
