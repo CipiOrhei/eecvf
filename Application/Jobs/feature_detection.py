@@ -4,15 +4,17 @@ from typing import Tuple
 # Do not delete used indirectly
 # noinspection PyUnresolvedReferences
 from Application.Frame import transferJobPorts
-from Application.Frame.global_variables import JobInitStateReturn
+from Application.Frame.global_variables import JobInitStateReturn, global_var_handler
 from Application.Frame.transferJobPorts import get_port_from_wave
 from Utils.log_handler import log_error_to_console, log_to_console
 from Application.Config.create_config import jobs_dict, create_dictionary_element
-from config_main import PYRAMID_LEVEL, FILTERS
+from config_main import PYRAMID_LEVEL, APPL_SAVE_LOCATION
 from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create, get_module_name_from_file
 
 from Application.Utils.misc import save_keypoint_to_array
 import cv2
+import os
+import numpy as np
 
 
 ############################################################################################################################################
@@ -141,14 +143,18 @@ def main_func_a_kaze(param_list: list = None) -> bool:
     # noinspection PyPep8Naming
     PORT_IN_MASK = 10
     # noinspection PyPep8Naming
-    PORT_OUT_KEYPOINTS = 11
+    PORT_IN_SAVE_NPY = 11
     # noinspection PyPep8Naming
-    PORT_OUT_DESCRIPTORS = 12
+    PORT_IN_SAVE_TXT = 12
     # noinspection PyPep8Naming
-    PORT_OUT_IMG = 13
+    PORT_OUT_KEYPOINTS = 13
+    # noinspection PyPep8Naming
+    PORT_OUT_DESCRIPTORS = 14
+    # noinspection PyPep8Naming
+    PORT_OUT_IMG = 15
 
     # verify that the number of parameters are OK.
-    if len(param_list) != 14:
+    if len(param_list) != 16:
         log_error_to_console("A-KAZE JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
         return False
     else:
@@ -180,12 +186,48 @@ def main_func_a_kaze(param_list: list = None) -> bool:
                 # save KeyPoints to port
                 for idx in range(min(len(des), param_list[PORT_IN_NR_FEATURES])):
                     p_out_des.arr[idx][:] = des[idx]
+
+                file_to_save = os.path.join(APPL_SAVE_LOCATION, p_out_des.name)
+
+                if param_list[PORT_IN_SAVE_TXT]:
+                    if not os.path.exists(file_to_save):
+                        os.makedirs(file_to_save)
+
+                    location_np = os.path.join(file_to_save, global_var_handler.PICT_NAME.split('.')[0])
+                    np.save(location_np, p_out_des.arr)
+
+                if param_list[PORT_IN_SAVE_NPY]:
+                    if not os.path.exists(file_to_save):
+                        os.makedirs(file_to_save)
+
+                    location_np = os.path.join(file_to_save, global_var_handler.PICT_NAME.split('.')[0] + '.txt')
+                    np.savetxt(location_np, p_out_des.arr)
+
                 p_out_des.set_valid()
                 # save descriptors to port
                 for t in range(min(len(kp), param_list[PORT_IN_NR_FEATURES])):
                     tmp = save_keypoint_to_array(kp[t])
                     p_out_keypoints.arr[t][:] = tmp
+
+                file_to_save = os.path.join(APPL_SAVE_LOCATION, p_out_keypoints.name)
+
+                if param_list[PORT_IN_SAVE_TXT]:
+                    if not os.path.exists(file_to_save):
+                        os.makedirs(file_to_save)
+
+                    location_np = os.path.join(file_to_save, global_var_handler.PICT_NAME.split('.')[0])
+                    np.save(location_np, p_out_keypoints.arr)
+
+                if param_list[PORT_IN_SAVE_NPY]:
+                    if not os.path.exists(file_to_save):
+                        os.makedirs(file_to_save)
+
+                    location_np = os.path.join(file_to_save, global_var_handler.PICT_NAME.split('.')[0] + '.txt')
+                    np.savetxt(location_np, p_out_keypoints.arr)
+
                 p_out_keypoints.set_valid()
+
+
 
             except BaseException as error:
                 log_error_to_console("A_KAZE JOB NOK: ", str(error))
@@ -299,6 +341,7 @@ def do_sift_job(port_input_name: str,
 def do_a_kaze_job(port_input_name: str, number_features: int = 512,
                   descriptor_type: int = cv2.AKAZE_DESCRIPTOR_KAZE, descriptor_size: int = 0, descriptor_channels: int = 3,
                   threshold: float = 0.001, nr_octaves: int = 4, nr_octave_layers: int = 4, diffusivity: int = cv2.KAZE_DIFF_PM_G1,
+                  save_to_text: bool = True, save_to_npy: bool = True,
                   mask_port_name: str = None,
                   port_kp_output: str = None, port_des_output: str = None, port_img_output: str = None,
                   level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> Tuple[str, str, str]:
@@ -319,6 +362,8 @@ def do_a_kaze_job(port_input_name: str, number_features: int = 512,
     :param diffusivity: Diffusivity type.
            cv2.KAZE_DIFF_PM_G1, cv2.KAZE_DIFF_PM_G2, cv2.KAZE_DIFF_CHARBONNIER, cv2.KAZE_DIFF_WEICKERT
     :param mask_port_name: Masks for each input image specifying where to look for keypoints
+    :param save_to_text: if we want to save BOW clusters to txt files
+    :param save_to_npy: if we want to save BOW clusters to npy files
     :param port_kp_output: Output port name for KeyPoints list
     :param port_des_output: Output port name for descriptor list
     :param port_img_output: Output port name for image
@@ -330,7 +375,7 @@ def do_a_kaze_job(port_input_name: str, number_features: int = 512,
     input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
 
     if port_kp_output is None:
-        port_kp_output = 'A_KAZE_DT_{dt}_DS_{ds}_THR_{thr}_NO_{no}_NOL_{nol}_D_{d}_{INPUT}'.format(dt=descriptor_type.__str__(), ds=descriptor_size.__str__(),
+        port_kp_output = 'A_KAZE_KP_DT_{dt}_DS_{ds}_THR_{thr}_NO_{no}_NOL_{nol}_D_{d}_{INPUT}'.format(dt=descriptor_type.__str__(), ds=descriptor_size.__str__(),
                                                                                                    thr=threshold.__str__().replace('.', '_'), d=diffusivity.__str__(),
                                                                                                    no=nr_octaves.__str__(), nol=nr_octave_layers.__str__().replace('.', '_'),
                                                                                                    INPUT=port_input_name)
@@ -369,7 +414,8 @@ def do_a_kaze_job(port_input_name: str, number_features: int = 512,
 
     main_func_list = [input_port_name, wave_offset, number_features, descriptor_type, descriptor_size, descriptor_channels,
                       threshold, nr_octaves, nr_octave_layers, diffusivity,
-                      mask_port_name, port_kp_output_name, port_des_output_name, port_img_output_name]
+                      mask_port_name,  save_to_text, save_to_npy,
+                      port_kp_output_name, port_des_output_name, port_img_output_name]
 
     output_port_list = [(port_kp_output_name, port_kp_output_name_size, 'f', False),
                         (port_des_output_name, port_des_output_name_size, 'f', False),

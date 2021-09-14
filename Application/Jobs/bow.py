@@ -158,8 +158,8 @@ def do_zubud_bow_job(port_to_add: str, dictionary_size: int,
                      port_bow_list_output: str = None,
                      level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
     """
-    Bag  of  Features  (BOF)  has  become  a  popular  approachin  CV  for  image  classification,  object  detection,  or  imageretrieval.
-    The  name  comes  from  the  Bag  of  Words  (BOW)representation used in textual information retrieva
+    Bag  of  Features  (BOF)  has  become  a  popular  approach in  CV  for  image  classification,  object  detection,  or  image retrieval.
+    The  name  comes  from  the  Bag  of  Words  (BOW)representation used in textual information retrieval
     # https://www.cs.cmu.edu/~efros/courses/LBMV07/Papers/csurka-eccv-04.pdf
     :param port_to_add:  Feature port to add to BOW
     :param dictionary_size: size of cluster per class
