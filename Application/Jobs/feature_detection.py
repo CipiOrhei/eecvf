@@ -177,15 +177,18 @@ def main_func_a_kaze(param_list: list = None) -> bool:
                                               descriptor_channels=param_list[PORT_IN_DESC_CHANNELS], threshold=param_list[PORT_IN_THR],
                                               nOctaves=param_list[PORT_IN_N_OCTAVES], nOctaveLayers=param_list[PORT_IN_N_OCTAVES_LAYERS],
                                               diffusivity=param_list[PORT_IN_DIFFUSIVITY])
-
+                
                 kp, des = a_kaze_obj.detectAndCompute(image=p_in.arr.copy(), mask=p_in_mask.arr)
                 # image of features
                 tmp = cv2.drawKeypoints(image=p_in.arr.copy(), keypoints=kp, outImage=p_out_img.arr.copy())
+                # p_out_img.arr[:] = tmp[:]
                 p_out_img.arr[:] = tmp[:]
                 p_out_img.set_valid()
                 # save KeyPoints to port
-                for idx in range(min(len(des), param_list[PORT_IN_NR_FEATURES])):
-                    p_out_des.arr[idx][:] = des[idx]
+                # for idx in range(min(len(des), param_list[PORT_IN_NR_FEATURES])):
+                #     p_out_des.arr[idx][:] = des[idx]
+
+                p_out_des.arr = np.float32(des)
 
                 file_to_save = os.path.join(APPL_SAVE_LOCATION, p_out_des.name)
 

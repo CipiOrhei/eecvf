@@ -147,6 +147,7 @@ def bow_zubud_main_func(param_list: list = None) -> bool:
             cluster_bow[port_out.name] = ZuBuD_BOW(name=port_in.name, dict_size=param_list[PORT_IN_DESC_SIZE])
 
         name = global_var_handler.PICT_NAME[:10]
+
         cluster_bow[port_out.name].add(name, np.float32(port_in.arr))
 
         if global_var_handler.NR_PICTURES - 1 == global_var_handler.FRAME:
@@ -328,7 +329,7 @@ def do_zubud_bow_inquiry_flann_job(port_to_inquiry: str, flann_thr: float, locat
     input_port_name = transform_port_name_lvl(name=port_to_inquiry, lvl=level)
 
     if port_out_name is None:
-        port_out_name = 'ZuBuD_BOW_INQ_{Input}'.format(Input=port_to_inquiry)
+        port_out_name = 'ZuBuD_BOW_INQ_THR_{thr}_{Input}'.format(thr=flann_thr.__str__().replace('.', '_'), Input=bow_port[0:-3])
 
     port_img_output_name = transform_port_name_lvl(name=port_out_name, lvl=level)
     port_des_output_name_size = '(201, 2)'
