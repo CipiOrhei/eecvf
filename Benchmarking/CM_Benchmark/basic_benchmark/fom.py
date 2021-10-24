@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 
+
 import config_main
 from Benchmarking.Util.image_parsing import find_img_extension
 from Utils.log_handler import log_setup_info_to_console, log_benchmark_info_to_console, log_error_to_console
@@ -17,7 +18,7 @@ def fom_calc(img_gt, img):
     :return: FOM value
     """
     # Compute the distance transform for the gt image .
-    dist = distance_transform_edt(img_gt == 0)
+    dist = distance_transform_edt(np.invert(img_gt))
     # constant
     alpha = 1.0 / 9.0
     fom = 0
@@ -94,6 +95,70 @@ def run_CM_benchmark_FOM():
 
         except Exception as ex:
             log_error_to_console('BENCHMARK CM FOM NOK', ex.__str__())
+
+
+def run_CM_benchmark_SFOM():
+    """
+    The Symetric Pratt Figure of Merit (PFOM) is a method used to provide
+    a quantitative comparison between edge detection algorithms
+    in image processing
+    Magnier, B. Edge detection: A review of dissimilarity evaluations and a proposed normalized measure. Multimed. Tools Appl. 2017, 77, 1–45.
+    :return:
+    """
+    log_setup_info_to_console("BENCHMARKING CM SFOM")
+    idx = 0
+
+    for set in config_main.BENCHMARK_SETS:
+        log_benchmark_info_to_console('Current set: {}'.format(set))
+        log_benchmark_info_to_console('Current set: {number}\{total}'.format(number=idx, total=len(config_main.BENCHMARK_SETS)))
+
+        idx += 1
+
+        try:
+            # Write results to disk
+            results_path = os.path.join(os.getcwd(), config_main.BENCHMARK_RESULTS, 'SFOM')
+
+            if not os.path.exists(results_path):
+                os.makedirs(results_path)
+
+            csv = open(os.path.join(results_path, set + '.log'), "w+")
+            csv.write('Per image (#, SFOM):\n')
+            log_benchmark_info_to_console('Per image (#, SFOM):\n')
+
+            avg_fom = 0
+            count = 0
+
+            for file in config_main.BENCHMARK_SAMPLE_NAMES:
+                # find extension of images and gt_images
+                if config_main.APPL_SAVE_JOB_NAME is True:
+                    img_extension = find_img_extension(os.path.join(config_main.BENCHMARK_INPUT_LOCATION, set, set + '_' + file))
+                else:
+                    img_extension = find_img_extension(os.path.join(config_main.BENCHMARK_INPUT_LOCATION, set, file))
+
+                gt_extension = find_img_extension(os.path.join(config_main.BENCHMARK_GT_LOCATION, file))
+
+                path_img_gt = os.path.join(config_main.BENCHMARK_GT_LOCATION, file + gt_extension)
+
+                if config_main.APPL_SAVE_JOB_NAME is True:
+                    path_img_al = os.path.join(config_main.BENCHMARK_INPUT_LOCATION, set, set + '_' + file + img_extension)
+                else:
+                    path_img_al = os.path.join(config_main.BENCHMARK_INPUT_LOCATION, set, file + img_extension)
+                img_gt = cv2.cvtColor(cv2.imread(path_img_gt), cv2.COLOR_BGR2GRAY)
+                img_al = cv2.cvtColor(cv2.imread(path_img_al), cv2.COLOR_BGR2GRAY)
+                try:
+                    val = 0.5 * fom_calc(img_gt, img_al) + 0.5 * fom_calc(img_al, img_gt)
+                    avg_fom += val
+                    count += 1
+                    csv.write('{:<10s} {:<10.6f}\n'.format(file, val))
+                    # log_benchmark_info_to_console('{:<10s} {:<10.6f}\n'.format(file, val * 100))
+                except Exception as ex:
+                    log_error_to_console("BENCHMARK CM SFOM: {file}".format(file=file), ex.__str__())
+
+            log_benchmark_info_to_console('SFOM: {:<10s} {:<10.6f}\n'.format(set, (avg_fom / count) * 100))
+            csv.write('SFOM: {:<10s} {:<10.6f}\n'.format(set, (avg_fom / count) * 100))
+
+        except Exception as ex:
+            log_error_to_console('BENCHMARK CM SFOM NOK', ex.__str__())
 
 
 if __name__ == "__main__":

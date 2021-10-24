@@ -335,6 +335,7 @@ def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: li
     ds = {'f1': 3, 'r': 0, 'p': 1}
     if order_by is not None:
         to_plot = (sorted(to_plot, key=lambda key_value: key_value[ds[order_by]], reverse=True))[:number_of_series]
+        print(to_plot)
     for i in to_plot:
         # "F={value} {name}".format(value=str(i[4]),name=i[2])
         name_legend = i[2]
@@ -348,7 +349,7 @@ def plot_first_cpm_results(list_of_data: list, number_of_series: int, inputs: li
         color = next(colors)
 
         if set_all_to_legend is False:
-            plt.plot(i[0], i[1], label="[F={value:0.3f}] {name}".format(value=i[3], name=name_legend), marker='o', color=color)
+            plt.plot(i[0], i[1], label="[F={value:0.3f}] {name}".format(value=i[3], name=name_legend), marker='^', color=color)
         else:
 
             plt.plot(i[0], i[1], label="[F1={f1:0.3f}][P={p:0.3f}][R={r:0.3f}]{name}".format(f1=i[3], p=i[1], r=i[0], name=name_legend), marker='o', color=color)
