@@ -3,7 +3,7 @@ import os
 import shutil
 
 import config_main
-from Benchmarking.CM_Benchmark.basic_benchmark.fom import run_CM_benchmark_FOM
+from Benchmarking.CM_Benchmark.basic_benchmark.fom import run_CM_benchmark_FOM, run_CM_benchmark_SFOM
 from Benchmarking.CM_Benchmark.basic_benchmark.psnr import run_CM_benchmark_PSNR
 from Benchmarking.CM_Benchmark.basic_benchmark.IoU import run_CM_benchmark_IoU
 from Benchmarking.sb_benchmark.sb_IoU import run_SB_benchmark_IoU
@@ -134,6 +134,27 @@ def run_FOM_benchmark(input_location: str, gt_location: str,
     job_set(jobs_set)
 
     run_CM_benchmark_FOM()
+
+
+# noinspection PyPep8Naming
+def run_SFOM_benchmark(input_location: str, gt_location: str,
+                      raw_image: str, jobs_set: list):
+    """
+    Run Symetric Figure of Merit benchmark
+
+    :param input_location: location of algorithm images
+    :param gt_location: location of gt images
+    :param raw_image: location of raw images
+    :param jobs_set: algo sets to evaluate
+    :return: None
+    """
+
+    set_gt_location(gt_location)
+    set_input_location(input_location)
+    set_image_set(raw_image)
+    job_set(jobs_set)
+
+    run_CM_benchmark_SFOM()
 
 
 # noinspection PyPep8Naming

@@ -1,9 +1,16 @@
 # noinspection PyPep8Naming
+import random
+
 import config_main as CONFIG
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 from operator import add
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from Utils.plot_benchmark_results import color_list
 
 """
 Module handles the plotting for the EECVF
@@ -278,6 +285,76 @@ def plot_time_jobs(port_list: list, series_names: list, name_to_save: str, input
 
     plt.close()
     file.close()
+
+
+def plot_box_benchmark_values(name_to_save: str,
+                              number_decimal: int = 3, number_of_series: int = None, data='FOM', data_subsets=None,
+                              save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True):
+    input_location = os.path.join(CONFIG.BENCHMARK_RESULTS, data)
+    subset_dict = dict()
+
+    for data_subset in data_subsets:
+        subset_dict[data_subset] = {}
+
+    # get files from benchmark folder
+    for dirname, dirnames, filenames in os.walk(input_location):
+        for filename in filenames:
+            # files.append(filename)
+            try:
+                f = open(os.path.join(input_location, filename)).readlines()[-1].split(' ')
+
+                for idx in range(len(f), 0, -1):
+                    value = f[idx - 1]
+                    if value != '' and value != '\n':
+                        break
+
+                for data_subset in data_subsets:
+                    if data_subset in filename:
+                        subset_dict[data_subset][filename.split('.')[0]] = round(float(value), number_decimal)
+
+            except:
+                print(filename)
+
+    for data_subset in subset_dict:
+        if number_of_series is None:
+            subset_dict[data_subset] = (sorted(subset_dict[data_subset].items(), key=lambda key_value: key_value[1], reverse=True))
+        else:
+            subset_dict[data_subset] = (sorted(subset_dict[data_subset].items(), key=lambda key_value: key_value[1], reverse=True))[:number_of_series]
+        # print(subset_dict[data_subset])
+
+    for set in subset_dict:
+        print(subset_dict[set][0])
+
+    subset_values_dict = {}
+
+    for data_subset in subset_dict:
+        subset_values_dict[data_subset] = [variant[1] for variant in subset_dict[data_subset]]
+
+    dataframe = pd.DataFrame.from_dict(subset_values_dict)
+    dataframe.set_index(dataframe.columns[0])
+
+    df = dataframe.plot(kind='box',
+                        labels=list(subset_dict.keys()),
+                        figsize=(15, 8), showmeans=True, grid=True)
+
+    plt.ylabel(data)
+
+    # colors = iter(random.sample(color_list, k=len(subset_dict)))
+    #
+    # for set in subset_dict:
+    #     # print(subset_dict[set][0])
+    #     color = next(colors)
+    #     plt.plot(label="[{data}={val:0.3f}]{name}".format(data=data, val=subset_dict[set][0][1], name=subset_dict[set][0][0]), marker='o', color=color)
+    #     plt.legend(fancybox=True, fontsize='x-large', loc='center left', bbox_to_anchor=(1, 0.5))
+
+    if show_plot is True:
+        plt.show()
+
+    if save_plot is True:
+        plt.savefig(os.path.join(save_location, name_to_save + '.jpg'))
+
+    plt.close()
+
 
 
 if __name__ == "__main__":

@@ -224,7 +224,7 @@ def create_latex_fom_table(number_decimal: int = 3, order_by: bool = True, numbe
             try:
                 f = open(os.path.join(input_location, filename)).readlines()[-1].split(' ')
 
-                for idx in range(len(f), 0, -1):
+                for idx in range(len(f), -1, -1):
                     value = f[idx - 1]
                     if value != '' and value != '\n':
                         break
