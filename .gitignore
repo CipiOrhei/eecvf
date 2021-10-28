@@ -6,6 +6,7 @@ Logs
 /TestData/psb
 /TestData/SB_LABELS
 /TestData/BSR
+/misc_wip
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
