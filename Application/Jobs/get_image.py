@@ -60,7 +60,7 @@ def get_image_cv(path: str, port_raw_image: str, do_grey: bool) -> None:
 
         if do_grey is True:
             img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
-            np.savetxt(os.path.join('c:/repos/eecvf_git/Logs', (path.split('\\')[-1]))[:-4] + '.txt', img, fmt='%3.0f')
+            # np.savetxt(os.path.join('c:/repos/eecvf_git/Logs', (path.split('\\')[-1]))[:-4] + '.txt', img, fmt='%3.0f')
         else:
             img = cv2.imread(filename=path)
             # np.savetxt(os.path.join('c:/repos/eecvf_git/Logs', (path.split('\\')[-1])).split('.')[0] + '.txt', img, fmt='%3.0f')
