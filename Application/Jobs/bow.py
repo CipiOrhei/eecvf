@@ -9,6 +9,7 @@ from config_main import PYRAMID_LEVEL
 from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create, get_module_name_from_file
 
 
+
 import cv2
 import numpy as np
 import os
@@ -51,15 +52,16 @@ class ZuBuD_BOW:
         self.list_clustered_bows = dict()
 
         # creates bows for each object object0003.view03.png
-        for i in range(1, 202):
-            name_building_class = 'object{:04d}'.format(i)
-            if is_from_file is False:
-                self.list_bows[name_building_class] = cv2.BOWKMeansTrainer(dict_size)
-            else:
+        if is_from_file is True:
+            for i in range(1, 202):
+                name_building_class = 'object{:04d}'.format(i)
                 self.list_bows[name_building_class] = None
 
-    def add(self, id, desc):
+    def add(self, id, desc, dict_size):
         desc = np.float32(desc)
+        if id not in self.list_bows.keys():
+            self.list_bows[id] = cv2.BOWKMeansTrainer(dict_size)
+            self.list_bows[id].clear()
         self.list_bows[id].add(desc)
 
     def check(self):
@@ -68,7 +70,9 @@ class ZuBuD_BOW:
 
     def cluster_all(self):
         for key in self.list_bows.keys():
-            self.list_clustered_bows[key] = self.list_bows[key].cluster()
+            desC = self.list_bows[key].cluster()
+            self.list_clustered_bows[key] = desC
+            self.list_bows[key].clear()
 
     def save_to_files_np(self, location):
         for key in self.list_bows.keys():
@@ -111,7 +115,6 @@ def init_func_global() -> JobInitStateReturn:
 # Main functions
 ############################################################################################################################################
 
-
 def bow_zubud_main_func(param_list: list = None) -> bool:
     """
     Main function for ZuBuD BOW calculation job.
@@ -146,9 +149,17 @@ def bow_zubud_main_func(param_list: list = None) -> bool:
         if port_out.name not in cluster_bow.keys():
             cluster_bow[port_out.name] = ZuBuD_BOW(name=port_in.name, dict_size=param_list[PORT_IN_DESC_SIZE])
 
+
         name = global_var_handler.PICT_NAME[:10]
 
-        cluster_bow[port_out.name].add(name, np.float32(port_in.arr))
+        cluster_bow[port_out.name].add(name, np.float32(port_in.arr), param_list[PORT_IN_DESC_SIZE])
+
+        file_to_save = os.path.join(config_main.APPL_SAVE_LOCATION, port_out.name)
+        if not os.path.exists(file_to_save):
+            os.makedirs(file_to_save)
+        location_np = os.path.join(file_to_save, global_var_handler.PICT_NAME[:-4] + '_bow_des.txt')
+        np.savetxt(location_np, port_in.arr)
+
 
         if global_var_handler.NR_PICTURES - 1 == global_var_handler.FRAME:
             # only in last wave
@@ -161,7 +172,7 @@ def bow_zubud_main_func(param_list: list = None) -> bool:
             if param_list[PORT_IN_SAVE_NPY]:
                 cluster_bow[port_out.name].save_to_files_np(file_to_save)
 
-            t = cluster_bow[port_out.name].list_clustered_bows
+            # t = cluster_bow[port_out.name].list_clustered_bows
 
             t = np.array(list(cluster_bow[port_out.name].list_clustered_bows.values()))
             port_out.arr[:] = t

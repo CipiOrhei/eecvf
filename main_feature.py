@@ -36,7 +36,7 @@ def main_bow_create():
     # diff_list = [cv2.KAZE_DIFF_PM_G1, cv2.KAZE_DIFF_PM_G2, cv2.KAZE_DIFF_CHARBONNIER, cv2.KAZE_DIFF_WEICKERT]
     diff_list = [cv2.KAZE_DIFF_PM_G1]
     # desc_size_list = [0, 8, 16, 32, 64, 128]
-    desc_size_list = [8]
+    desc_size_list = [64]
     nOctaves_list = [5]
     nLayes_list = [6]
     thr_list = [0.85]
@@ -70,8 +70,8 @@ def main_bow_create():
     Application.set_output_image_folder('Logs/query_application')
     Application.delete_folder_appl_out()
 
-    Application.do_get_image_job(port_output_name='RAW')
-    grey = Application.do_grayscale_transform_job(port_input_name='RAW')
+    grey = Application.do_get_image_job(port_output_name='GRAY_RAW', direct_grey=True)
+    # grey = Application.do_grayscale_transform_job(port_input_name='RAW')
 
     for desc in desc_list:
         for diff in diff_list:

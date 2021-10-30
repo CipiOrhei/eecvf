@@ -196,14 +196,14 @@ def main_func_a_kaze(param_list: list = None) -> bool:
                     if not os.path.exists(file_to_save):
                         os.makedirs(file_to_save)
 
-                    location_np = os.path.join(file_to_save, global_var_handler.PICT_NAME.split('.')[0])
+                    location_np = os.path.join(file_to_save, global_var_handler.PICT_NAME[:-4])
                     np.save(location_np, p_out_des.arr)
 
                 if param_list[PORT_IN_SAVE_TXT]:
                     if not os.path.exists(file_to_save):
                         os.makedirs(file_to_save)
 
-                    location_np = os.path.join(file_to_save, global_var_handler.PICT_NAME.split('.')[0] + '.txt')
+                    location_np = os.path.join(file_to_save, global_var_handler.PICT_NAME[:-4] + '.txt')
                     np.savetxt(location_np, p_out_des.arr)
 
                 p_out_des.set_valid()
