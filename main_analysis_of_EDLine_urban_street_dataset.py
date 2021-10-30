@@ -11,10 +11,10 @@ import Utils
 
 """
 This module contains the code used for the following paper:
-  title={An analysis of ED Line algorithm in urban street-view dataset},
-  author={Orhei, Ciprian and Muguras, Mocofan and Vert, Silviu and Vasiu, Radu},
+  title={An analysis of ED line algorithm in urban street-view dataset},
+  author={Orhei, Ciprian and Mocofan, Muguras and Vert, Silviu and Vasiu, Radu},
   booktitle={International Conference on Information and Software Technologies},
-  pages={--},
+  pages={123--135},
   year={2021},
   organization={Springer}
 """

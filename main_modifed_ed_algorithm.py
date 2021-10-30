@@ -13,10 +13,17 @@ import Utils
 Code for paper:
   title={An automated threshold Edge Drawing algorithm},
   author={Orhei, Ciprian and Mocofan, Muguras and Vert, Silviu and Vasiu, Radu},
-  booktitle={2021 43th international conference on telecommunications and signal processing (TSP)},
-  pages={--},
+  booktitle={2021 44th International Conference on Telecommunications and Signal Processing (TSP)},
+  pages={292--295},
   year={2021},
   organization={IEEE}
+  
+  OR
+  
+  title={An automated threshold Edge Drawing algorithm},
+  author={Orhei, Ciprian and Mocofan, Muguras and Vert, Silviu and Vasiu, Radu},
+  journal={arXiv preprint arXiv:2110.05119},
+  year={2021}
 """
 
 def main_diff_operators():

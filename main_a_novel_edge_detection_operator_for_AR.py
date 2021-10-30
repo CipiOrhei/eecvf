@@ -17,6 +17,13 @@ This module contains the code used for the following paper:
   pages={208--219},
   year={2020},
   organization={Springer}
+  
+  OR 
+  
+  title={A Novel Edge Detection Operator for Identifying Buildings in Augmented Reality Applications},
+  author={Orhei, Ciprian and Vert, Silviu and Vasiu, Radu},
+  journal={arXiv preprint arXiv:2106.01055},
+  year={2021}
 """
 
 
