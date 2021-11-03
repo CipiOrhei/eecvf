@@ -102,7 +102,7 @@ def run_CM_benchmark_SFOM():
     The Symetric Pratt Figure of Merit (PFOM) is a method used to provide
     a quantitative comparison between edge detection algorithms
     in image processing
-    Magnier, B. Edge detection: A review of dissimilarity evaluations and a proposed normalized measure. Multimed. Tools Appl. 2017, 77, 1–45.
+    Magnier, B. Edge detection: A review of dissimilarity evaluations and a proposed normalized measure. Multimed. Tools Appl. 2017, 77, 145.
     :return:
     """
     log_setup_info_to_console("BENCHMARKING CM SFOM")

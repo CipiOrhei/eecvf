@@ -14,7 +14,7 @@ from Benchmarking.Config.create_benchmark_job import set_gt_location, set_image_
 
 def rde_calc(img, img_gt, k_value):
     """
-    Dubuisson, M.P.; Jain, A.K. A modified Hausdorff distance for object matching. IEEE ICPR 1994, 1, 566–568
+    Dubuisson, M.P.; Jain, A.K. A modified Hausdorff distance for object matching. IEEE ICPR 1994, 1, 566-568
     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.1.8155&rep=rep1&type=pdf
     :param img: edge map resulting of algorithm
     :param img_gt: ground truth image
@@ -49,7 +49,7 @@ def rde_calc(img, img_gt, k_value):
         right = math.pow(sum_dc / cn_gt, 1.0/k_value)
 
     if cn_cd==0:
-        rde = 0
+        rde = 1000
     else:
         rde = left + right
 
