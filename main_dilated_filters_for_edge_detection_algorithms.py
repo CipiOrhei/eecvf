@@ -160,15 +160,21 @@ def main_find_param_first_order_edges(dataset):
                                  prefix_to_cut_legend='FINAL_', suffix_to_cut_legend='_L0',
                                  list_of_data=list_to_save, number_of_series=40,
                                  replace_list=[('_SOBEL', ''),('_DILATED', ' Dilated '),
-                                               ('_3x3', ' 3x3'), ('_5x5', ' 5x5'), ('_7x7', ' 7x7'), ('THR_', ' Thr='), ('_BLURED_S_', ' S='), ('_', '.')],
-                                 inputs=[''], self_contained_list=True,set_legend_left=True,
+                                               ('_3x3', ' 3x3'), ('_5x5', ' 5x5'), ('_7x7', ' 7x7'),
+                                               ('THR_', ' TG='), ('_BLURED_S_', ' S='), ('_', '.'),
+                                               ('dilated 7x7', '7x7(D)'),
+                                               ('dilated 5x5', '5x5(D)'),
+                                               ('Dilated  7x7', '7x7(D)'),
+                                               ('Dilated  5x5', '5x5(D)'),
+                                               ],
+                                 inputs=[''], self_contained_list=True, set_legend_left=True, set_all_to_legend=False,
                                  save_plot=True, show_plot=False)
 
     Utils.close_files()
 
 
 def main_first_order_edge_detection(dataset):
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
     # Benchmarking.delete_folder_benchmark_out()
 
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
@@ -317,25 +323,34 @@ def main_first_order_edge_detection(dataset):
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
     # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
-    Application.run_application()
+    # Application.run_application()
 
     # Do bsds benchmarking
     # Be ware not to activate job_name_in_port in Application.configure_save_pictures
-    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
-                                                raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
-                                                jobs_set=list_to_save, do_thinning=False)
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='first_order_results',
                                  list_of_data=list_to_save, number_of_series=50,
-                                 prefix_to_cut_legend='FINAL_', suffix_to_cut_legend='_BLURED_L0',
-                                 replace_list=[('SEPARATED_PIXEL_DIFFERENCE_', 'Separated Px Dif '),
-                                               ('PIXEL_DIFFERENCE_', 'Pixel Dif '),
+                                 prefix_to_cut_legend='FINAL_', suffix_to_cut_legend=None,
+                                 replace_list=[('SEPARATED_PIXEL_DIFFERENCE_', 'Sep Px Dif '),
+                                               ('PIXEL_DIFFERENCE_', 'Px Dif '),
                                                ('PREWITT_', 'Prewitt '), ('KIRSCH_', 'Kirsch '), ('SOBEL_', 'Sobel '),
                                                ('SCHARR_', 'Scharr '), ('KROON_', 'Kroon '), ('ORHEI_V1_', 'Orhei '), ('ORHEI_', 'Orhei '),
                                                ('KITCHEN_', 'Kitchen '), ('KAYYALI_', 'Kayyali '),
-                                               ('DILATED_', 'dilated ')],
-                                 inputs=[''], self_contained_list=True, set_legend_left=True,
+                                               ('DILATED_', 'dilated '),
+                                               ('_GAUSS_BLUR_K_0_S_2_25_GREY_L0', ''),
+                                               ('_GAUSS_BLUR_K_0_S_2_5_GREY_L0', ''),
+                                               ('_GAUSS_BLUR_K_0_S_2_75_GREY_L0', ''),
+                                               ('_GAUSS_BLUR_K_0_S_2_0_GREY_L0', ''),
+                                               ('dilated 7x7', '7x7(D)'),
+                                               ('dilated 5x5', '5x5(D)'),
+                                               ('Dilated 7x7', '7x7(D)'),
+                                               ('Dilated 5x5', '5x5(D)'),
+                                               ],
+                                 inputs=[''], self_contained_list=True, set_legend_left=True, set_all_to_legend=True,
                                  save_plot=True, show_plot=False)
 
     Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='first_order_latex_table_results', print_to_console=True,
@@ -442,7 +457,7 @@ def main_find_sigma_compass_first_order_edges(dataset):
 
 
 def main_find_thr_sig_compass_first_order_edges(dataset):
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
     # Benchmarking.delete_folder_benchmark_out()
 
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
@@ -453,15 +468,15 @@ def main_find_thr_sig_compass_first_order_edges(dataset):
     Application.do_grayscale_transform_job(port_input_name='RAW', port_output_name='GREY')
 
     edges = [
-        CONFIG.FILTERS.ROBINSON_CROSS_3x3
-        , CONFIG.FILTERS.ROBINSON_CROSS_DILATED_5x5
-        , CONFIG.FILTERS.ROBINSON_CROSS_DILATED_7x7
+        CONFIG.FILTERS.ROBINSON_CROSS_3x3,
+        CONFIG.FILTERS.ROBINSON_CROSS_DILATED_5x5,
+        CONFIG.FILTERS.ROBINSON_CROSS_DILATED_7x7
     ]
 
     # find best threshold for first level
     for edge in edges:
-        for thr in range(30, 100, 10):
-            for sigma in range(200, 350, 25):
+        for thr in range(30, 160, 10):
+            for sigma in range(25, 350, 25):
                 s = sigma / 100
                 blured_img = Application.do_gaussian_blur_image_job(port_input_name='GREY', sigma=s,
                                                                     port_output_name='BLURED_SIGMA_' + str(s).replace('.', '_'))
@@ -480,19 +495,30 @@ def main_find_thr_sig_compass_first_order_edges(dataset):
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
     # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
-    Application.run_application()
+    # Application.run_application()
 
     # Do bsds benchmarking
     # Be ware not to activate job_name_in_port in Application.configure_save_pictures
-    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
-                                                raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
-                                                jobs_set=list_to_save, do_thinning=False)
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='compass_first_order_thr_sigma_results_finder',
-                                 list_of_data=list_to_save, number_of_series=25,
-                                 inputs=[''], self_contained_list=True,
-                                 replace_list=[('_ROBINSON_CROSS_3x3', ''), ('THR_', 'Thr='), ('_BLURED_SIGMA_', ' S='), ('_', '.')],
+                                 list_of_data=list_to_save, number_of_series=40, set_all_to_legend=False,
+                                 inputs=[''], self_contained_list=True, set_legend_left=True,
+                                 replace_list=[
+                                     ('_ROBINSON_CROSS_', ' ')
+                                     , ('DILATED', 'Dilated '),
+                                     ('_3x3', ' 3x3'), ('_5x5', ' 5x5'), ('_7x7', ' 7x7'),
+                                     ('THR_', 'TG='), ('_BLURED_SIGMA_', ' S='), ('_', '.'),
+                                     ('dilated 7x7', '7x7(D)'),
+                                     ('dilated 5x5', '5x5(D)'),
+                                     ('Dilated 7x7', '7x7(D)'),
+                                     ('Dilated 5x5', '5x5(D)'),
+                                     ('Dilated  7x7', '7x7(D)'),
+                                     ('Dilated  5x5', '5x5(D)'),
+                                 ],
                                  prefix_to_cut_legend='FINAL_', suffix_to_cut_legend='_L0',
                                  save_plot=True, show_plot=False)
 
@@ -500,14 +526,14 @@ def main_find_thr_sig_compass_first_order_edges(dataset):
 
 
 def main_first_order_compass_edge_detection(dataset):
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
     # Benchmarking.delete_folder_benchmark_out()
 
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
 
     list_to_save = []
     threshold = 50
-    sigma = 2.0
+    sigma = 2.00
 
     compass_filters = [
         CONFIG.FILTERS.ROBINSON_CROSS_DILATED_7x7
@@ -561,14 +587,14 @@ def main_first_order_compass_edge_detection(dataset):
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
     # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
-    Application.run_application()
+    # Application.run_application()
 
     # Do bsds benchmarking
     # Be ware not to activate job_name_in_port in Application.configure_save_pictures
-    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
-                                                raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
-                                                jobs_set=list_to_save, do_thinning=False)
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='compass_first_order_results',
                                  list_of_data=list_to_save, number_of_series=50,
@@ -576,16 +602,23 @@ def main_first_order_compass_edge_detection(dataset):
                                  replace_list=[('ROBINSON_CROSS_', 'Robinson Cross '), ('KIRSCH_', 'Kirsch Cross '),
                                                ('ROBINSON_MODIFIED_CROSS_', 'Robinson Mod Cross '),
                                                ('PREWITT_COMPASS_', 'Prewitt Compass '),
-                                               ('DILATED_', 'Dilated ')],
-                                 prefix_to_cut_legend='FINAL_', suffix_to_cut_legend='_BLURED_L0',
+                                               ('DILATED_', 'Dilated '),
+                                               ('dilated 7x7', '7x7(D)'),
+                                               ('dilated 5x5', '5x5(D)'),
+                                               ('Dilated 7x7', '7x7(D)'),
+                                               ('Dilated 5x5', '5x5(D)'),
+                                               ('Dilated  7x7', '7x7(D)'),
+                                               ('Dilated  5x5', '5x5(D)'),
+                                               ],
+                                 prefix_to_cut_legend='FINAL_', suffix_to_cut_legend='_BLURED_L0', set_legend_left=True, set_all_to_legend=True,
                                  save_plot=True, show_plot=False)
 
-    Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='compass_first_order_latex_table_results', print_to_console=True,
-                                 header_list=['Variant', '', '3x3', 'Dilated 5x5', 'Dilated 7x7'],
-                                 prefix_data_name='FINAL', suffix_data_name='BLURED', level_data_name='L0',
-                                 version_data_name=['3x3', 'DILATED_5x5', 'DILATED_7x7'], version_separation='DILATED',
-                                 data_per_variant=['R', 'P', 'F1']
-                                 )
+    # Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='compass_first_order_latex_table_results', print_to_console=True,
+    #                              header_list=['Variant', '', '3x3', 'Dilated 5x5', 'Dilated 7x7'],
+    #                              prefix_data_name='FINAL', suffix_data_name='BLURED', level_data_name='L0',
+    #                              version_data_name=['3x3', 'DILATED_5x5', 'DILATED_7x7'], version_separation='DILATED',
+    #                              data_per_variant=['R', 'P', 'F1']
+    #                              )
 
     Utils.close_files()
 
@@ -684,7 +717,7 @@ def main_first_order_compass_edge_detection(dataset):
 
 
 def main_find_thr_sigma_frei_edges(dataset):
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
     # Benchmarking.delete_folder_benchmark_out()
 
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
@@ -697,9 +730,9 @@ def main_find_thr_sigma_frei_edges(dataset):
 
 
     # find best threshold for first level
-    for dilatation in range(3):
-        for thr in range(50, 90, 10):
-            for sigma in range(150, 275, 25):
+    for dilatation in [0, 1, 2]:
+        for thr in range(10, 150, 10):
+            for sigma in range(25, 300, 25):
                 s = sigma / 100
                 blured_img = Application.do_gaussian_blur_image_job(port_input_name='GREY', sigma=s,
                                                                     port_output_name='BLURED_SIGMA_' + str(s).replace('.', '_'))
@@ -715,20 +748,31 @@ def main_find_thr_sigma_frei_edges(dataset):
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
     # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
-    Application.run_application()
+    # Application.run_application()
 
     # Do bsds benchmarking
     # Be ware not to activate job_name_in_port in Application.configure_save_pictures
-    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
-                                                raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
-                                                jobs_set=list_to_save, do_thinning=False)
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='frei_edge_sigma_thr_finder',
-                                 list_of_data=list_to_save, number_of_series=25,
-                                 replace_list=[('FREI_CHEN_EDGE_3x3_BLURED_SIGMA_', 'S='), ('_', '.')],
+                                 list_of_data=list_to_save, number_of_series=40,
+                                 replace_list=[
+                                     ('_FREI_CHEN_EDGE_', ' ')
+                                     , ('DILATED', 'Dilated '),
+                                     ('_3x3', ' 3x3'), ('_5x5', ' 5x5'), ('_7x7', ' 7x7'),
+                                     ('THR_', 'Thr='), ('_BLURED_SIGMA_', ' S='), ('_', '.'),
+                                     ('dilated 7x7', '7x7(D)'),
+                                     ('dilated 5x5', '5x5(D)'),
+                                     ('Dilated 7x7', '7x7(D)'),
+                                     ('Dilated 5x5', '5x5(D)'),
+                                     ('Dilated  7x7', '7x7(D)'),
+                                     ('Dilated  5x5', '5x5(D)'),
+                                 ],
                                  prefix_to_cut_legend='FINAL_', suffix_to_cut_legend='_L0',
-                                 inputs=[''], self_contained_list=True,
+                                 inputs=[''], self_contained_list=True, set_legend_left=True, set_all_to_legend=False,
                                  save_plot=True, show_plot=False)
 
     Utils.close_files()
@@ -784,23 +828,30 @@ def main_frei_edges(dataset):
                                  inputs=[''], self_contained_list=True,
                                  replace_list=[('FREI_CHEN_EDGE_', 'Frei-Chen Edge '), ('FREI_CHEN_LINE_', 'Frei-Chen Line '),
                                                ('_BLURED_SIGMA_2_5_L0', ''),
-                                               ('DILATED_', 'Dilated ')],
+                                               ('DILATED_', 'Dilated '),
+                                               ('dilated 7x7', '7x7(D)'),
+                                               ('dilated 5x5', '5x5(D)'),
+                                               ('Dilated 7x7', '7x7(D)'),
+                                               ('Dilated 5x5', '5x5(D)'),
+                                               ('Dilated  7x7', '7x7(D)'),
+                                               ('Dilated  5x5', '5x5(D)'),
+                                               ],
                                  prefix_to_cut_legend='FINAL_', suffix_to_cut_legend='_BLURED_SIGMA_0_075_L0',
                                  save_plot=True, show_plot=False)
 
-    Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='frei_edge_latex_table_results', print_to_console=True,
-                                 list_of_series=['FREI_CHEN_EDGE', 'FREI_CHEN_LINE'],
-                                 header_list=['Variant', '', '3x3', 'Dilated 5x5', 'Dilated 7x7'],
-                                 prefix_data_name='FINAL', suffix_data_name='BLURED', level_data_name='L0',
-                                 version_data_name=['3x3', 'DILATED_5x5', 'DILATED_7x7'],
-                                 data_per_variant=['R', 'P', 'F1']
-                                 )
+    # Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='frei_edge_latex_table_results', print_to_console=True,
+    #                              list_of_series=['FREI_CHEN_EDGE', 'FREI_CHEN_LINE'],
+    #                              header_list=['Variant', '', '3x3', 'Dilated 5x5', 'Dilated 7x7'],
+    #                              prefix_data_name='FINAL', suffix_data_name='BLURED', level_data_name='L0',
+    #                              version_data_name=['3x3', 'DILATED_5x5', 'DILATED_7x7'],
+    #                              data_per_variant=['R', 'P', 'F1']
+    #                              )
 
     Utils.close_files()
 
 
 def main_find_thr_laplace_edges(dataset):
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
     # Benchmarking.delete_folder_benchmark_out()
 
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
@@ -811,12 +862,15 @@ def main_find_thr_laplace_edges(dataset):
     Application.do_grayscale_transform_job(port_input_name='RAW', port_output_name='GREY')
 
     laplace_edges = [
-        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1, CONFIG.FILTERS_SECOND_ORDER.LAPLACE_5x5_1
-        , CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1, CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1]
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1,
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_5x5_1,
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1,
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1
+    ]
 
     # find best threshold for first level
     for edge in laplace_edges:
-        for thr in range(45, 100, 10):
+        for thr in range(25, 265, 10):
             edge_result = Application.do_laplace_job(port_input_name='GREY', kernel=edge)
             thr_edge_result = Application.do_image_threshold_job(port_input_name=edge_result, input_value=thr,
                                                                  input_threshold_type='cv2.THRESH_BINARY',
@@ -839,9 +893,19 @@ def main_find_thr_laplace_edges(dataset):
     #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='laplace_thr_results_finder',
-                                 list_of_data=list_to_save, number_of_series=25,
-                                 inputs=[''], self_contained_list=True,
-                                 replace_list=[('THR_', 'Thr='), ('_LAPLACE_V1_3x3', '')],
+                                 list_of_data=list_to_save, number_of_series=40,
+                                 inputs=[''], self_contained_list=True, set_legend_left=True, set_all_to_legend=False,
+                                 replace_list=[
+                                     ('_LAPLACE_V1_', ' '), ('DILATED_', ' Dilated '),
+                                     ('_3x3', ' 3x3'), ('_5x5', ' 5x5'), ('_7x7', ' 7x7'),
+                                     ('THR_', 'TG='),
+                                     ('dilated 7x7', '7x7(D)'),
+                                     ('dilated 5x5', '5x5(D)'),
+                                     ('Dilated 7x7', '7x7(D)'),
+                                     ('Dilated 5x5', '5x5(D)'),
+                                     ('Dilated  7x7', '7x7(D)'),
+                                     ('Dilated  5x5', '5x5(D)'),
+                                 ],
                                  prefix_to_cut_legend='FINAL_', suffix_to_cut_legend='_GREY_L0',
                                  save_plot=True, show_plot=False)
 
@@ -849,7 +913,7 @@ def main_find_thr_laplace_edges(dataset):
 
 
 def main_laplace_edges(dataset):
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
     # Benchmarking.delete_folder_benchmark_out()
 
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
@@ -900,36 +964,44 @@ def main_laplace_edges(dataset):
     Application.create_config_file()
     # Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
-    Application.run_application()
+    # Application.run_application()
 
     # Do bsds benchmarking
     # Be ware not to activate job_name_in_port in Application.configure_save_pictures
-    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
-                                                raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
-                                                jobs_set=list_to_save, do_thinning=False)
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='laplace_edge_results',
                                  list_of_data=list_to_save, number_of_series=30,
-                                 inputs=[''], self_contained_list=True,
-                                 replace_list=[('THR_75_LAPLACE_', ''), ('_DILATED_', ' Dilated '),
-                                               ('_3x3', ' 3x3'), ('_5x5', ' 5x5')],
+                                 inputs=[''], self_contained_list=True, set_legend_left=True,  set_all_to_legend=True,
+                                 replace_list=[('THR_75_LAPLACE_', ''), ('THR_95_LAPLACE_', ''),
+                                               ('_DILATED_', ' Dilated '),
+                                               ('_3x3', ' 3x3'), ('_5x5', ' 5x5'),
+                                               ('dilated 7x7', '7x7(D)'),
+                                               ('dilated 5x5', '5x5(D)'),
+                                               ('Dilated 7x7', '7x7(D)'),
+                                               ('Dilated 5x5', '5x5(D)'),
+                                               ('Dilated  7x7', '7x7(D)'),
+                                               ('Dilated  5x5', '5x5(D)'),
+                                               ],
                                  prefix_to_cut_legend='FINAL_', suffix_to_cut_legend='_GREY_L0',
                                  save_plot=True, show_plot=False)
 
-    Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='laplace_latex_table_results', print_to_console=True,
-                                 header_list=['Variant', '', '3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
-                                 list_of_series=['LAPLACE_V1', 'LAPLACE_V2', 'LAPLACE_V3', 'LAPLACE_V4', 'LAPLACE_V5'],
-                                 prefix_data_name='FINAL', suffix_data_name='GREY', level_data_name='L0',
-                                 version_data_name=['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'], version_separation='DILATED',
-                                 data_per_variant=['R', 'P', 'F1']
-                                 )
+    # Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='laplace_latex_table_results', print_to_console=True,
+    #                              header_list=['Variant', '', '3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
+    #                              list_of_series=['LAPLACE_V1', 'LAPLACE_V2', 'LAPLACE_V3', 'LAPLACE_V4', 'LAPLACE_V5'],
+    #                              prefix_data_name='FINAL', suffix_data_name='GREY', level_data_name='L0',
+    #                              version_data_name=['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'], version_separation='DILATED',
+    #                              data_per_variant=['R', 'P', 'F1']
+    #                              )
 
     Utils.close_files()
 
 
 def main_find_sigma_log_edges(dataset):
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
     # Benchmarking.delete_folder_benchmark_out()
 
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
@@ -940,14 +1012,17 @@ def main_find_sigma_log_edges(dataset):
     Application.do_grayscale_transform_job(port_input_name='RAW', port_output_name='GREY')
 
     laplace_edges = [
-        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1, CONFIG.FILTERS_SECOND_ORDER.LAPLACE_5x5_1
-        , CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1, CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1]
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1,
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_5x5_1,
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1,
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1
+    ]
 
     # find best threshold for first level
     for edge in laplace_edges:
-        for sigma in range(100, 200, 20):
+        for sigma in range(20, 200, 20):
             s = sigma / 100
-            for thr in range(5, 40, 5):
+            for thr in range(5, 100, 5):
                 edge_result = Application.do_log_job(port_input_name='GREY', gaussian_sigma=s,
                                                      laplacian_kernel=edge,
                                                      port_output_name='LOG_' + edge +'_S_' + str(s).replace('.', '_') + '_GREY')
@@ -962,27 +1037,38 @@ def main_find_sigma_log_edges(dataset):
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
     # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
-    Application.run_application()
+    # Application.run_application()
 
     # Do bsds benchmarking
     # Be ware not to activate job_name_in_port in Application.configure_save_pictures
-    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
-                                                raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
-                                                jobs_set=list_to_save, do_thinning=False)
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='log_thr_results_finder',
-                                 list_of_data=list_to_save, number_of_series=25,
+                                 list_of_data=list_to_save, number_of_series=40, set_all_to_legend=False,
                                  prefix_to_cut_legend='FINAL_', suffix_to_cut_legend='_GREY_L0',
-                                 replace_list=[('THR_', 'Thr='), ('_LOG_LAPLACE_V1_3x3_S_', ' S='), ('_', '.')],
-                                 inputs=[''], self_contained_list=True, set_legend_left=False,
+                                 replace_list=[
+                                     ('THR_', 'TG='),
+                                     ('_LOG_LAPLACE_V1', ''), ('_DILATED_', ' Dilated '),
+                                     ('_3x3', ' 3x3'), ('_5x5', ' 5x5'), ('_7x7', ' 7x7'),
+                                      ('_S_', ' S='), ('_', '.'),
+                                     ('dilated 7x7', '7x7(D)'),
+                                     ('dilated 5x5', '5x5(D)'),
+                                     ('Dilated 7x7', '7x7(D)'),
+                                     ('Dilated 5x5', '5x5(D)'),
+                                     ('Dilated  7x7', '7x7(D)'),
+                                     ('Dilated  5x5', '5x5(D)'),
+                                 ],
+                                 inputs=[''], self_contained_list=True, set_legend_left=True,
                                  save_plot=True, show_plot=False)
 
     Utils.close_files()
 
 
 def main_log_edges(dataset):
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
     # Benchmarking.delete_folder_benchmark_out()
 
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
@@ -1062,7 +1148,6 @@ def main_log_edges(dataset):
     thr = 30
     s = 1.80
     for edge in laplace_edges:
-
         edge_result = Application.do_log_job(port_input_name='GREY', gaussian_sigma=s, laplacian_kernel=edge,
                                              port_output_name='LOG_' + edge + '_S_' + str(s).replace('.', '_') + '_GREY')
         thr_edge_result = Application.do_image_threshold_job(port_input_name=edge_result, input_value=thr,
@@ -1076,36 +1161,45 @@ def main_log_edges(dataset):
     Application.create_config_file()
     # Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
-    Application.run_application()
+    # Application.run_application()
 
     # Do bsds benchmarking
     # Be ware not to activate job_name_in_port in Application.configure_save_pictures
-    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
-                                                raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
-                                                jobs_set=list_to_save, do_thinning=False)
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='log_edge_results',
-                                 list_of_data=list_to_save, number_of_series=30,
-                                 inputs=[''], self_contained_list=True,
-                                 replace_list=[('THR_5_LOG_LAPLACE_', ''), ('_DILATED_', ' Dilated '),
-                                               ('_3x3', ' 3x3'), ('_5x5', '  5x5')],
-                                 prefix_to_cut_legend='FINAL_', suffix_to_cut_legend='_S_1_8_GREY_L0',
+                                 list_of_data=list_to_save, number_of_series=30, set_legend_left=True,
+                                 inputs=[''], self_contained_list=True, set_all_to_legend=True,
+                                 replace_list=[('THR_5_LOG_LAPLACE_', ''), ('THR_15_LOG_LAPLACE_', ''),('THR_30_LOG_LAPLACE_', ''),
+                                               ('_DILATED_', ' Dilated '),
+                                               ('_3x3', ' 3x3'), ('_5x5', '  5x5'),
+                                               ('_S_1_8_GREY_L0', ''), ('_S_1_4_GREY_L0', ''),
+                                               ('dilated 7x7', '7x7(D)'),
+                                               ('dilated 5x5', '5x5(D)'),
+                                               ('Dilated 7x7', '7x7(D)'),
+                                               ('Dilated 5x5', '5x5(D)'),
+                                               ('Dilated  7x7', '7x7(D)'),
+                                               ('Dilated  5x5', '5x5(D)'),
+                                               ],
+                                 prefix_to_cut_legend='FINAL_', suffix_to_cut_legend=None,
                                  save_plot=True, show_plot=False)
 
-    Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='log_latex_table_results', print_to_console=True,
-                                 header_list=['Variant', '', '3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
-                                 list_of_series=['LAPLACE_V1', 'LAPLACE_V2', 'LAPLACE_V3', 'LAPLACE_V4', 'LAPLACE_V5'],
-                                 prefix_data_name='FINAL', suffix_data_name='GREY', level_data_name='L0',
-                                 version_data_name=['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'], version_separation='DILATED',
-                                 data_per_variant=['R', 'P', 'F1']
-                                 )
+    # Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='log_latex_table_results', print_to_console=True,
+    #                              header_list=['Variant', '', '3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
+    #                              list_of_series=['LAPLACE_V1', 'LAPLACE_V2', 'LAPLACE_V3', 'LAPLACE_V4', 'LAPLACE_V5'],
+    #                              prefix_data_name='FINAL', suffix_data_name='GREY', level_data_name='L0',
+    #                              version_data_name=['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'], version_separation='DILATED',
+    #                              data_per_variant=['R', 'P', 'F1']
+    #                              )
 
     Utils.close_files()
 
 
 def main_find_sigma_marr_edges(dataset):
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
     # Benchmarking.delete_folder_benchmark_out()
 
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
@@ -1116,15 +1210,16 @@ def main_find_sigma_marr_edges(dataset):
     Application.do_grayscale_transform_job(port_input_name='RAW', port_output_name='GREY')
 
     laplace_edges = [
-        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1
-        , CONFIG.FILTERS_SECOND_ORDER.LAPLACE_5x5_1
-        , CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1
-        , CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1]
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1,
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_5x5_1,
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1,
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1
+    ]
 
     for edge in laplace_edges:
-        for sigma in range(160, 220, 20):
+        for sigma in range(20, 300, 20):
             s = sigma / 100
-            for thr in range(20, 50, 10):
+            for thr in range(20, 100, 10):
                 t = thr / 100
                 edge_result = Application.do_marr_hildreth_job(port_input_name='GREY', gaussian_sigma=s,
                                                                laplacian_kernel=edge,
@@ -1137,27 +1232,37 @@ def main_find_sigma_marr_edges(dataset):
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
     # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
-    Application.run_application()
+    # Application.run_application()
 
     # Do bsds benchmarking
     # Be ware not to activate job_name_in_port in Application.configure_save_pictures
-    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
-                                                raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
-                                                jobs_set=list_to_save, do_thinning=False)
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='mar_sigma_results_finder',
-                                 list_of_data=list_to_save, number_of_series=25,
-                                 prefix_to_cut_legend='FINAL_MARR_HILDRETH_LAPLACE_V1_3x3', suffix_to_cut_legend='_GREY_L0',
-                                 replace_list=[('FINAL_MARR_HILDRETH_LAPLACE', ''),('_S_', 'S='), ('_THR_', ' Thr='), ('_', '.')],
-                                 inputs=[''], self_contained_list=True, set_legend_left=False,
+                                 list_of_data=list_to_save, number_of_series=40, set_all_to_legend=False,
+                                 prefix_to_cut_legend='FINAL_MARR_HILDRETH_LAPLACE_V1_', suffix_to_cut_legend='_GREY_L0',
+                                 replace_list=[
+                                     ('DILATED_', 'Dilated '),
+                                     ('_3x3', ' 3x3'), ('_5x5', ' 5x5'), ('_7x7', ' 7x7'),
+                                     ('_S_', ' S='), ('_THR_', ' TG='), ('_', '.'),
+                                     ('dilated 7x7', '7x7(D)'),
+                                     ('dilated 5x5', '5x5(D)'),
+                                     ('Dilated 7x7', '7x7(D)'),
+                                     ('Dilated 5x5', '5x5(D)'),
+                                     ('Dilated  7x7', '7x7(D)'),
+                                     ('Dilated  5x5', '5x5(D)'),
+                                 ],
+                                 inputs=[''], self_contained_list=True, set_legend_left=True,
                                  save_plot=True, show_plot=False)
 
     Utils.close_files()
 
 
 def main_marr_edges(dataset):
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
     # Benchmarking.delete_folder_benchmark_out()
 
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
@@ -1235,30 +1340,39 @@ def main_marr_edges(dataset):
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
     # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
-    Application.run_application()
+    # Application.run_application()
 
     # Do bsds benchmarking
     # Be ware not to activate job_name_in_port in Application.configure_save_pictures
-    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
-                                                raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
-                                                jobs_set=list_to_save, do_thinning=False)
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='marr_edge_results',
                                  list_of_data=list_to_save, number_of_series=30,
-                                 inputs=[''], self_contained_list=True,
+                                 inputs=[''], self_contained_list=True, set_legend_left=True,  set_all_to_legend=True,
                                  prefix_to_cut_legend='FINAL_MARR_HILDRETH_LAPLACE_',
                                  replace_list=[('_DILATED_', ' Dilated '), ('_3x3', ' 3x3'), ('_5x5', ' 5x5'), ('_GREY_L0', ''),
-                                               ('_S_', ' S='), ('_THR_', ' Thr='), ('_', '.')],
+                                               ('_S_2_0', ''), ('_S_1_8', ''), ('_S_1_6', ''),
+                                               ('_THR_0_2', ''), ('_THR_0_3', ''),
+                                               ('_', '.'),
+                                               ('dilated 7x7', '7x7(D)'),
+                                               ('dilated 5x5', '5x5(D)'),
+                                               ('Dilated 7x7', '7x7(D)'),
+                                               ('Dilated 5x5', '5x5(D)'),
+                                               ('Dilated  7x7', '7x7(D)'),
+                                               ('Dilated  5x5', '5x5(D)'),
+                                               ],
                                  save_plot=True, show_plot=False)
 
-    Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='marr_latex_table_results', print_to_console=True,
-                                 header_list=['Variant', '', '3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
-                                 list_of_series=['LAPLACE_V1', 'LAPLACE_V2', 'LAPLACE_V3', 'LAPLACE_V4', 'LAPLACE_V5'],
-                                 prefix_data_name='FINAL', suffix_data_name='GREY', level_data_name='L0',
-                                 version_data_name=['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'], version_separation='DILATED',
-                                 data_per_variant=['R', 'P', 'F1']
-                                 )
+    # Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='marr_latex_table_results', print_to_console=True,
+    #                              header_list=['Variant', '', '3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
+    #                              list_of_series=['LAPLACE_V1', 'LAPLACE_V2', 'LAPLACE_V3', 'LAPLACE_V4', 'LAPLACE_V5'],
+    #                              prefix_data_name='FINAL', suffix_data_name='GREY', level_data_name='L0',
+    #                              version_data_name=['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'], version_separation='DILATED',
+    #                              data_per_variant=['R', 'P', 'F1']
+    #                              )
 
     Utils.close_files()
 
@@ -1357,10 +1471,18 @@ def main_sigma_finder_canny_2(dataset):
     #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='canny_sigma_results_finder',
-                                 suffix_to_cut_legend='_L0',
+                                 suffix_to_cut_legend='_L0', set_all_to_legend=False,
                                  list_of_data=list_to_save, number_of_series=50, set_legend_left=True,
                                  replace_list=[('CANNY_SOBEL', ''),('_DILATED', ' Dilated '),
-                                               ('_3x3', ' 3x3'), ('_5x5', ' 5x5'), ('_7x7', ' 7x7'), ('_S_', ' S='), ('_L_', ' L='), ('_H_', ' H='), ('_L0', ''), ('_', '.')],
+                                               ('_3x3', ' 3x3'), ('_5x5', ' 5x5'), ('_7x7', ' 7x7'),
+                                               ('_S_', ' S='), ('_L_', ' TL='), ('_H_', ' TH='), ('_L0', ''), ('_', '.'),
+                                               ('dilated 7x7', '7x7(D)'),
+                                               ('dilated 5x5', '5x5(D)'),
+                                               ('Dilated 7x7', '7x7(D)'),
+                                               ('Dilated 5x5', '5x5(D)'),
+                                               ('Dilated  7x7', '7x7(D)'),
+                                               ('Dilated  5x5', '5x5(D)'),
+                                               ],
                                  inputs=[''], self_contained_list=True,
                                  save_plot=True, show_plot=False)
 
@@ -1553,37 +1675,47 @@ def main_canny_2(dataset):
 
     # Do bsds benchmarking
     # Be ware not to activate job_name_in_port in Application.configure_save_pictures
-    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
-                                                raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
-                                                jobs_set=list_to_save, do_thinning=False)
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='canny_results',
                                  suffix_to_cut_legend=None, prefix_to_cut_legend='CANNY_',
                                  list_of_data=list_to_save, number_of_series=40,
-                                 replace_list=[('SEPARATED_PIXEL_DIFFERENCE_', 'Separated Px Dif '),
-                                               ('PIXEL_DIFFERENCE_', 'Pixel Dif '),
+                                 replace_list=[('SEPARATED_PIXEL_DIFFERENCE_', 'Sep Px Dif '),
+                                               ('PIXEL_DIFFERENCE_', 'Px Dif '),
                                                ('PREWITT_', 'Prewitt '), ('KIRSCH_', 'Kirsch '), ('SOBEL_', 'Sobel '),
                                                ('SCHARR_', 'Scharr '), ('KROON_', 'Kroon '), ('ORHEI_V1_', 'Orhei '),
                                                ('ORHEI_', 'Orhei '),
                                                ('KITCHEN_', 'Kitchen '), ('KAYYALI_', 'Kayyali '),
                                                ('DILATED_', 'dilated '),
                                                ('_3x3', ' 3x3'), ('_5x5', ' 5x5'), ('_7x7', ' 7x7'),
-                                               ('_S_', ' S='), ('_L_', ' L='), ('_H_', ' H='), ('_L0', ''), ('_', '.')],
-                                 inputs=[''], self_contained_list=True, set_legend_left=True,
+                                               ('_S_1_5', ''),
+                                               ('_L_90', ''), ('_L_80', ''),  ('_L_70', ''),
+                                               ('_H_130', ''), ('_H_90', ''),
+                                               ('_L0', ''), ('_', '.'),
+                                               ('dilated 7x7', '7x7(D)'),
+                                               ('dilated 5x5', '5x5(D)'),
+                                               ('Dilated 7x7', '7x7(D)'),
+                                               ('Dilated 5x5', '5x5(D)'),
+                                               ('Dilated  7x7', '7x7(D)'),
+                                               ('Dilated  5x5', '5x5(D)'),
+                                               ],
+                                 inputs=[''], self_contained_list=True, set_legend_left=True, set_all_to_legend=True,
                                  save_plot=True, show_plot=False)
 
-    Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='canny_latex_table_results', print_to_console=True,
-                                 header_list=['Variant', '', '3x3', '5x5', 'Dilated 5x5', '7x7', 'Dilated 7x7'],
-                                 prefix_data_name='CA', suffix_data_name='BLURED', level_data_name='L0',
-                                 version_data_name=['3x3', '5x5', 'DILATED_5x5', '7x7', 'DILATED_7x7'],
-                                 data_per_variant=['R', 'P', 'F1'], version_separation='DILATED')
+    # Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='canny_latex_table_results', print_to_console=True,
+    #                              header_list=['Variant', '', '3x3', '5x5', 'Dilated 5x5', '7x7', 'Dilated 7x7'],
+    #                              prefix_data_name='CA', suffix_data_name='BLURED', level_data_name='L0',
+    #                              version_data_name=['3x3', '5x5', 'DILATED_5x5', '7x7', 'DILATED_7x7'],
+    #                              data_per_variant=['R', 'P', 'F1'], version_separation='DILATED')
 
     Utils.close_files()
 
 
 def main_param_shen_finder(dataset):
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
     # Benchmarking.delete_folder_benchmark_out()
 
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
@@ -1595,15 +1727,16 @@ def main_param_shen_finder(dataset):
 
     laplace_edges = [
         CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1,
-        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_5x5_1
-        , CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1, CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_5x5_1,
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1,
+        CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1,
     ]
 
     for edge in laplace_edges:
         for s in [0.5, 0.9]:
-            for w in [5, 11]:
+            for w in [5, 7, 11]:
                 for r in [0.5, 0.9]:
-                    for th in [0, 0.5]:
+                    for th in [0, 0.5, 0.9]:
                         for thr in [4]:
                             edge_result = Application.do_shen_castan_job(port_input_name='GREY',
                                                                          laplacian_kernel=edge,
@@ -1628,18 +1761,28 @@ def main_param_shen_finder(dataset):
     #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='', level='L0', order_by='f1', name='shen_tunning',
-                                 list_of_data=list_to_save, number_of_series=25,
-                                 suffix_to_cut_legend='_L0',
-                                 replace_list=[('SHEN_CASTAN_', ''), ('THR_', ' Thr='), ('_S_', ' S='), ('_W_', ' W='),
-                                               ('_R_', ' R='), ('_TH_', ' Tn='), ('_', '.')],
-                                 inputs=[''], self_contained_list=True, set_legend_left=False,
+                                 list_of_data=list_to_save, number_of_series=40,
+                                 suffix_to_cut_legend='_L0', set_all_to_legend=False,
+                                 replace_list=[('SHEN_CASTAN_', ''), ('LAPLACE_V1_', ''),
+                                               ('DILATED_', 'Dilated '),
+                                               ('_3x3', ' 3x3'), ('_5x5', ' 5x5'), ('_7x7', ' 7x7'),
+                                               ('_THR_', ' TG='), ('_S_', ' SF='), ('_W_', ' W='),
+                                               ('_R_', ' R='), ('_TH_', ' TH='), ('_', '.'),
+                                               ('dilated 7x7', '7x7(D)'),
+                                               ('dilated 5x5', '5x5(D)'),
+                                               ('Dilated 7x7', '7x7(D)'),
+                                               ('Dilated 5x5', '5x5(D)'),
+                                               ('Dilated  7x7', '7x7(D)'),
+                                               ('Dilated  5x5', '5x5(D)'),
+                                               ],
+                                 inputs=[''], self_contained_list=True, set_legend_left=True,
                                  save_plot=True, show_plot=False)
 
     Utils.close_files()
 
 
 def main_shen_edges(dataset):
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
     # Benchmarking.delete_folder_benchmark_out()
 
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
@@ -1681,30 +1824,37 @@ def main_shen_edges(dataset):
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save=list_to_save, job_name_in_port=False)
     # Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
-    Application.run_application()
+    # Application.run_application()
 
     # Do bsds benchmarking
     # Be ware not to activate job_name_in_port in Application.configure_save_pictures
-    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
-                                                raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
-                                                jobs_set=list_to_save, do_thinning=False)
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_save, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='FINAL', level='L0', order_by='f1', name='shen_edge_results',
                                  list_of_data=list_to_save, number_of_series=30,
-                                 inputs=[''], self_contained_list=True,
+                                 inputs=[''], self_contained_list=True, set_legend_left=True, set_all_to_legend=True,
                                  replace_list=[('SHEN_CASTAN_LAPLACE_', ''), ('_DILATED_', ' Dilated '), ('_3x3', ' 3x3'), ('_5x5', ' 5x5'),
-                                               ('_L0', '')],
+                                               ('_L0', ''),
+                                               ('dilated 7x7', '7x7(D)'),
+                                               ('dilated 5x5', '5x5(D)'),
+                                               ('Dilated 7x7', '7x7(D)'),
+                                               ('Dilated 5x5', '5x5(D)'),
+                                               ('Dilated  7x7', '7x7(D)'),
+                                               ('Dilated  5x5', '5x5(D)'),
+                                               ],
                                  prefix_to_cut_legend='FINAL_', suffix_to_cut_legend='_GREY_L0',
                                  save_plot=True, show_plot=False)
 
-    Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='shen_latex_table_results', print_to_console=True,
-                                 header_list=['Variant', '', '3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
-                                 list_of_series=['LAPLACE_V1', 'LAPLACE_V2', 'LAPLACE_V3', 'LAPLACE_V4', 'LAPLACE_V5'],
-                                 prefix_data_name='FINAL', suffix_data_name='GREY', level_data_name='L0',
-                                 version_data_name=['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'], version_separation='DILATED',
-                                 data_per_variant=['R', 'P', 'F1']
-                                 )
+    # Utils.create_latex_cpm_table(list_of_data=list_to_save, name_of_table='shen_latex_table_results', print_to_console=True,
+    #                              header_list=['Variant', '', '3x3', '5x5', 'Dilated 5x5', 'Dilated 7x7'],
+    #                              list_of_series=['LAPLACE_V1', 'LAPLACE_V2', 'LAPLACE_V3', 'LAPLACE_V4', 'LAPLACE_V5'],
+    #                              prefix_data_name='FINAL', suffix_data_name='GREY', level_data_name='L0',
+    #                              version_data_name=['3x3', '5x5', 'DILATED_5x5', 'DILATED_7x7'], version_separation='DILATED',
+    #                              data_per_variant=['R', 'P', 'F1']
+    #                              )
 
     Utils.close_files()
 
@@ -1716,7 +1866,7 @@ def main_ed_parsing(dataset):
     """
     Application.set_input_image_folder('TestData/BSR/BSDS500/data/images/' + dataset)
 
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
     # Benchmarking.delete_folder_benchmark_out()
 
     Application.do_get_image_job(port_output_name='RAW')
@@ -1733,12 +1883,10 @@ def main_ed_parsing(dataset):
     ]
 
     for edge in first_order_edge:
-        # for kernel_gaus in [3, 5, 7, 9]:
-        for kernel_gaus in [5, 7, 9]:
-            # for grad_thr in [10,  30, 40, 50, 60, 70, 90, 110, 130, 150]:
-            for grad_thr in [40, 50, 60, 70]:
-                for anc_thr in [5, 10, 20]:
-                    for sc_int in [1]:
+        for kernel_gaus in [3, 5, 7, 9]:
+            for grad_thr in [10,  30, 40, 50, 60, 70, 90, 110, 130, 150]:
+                for anc_thr in [5, 10, 20, 30, 40, 60]:
+                    for sc_int in [1, 3, 5]:
                         blur = Application.do_gaussian_blur_image_job(port_input_name='GRAY_RAW', kernel_size=kernel_gaus, sigma=0)
                         e3, e4 = Application.do_edge_drawing_mod_job(port_input_name=blur, operator=edge,
                                                                      gradient_thr=grad_thr, anchor_thr=anc_thr, scan_interval=sc_int,
@@ -1750,20 +1898,30 @@ def main_ed_parsing(dataset):
     Application.configure_save_pictures(ports_to_save=list)
     # Application.configure_show_pictures(ports_to_show=list, time_to_show=0)
 
-    Application.run_application()
+    # Application.run_application()
 
     # Do bsds benchmarking
     # Be ware not to activate job_name_in_port in Application.configure_save_pictures
-    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/test',
-                                                raw_image='TestData/BSR/BSDS500/data/images/test',
-                                                jobs_set=list, do_thinning=False)
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/test',
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/test',
+    #                                             jobs_set=list, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='EDGE_DRAWING_MOD_', level='L0', order_by='f1', name='ed_finder_thr',
-                                 list_of_data=list, number_of_series=25,
-                                 inputs=[''], self_contained_list=True, set_legend_left=False,
+                                 list_of_data=list, number_of_series=40,
+                                 inputs=[''], self_contained_list=True, set_legend_left=True,
                                  suffix_to_cut_legend='_S_0_GRAY_RAW_L0',
-                                 replace_list=[('EDGE_DRAWING_MOD_THR_', 'TG='), ('_ANC_THR_', ' TA='), ('_SCAN_', ' SI='), ('_SOBEL_3x3_GAUSS_BLUR_K_', ' GK=')],
+                                 replace_list=[('_SOBEL', ''),('_DILATED', ' Dilated '),
+                                               ('_3x3', ' 3x3'), ('_5x5', ' 5x5'), ('_7x7', ' 7x7'),
+                                               ('EDGE_DRAWING_MOD_THR_', 'TG='), ('_ANC_THR_', ' TA='), ('_SCAN_', ' SI='),
+                                               ('_GAUSS_BLUR_K_', ' GK='), ('_', '.'),
+                                               ('dilated 7x7', '7x7(D)'),
+                                               ('dilated 5x5', '5x5(D)'),
+                                               ('Dilated 7x7', '7x7(D)'),
+                                               ('Dilated 5x5', '5x5(D)'),
+                                               ('Dilated  7x7', '7x7(D)'),
+                                               ('Dilated  5x5', '5x5(D)'),
+                                               ],
                                  save_plot=True, show_plot=False, set_all_to_legend=False)
 
     Utils.close_files()
@@ -1831,25 +1989,32 @@ def main_ededge(dataset):
 
     # Do bsds benchmarking
     # Be ware not to activate job_name_in_port in Application.configure_save_pictures
-    Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
-                                                gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
-                                                raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
-                                                jobs_set=list_to_eval_edge, do_thinning=False)
+    # Benchmarking.run_bsds500_boundary_benchmark(input_location='Logs/application_results',
+    #                                             gt_location='TestData/BSR/BSDS500/data/groundTruth/' + dataset,
+    #                                             raw_image='TestData/BSR/BSDS500/data/images/' + dataset,
+    #                                             jobs_set=list_to_eval_edge, do_thinning=False)
 
     Utils.plot_first_cpm_results(prefix='EDGE_DRAWING_MOD_', level='L0', order_by='f1', name='ed_results',
                                  list_of_data=list_to_eval_edge, number_of_series=50,
                                  inputs=[''], self_contained_list=True, set_legend_left=True,
                                  suffix_to_cut_legend='_S_0_GRAY_RAW_L0',
                                  replace_list=[('EDGE_DRAWING_MOD_THR_50_ANC_THR_5_SCAN_1_', ''),
-                                               ('SEPARATED_PIXEL_DIFFERENCE_', 'Separated Px Dif '),
-                                               ('PIXEL_DIFFERENCE_', 'Pixel Dif '),
+                                               ('SEPARATED_PIXEL_DIFFERENCE_', 'Sep Px Dif '),
+                                               ('PIXEL_DIFFERENCE_', 'Px Dif '),
                                                ('PREWITT_', 'Prewitt '), ('KIRSCH_', 'Kirsch '), ('SOBEL_', 'Sobel '),
                                                ('SCHARR_', 'Scharr '), ('KROON_', 'Kroon '), ('ORHEI_V1_', 'Orhei '),
                                                ('ORHEI_', 'Orhei '),
                                                ('KITCHEN_', 'Kitchen '), ('KAYYALI_', 'Kayyali '),
                                                ('DILATED_', 'dilated '),
-                                               ('_GAUSS_BLUR_K_9', '')],
-                                 save_plot=True, show_plot=False, set_all_to_legend=False)
+                                               ('_GAUSS_BLUR_K_9', ''),
+                                               ('dilated 7x7', '7x7(D)'),
+                                               ('dilated 5x5', '5x5(D)'),
+                                               ('Dilated 7x7', '7x7(D)'),
+                                               ('Dilated 5x5', '5x5(D)'),
+                                               ('Dilated  7x7', '7x7(D)'),
+                                               ('Dilated  5x5', '5x5(D)'),
+                                               ],
+                                 save_plot=True, show_plot=False, set_all_to_legend=True)
 
     # Utils.create_latex_cpm_table_list()
 
@@ -2472,7 +2637,7 @@ if __name__ == "__main__":
     dataset = 'test'
     # dataset = 'small'
 
-    # main_find_param_first_order_edges(dataset)
+    main_find_param_first_order_edges(dataset)
     # Utils.reopen_files()
     # main_first_order_edge_detection(dataset)
     # Utils.reopen_files()
@@ -2487,7 +2652,7 @@ if __name__ == "__main__":
     # main_frei_edges(dataset)
     # Utils.reopen_files()
 
-    main_find_thr_laplace_edges(dataset)
+    # main_find_thr_laplace_edges(dataset)
     # Utils.reopen_files()
     # main_laplace_edges(dataset)
     # Utils.reopen_files()
