@@ -1,5 +1,6 @@
+import math
 import os
-from math import log10
+# from math import log10
 # noinspection PyPackageRequirements
 import cv2
 import numpy as np
@@ -17,17 +18,37 @@ def psnr_calc(img, img_gt):
     :return: psnr value for image
     """
     psnr = 100
-    mse = np.mean((img - img_gt) ** 2)
+    mse = np.mean((img_gt - img) ** 2)
 
     if mse != 0:  # MSE is zero means no noise is present in the signal .
-        max_pixel = np.max(img ** 2)
-        psnr = 10 * log10(max_pixel / mse)
+        # max_pixel = np.max(img ** 2)
+        max_pixel = 255.0
+        psnr = 20 * math.log10(max_pixel/ math.sqrt(mse))
         # psnr = (max_pixel / mse)
 
     return psnr
 
 
-def run_CM_benchmark_PSNR():
+def psnr_calc_db(img, img_gt):
+    """
+    calculate Peak Signal-to-Noise Ratio (PSNR)
+    :param img: edge map resulting of algorithm
+    :param img_gt: ground truth image
+    :return: psnr value for image
+    """
+    psnr = 100
+    mse = np.mean((img - img_gt) ** 2)
+
+    if mse != 0:  # MSE is zero means no noise is present in the signal .
+        # max_pixel = np.max(img ** 2)
+        max_pixel = 255.0
+        psnr = 20 * log10(max_pixel) - 10* log10(mse)
+        # psnr = (max_pixel / mse)
+
+    return psnr
+
+
+def run_CM_benchmark_PSNR(db_calc):
     """
     Run Peak Signal-to-Noise Ratio (PSNR) for a set of data
     :return:
@@ -74,7 +95,12 @@ def run_CM_benchmark_PSNR():
                 img_al = cv2.imread(path_img_al)
 
                 try:
-                    val = psnr_calc(img_al, img_gt)
+                    if db_calc:
+                        val = psnr_calc_db(img_al, img_gt)
+                    else:
+                        # val = psnr_calc(cv2.cvtColor(img_al, cv2.COLOR_BGR2GRAY), cv2.cvtColor(img_gt, cv2.COLOR_BGR2GRAY))
+                        val = cv2.PSNR(cv2.cvtColor(img_al, cv2.COLOR_BGR2GRAY), cv2.cvtColor(img_gt, cv2.COLOR_BGR2GRAY))
+                    # val = cv2.ps
                     avg_psnr += val
                     count += 1
                     csv.write('{:<10s} {:<10.6f}\n'.format(file, val))

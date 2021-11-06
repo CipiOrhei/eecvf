@@ -287,7 +287,7 @@ def plot_time_jobs(port_list: list, series_names: list, name_to_save: str, input
     file.close()
 
 
-def plot_box_benchmark_values(name_to_save: str,
+def plot_box_benchmark_values(name_to_save: str, eval: list,
                               number_decimal: int = 3, number_of_series: int = None, data='FOM', data_subsets=None,
                               save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True):
     input_location = os.path.join(CONFIG.BENCHMARK_RESULTS, data)
@@ -309,7 +309,8 @@ def plot_box_benchmark_values(name_to_save: str,
                         break
 
                 for data_subset in data_subsets:
-                    if data_subset in filename:
+                    fxx = filename.split('.')[0]
+                    if (data_subset in filename) and (fxx in eval):
                         subset_dict[data_subset][filename.split('.')[0]] = round(float(value), number_decimal)
 
             except:
@@ -335,11 +336,13 @@ def plot_box_benchmark_values(name_to_save: str,
 
     dataframe = pd.DataFrame.from_dict(subset_values_dict)
     dataframe.set_index(dataframe.columns[0])
+    colors = ['blue', 'green', 'purple', 'tan', 'pink', 'red']
 
     df = dataframe.plot(kind='box',
                         labels=list(subset_dict.keys()),
                         figsize=(15, 8), showmeans=True, grid=True)
 
+    # print(df.box)
     plt.ylabel(data)
 
     # colors = iter(random.sample(color_list, k=len(subset_dict)))
@@ -354,7 +357,7 @@ def plot_box_benchmark_values(name_to_save: str,
         plt.show()
 
     if save_plot is True:
-        plt.savefig(os.path.join(save_location, name_to_save + '.jpg'))
+        plt.savefig(os.path.join(save_location, name_to_save + '.jpg'), bbox_inches='tight')
 
     plt.close()
 

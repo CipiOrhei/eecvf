@@ -96,7 +96,7 @@ def run_bsds500_boundary_benchmark(input_location: str, gt_location: str, raw_im
 
 # noinspection PyPep8Naming
 def run_PSNR_benchmark(input_location: str, gt_location: str,
-                       raw_image: str, jobs_set: list):
+                       raw_image: str, jobs_set: list, db_calc: bool = False):
     """
     T.B. Nguyen and D. Ziou, “Contextual and Non-Contextual Performance Evaluation of Edge Detectors,”
     Pattern Recognition Letters, vol. 21, no. 8, pp. 805-816, 2000.
@@ -104,6 +104,7 @@ def run_PSNR_benchmark(input_location: str, gt_location: str,
     :param gt_location: location of gt images
     :param raw_image: location of raw images
     :param jobs_set: algo sets to evaluate
+    :param db_calc: PSNR id dB
     :return: None
     """
 
@@ -112,7 +113,7 @@ def run_PSNR_benchmark(input_location: str, gt_location: str,
     set_image_set(raw_image)
     job_set(jobs_set)
 
-    run_CM_benchmark_PSNR()
+    run_CM_benchmark_PSNR(db_calc)
 
 
 # noinspection PyPep8Naming
