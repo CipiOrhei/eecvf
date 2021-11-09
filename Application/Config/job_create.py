@@ -29,18 +29,23 @@ custom_kernels_used = []
 # TODO create possibility to add multiple input folders
 
 
-def do_get_image_job(port_output_name: str = 'RAW') -> str:
+def do_get_image_job(port_output_name: str = 'RAW', direct_grey: bool = False) -> str:
     """
     Function for configure the image retrieval job from folder.
     The job is added to the job buffer.
     :param port_output_name: name you want to use for raw image in the application
+    :param direct_grey: If we want to get the image direct grey values
     :return: output image port name
     """
     output_raw_port_name = transform_port_name_lvl(name=port_output_name, lvl=PYRAMID_LEVEL.LEVEL_0)
-    output_raw_port_size = transform_port_size_lvl(lvl=PYRAMID_LEVEL.LEVEL_0, rgb=True)
+
+    if direct_grey is True:
+        output_raw_port_size = transform_port_size_lvl(lvl=PYRAMID_LEVEL.LEVEL_0, rgb=False)
+    else:
+        output_raw_port_size = transform_port_size_lvl(lvl=PYRAMID_LEVEL.LEVEL_0, rgb=True)
 
     input_port_list = None
-    main_func_list = [output_raw_port_name]
+    main_func_list = [output_raw_port_name, direct_grey]
     output_port_list = [(output_raw_port_name, output_raw_port_size, 'B', True)]
 
     job_name = job_name_create(action='Get image frame')

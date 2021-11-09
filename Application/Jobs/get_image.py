@@ -46,17 +46,25 @@ def init_func() -> JobInitStateReturn:
 ############################################################################################################################################
 
 
-def get_image_cv(path: str, port_raw_image: str) -> None:
+def get_image_cv(path: str, port_raw_image: str, do_grey: bool) -> None:
     """
     Get's the picture accordingly to frame and populate the ports with the raw data color.
     :param port_raw_image: Name of port input of raw image
     :param path: path to picture
+    :param do_grey: if we want to get it direct grey
     :return: None
     """
     port_image = get_port_from_wave(name=port_raw_image)
 
     try:
-        img = cv2.imread(filename=path)
+
+        if do_grey is True:
+            img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+            # np.savetxt(os.path.join('c:/repos/eecvf_git/Logs', (path.split('\\')[-1]))[:-4] + '.txt', img, fmt='%3.0f')
+        else:
+            img = cv2.imread(filename=path)
+            # np.savetxt(os.path.join('c:/repos/eecvf_git/Logs', (path.split('\\')[-1])).split('.')[0] + '.txt', img, fmt='%3.0f')
+
         height, width = img.shape[:2]
 
         if width != global_var_handler.WIDTH_L0 or height != global_var_handler.HEIGHT_L0:
@@ -68,6 +76,7 @@ def get_image_cv(path: str, port_raw_image: str) -> None:
             global_var_handler.recalculate_pyramid_level_values()
             # noinspection PyUnresolvedReferences
             reshape_ports(size_array=global_var_handler.SIZE_ARRAY)
+
 
         port_image.arr[:] = img
         port_image.set_valid()
@@ -91,14 +100,16 @@ def main_func(param_list: list = None) -> bool:
     # index of param
     # noinspection PyPep8Naming
     PORT_RAW_PICT = 0
+    # noinspection PyPep8Naming
+    PORT_GET_GREY = 1
 
     # check if param OK
-    if len(param_list) != 1:
+    if len(param_list) != 2:
         log_error_to_console("GET FRAME MAIN FUNCTION PARAM NOK", str(len(param_list)))
         return False
     else:
         get_image_cv(path=os.path.join(config_main.APPL_INPUT_DIR, config_main.APPL_INPUT_IMG_DIR[global_var_handler.FRAME]),
-                     port_raw_image=param_list[PORT_RAW_PICT])
+                     port_raw_image=param_list[PORT_RAW_PICT], do_grey=param_list[PORT_GET_GREY])
 
         global_var_handler.PICT_NAME = config_main.APPL_INPUT_IMG_DIR[global_var_handler.FRAME]
 
