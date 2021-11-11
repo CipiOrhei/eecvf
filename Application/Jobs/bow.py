@@ -46,14 +46,14 @@ def flann_matching(des1,des2, comp_thr = 0.85):
 
 class ZuBuD_BOW:
 
-    def __init__(self, name, dict_size, is_from_file=False):
+    def __init__(self, name, dict_size, number_classes, is_from_file=False):
         self.name = name
         self.list_bows = dict()
         self.list_clustered_bows = dict()
 
         # creates bows for each object object0003.view03.png
         if is_from_file is True:
-            for i in range(1, 202):
+            for i in range(1, number_classes + 1):
                 name_building_class = 'object{:04d}'.format(i)
                 self.list_bows[name_building_class] = None
                 self.list_clustered_bows[name_building_class] = None
@@ -116,7 +116,7 @@ def init_func_global() -> JobInitStateReturn:
 # Main functions
 ############################################################################################################################################
 object_list_des = dict()
-bow_cluster_list = list()
+bow_cluster_list = dict()
 
 def bow_zubud_main_func(param_list: list = None) -> bool:
     """
@@ -132,13 +132,15 @@ def bow_zubud_main_func(param_list: list = None) -> bool:
     # noinspection PyPep8Naming
     PORT_IN_DESC_SIZE = 2
     # noinspection PyPep8Naming
-    PORT_IN_SAVE_NPY = 3
+    PORT_NR_CLASSES = 3
     # noinspection PyPep8Naming
-    PORT_IN_SAVE_TXT = 4
+    PORT_IN_SAVE_NPY = 4
     # noinspection PyPep8Naming
-    PORT_OUT_BOW = 5
+    PORT_IN_SAVE_TXT = 5
+    # noinspection PyPep8Naming
+    PORT_OUT_BOW = 6
     # verify that the number of parameters are OK.
-    if len(param_list) != 6:
+    if len(param_list) != 7:
         log_error_to_console("ZuBuD_BOW JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
         return False
     else:
@@ -150,7 +152,7 @@ def bow_zubud_main_func(param_list: list = None) -> bool:
         port_out = get_port_from_wave(name=param_list[PORT_OUT_BOW])
 
         if port_out.name not in cluster_bow.keys():
-            cluster_bow[port_out.name] = ZuBuD_BOW(name=port_in.name, dict_size=param_list[PORT_IN_DESC_SIZE])
+            cluster_bow[port_out.name] = ZuBuD_BOW(name=port_in.name, dict_size=param_list[PORT_IN_DESC_SIZE], number_classes=param_list[PORT_NR_CLASSES])
 
         name = global_var_handler.PICT_NAME[:10]
 
@@ -173,6 +175,8 @@ def bow_zubud_main_func(param_list: list = None) -> bool:
 
         if global_var_handler.NR_PICTURES - 1 == global_var_handler.FRAME:
 
+            bow_cluster_list[port_out.name]=list()
+
             for key in object_list_des.keys():
                 BOW = cv2.BOWKMeansTrainer(param_list[PORT_IN_DESC_SIZE])
 
@@ -180,13 +184,13 @@ def bow_zubud_main_func(param_list: list = None) -> bool:
                     BOW.add(np.float32(el))
 
                 desC = BOW.cluster()
-                bow_cluster_list.append(desC)
+                bow_cluster_list[port_out.name].append(desC)
                 # only in last wave
                 BOW.clear()
 
             keys = list(object_list_des.keys())
-            for idx in range(len(bow_cluster_list)):
-                cluster_bow[port_out.name].list_clustered_bows[keys[idx]] = bow_cluster_list[idx]
+            for idx in range(len(bow_cluster_list[port_out.name])):
+                cluster_bow[port_out.name].list_clustered_bows[keys[idx]] = bow_cluster_list[port_out.name][idx]
 
             file_to_save = os.path.join(config_main.APPL_SAVE_LOCATION, port_out.name)
 
@@ -233,13 +237,15 @@ def bow_zubud_flann_inquiry_main_func(param_list: list = None) -> bool:
     # noinspection PyPep8Naming
     PORT_IN_FLANN_THR = 4
     # noinspection PyPep8Naming
-    PORT_IN_LOCATION_BOW = 5
+    PORT_NR_CLASSES = 5
     # noinspection PyPep8Naming
-    PORT_IN_PORT_BOW = 6
+    PORT_IN_LOCATION_BOW = 6
     # noinspection PyPep8Naming
-    PORT_OUT = 7
+    PORT_IN_PORT_BOW = 7
+    # noinspection PyPep8Naming
+    PORT_OUT = 8
     # verify that the number of parameters are OK.
-    if len(param_list) != 8:
+    if len(param_list) != 9:
         log_error_to_console("ZuBuD_BOW_FLANN_INQUIRY JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
         return False
     else:
@@ -253,7 +259,7 @@ def bow_zubud_flann_inquiry_main_func(param_list: list = None) -> bool:
         # CHANGE IF NAME OF BOW CHANGES
         size_dict = int(param_list[PORT_IN_PORT_BOW][10:13])
 
-        cluster_bow[param_list[PORT_IN_PORT_BOW]] = ZuBuD_BOW(name=param_list[PORT_IN_PORT_BOW], dict_size=size_dict, is_from_file=True)
+        cluster_bow[param_list[PORT_IN_PORT_BOW]] = ZuBuD_BOW(name=param_list[PORT_IN_PORT_BOW], dict_size=size_dict, is_from_file=True, number_classes=param_list[PORT_NR_CLASSES])
 
         if param_list[PORT_IN_SAVED_NPY]:
             cluster_bow[param_list[PORT_IN_PORT_BOW]].populate_from_npy_files(location=param_list[PORT_IN_LOCATION_BOW], port=param_list[PORT_IN_PORT_BOW])
@@ -294,7 +300,7 @@ def bow_zubud_flann_inquiry_main_func(param_list: list = None) -> bool:
 # Job create functions
 ############################################################################################################################################
 
-def do_zubud_bow_job(port_to_add: str, dictionary_size: int,
+def do_zubud_bow_job(port_to_add: str, dictionary_size: int, number_classes: int = 201,
                      save_to_text: bool = True, save_to_npy: bool = True,
                      port_bow_list_output: str = None,
                      level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
@@ -319,12 +325,12 @@ def do_zubud_bow_job(port_to_add: str, dictionary_size: int,
 
     # size can be custom as needed
     port_img_output_name = transform_port_name_lvl(name=port_output, lvl=level)
-    port_des_output_name_size = '(201, {size}, 64)'.format(size=dictionary_size)
+    port_des_output_name_size = '({nr_classes}, {size}, 64)'.format(nr_classes=number_classes, size=dictionary_size)
     # port_des_output_name_size = '(201, 2)'.format(size=dictionary_size)
     # port_img_output_name_size = transform_port_size_lvl(lvl=level, rgb=True)
 
     input_port_list = [input_port_name]
-    main_func_list = [input_port_name, wave_offset, dictionary_size, save_to_text, save_to_npy, port_img_output_name]
+    main_func_list = [input_port_name, wave_offset, dictionary_size, number_classes, save_to_text, save_to_npy, port_img_output_name]
     output_port_list = [(port_img_output_name, port_des_output_name_size, 'f', False)]
 
     job_name = job_name_create(action='ZuBuD_BOW {size}'.format(size=dictionary_size.__str__()),
@@ -344,7 +350,7 @@ def do_zubud_bow_job(port_to_add: str, dictionary_size: int,
 
 
 def do_zubud_bow_inquiry_flann_job(port_to_inquiry: str, flann_thr: float, location_of_bow: str, bow_port: str,
-                                   saved_to_text: bool = False, saved_to_npy: bool = True,
+                                   saved_to_text: bool = False, saved_to_npy: bool = True, number_classes=201,
                                    port_out_name: str = None,
                                    level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
     """
@@ -367,10 +373,10 @@ def do_zubud_bow_inquiry_flann_job(port_to_inquiry: str, flann_thr: float, locat
         port_out_name = 'ZuBuD_BOW_INQ_THR_{thr}_{Input}'.format(thr=flann_thr.__str__().replace('.', '_'), Input=bow_port[0:-3])
 
     port_img_output_name = transform_port_name_lvl(name=port_out_name, lvl=level)
-    port_des_output_name_size = '(201, 2)'
+    port_des_output_name_size = '({nr_classes}, 2)'.format(nr_classes=number_classes)
 
     input_port_list = [input_port_name]
-    main_func_list = [input_port_name, wave_offset, saved_to_text, saved_to_npy, flann_thr, location_of_bow, bow_port, port_img_output_name]
+    main_func_list = [input_port_name, wave_offset, saved_to_text, saved_to_npy, flann_thr, number_classes, location_of_bow, bow_port, port_img_output_name]
     output_port_list = [(port_img_output_name, port_des_output_name_size, 'f', False)]
 
     job_name = job_name_create(action='ZuBuD_BOW inquiry FLANN {thr}'.format(thr=flann_thr.__str__().replace('.','_')),
