@@ -325,7 +325,7 @@ def plot_box_benchmark_values(name_to_save: str, eval: list,
 
     for set in subset_dict:
         if 'RDE' in data:
-            print('min', subset_dict[set][0])
+            print('min', subset_dict[set][-1])
         else:
             print('max', subset_dict[set][0])
 
