@@ -193,6 +193,8 @@ from Application.Jobs.feature_detection import do_a_kaze_job
 ############################################################################################################################################
 from Application.Jobs.bow import do_zubud_bow_job
 from Application.Jobs.bow import do_zubud_bow_inquiry_flann_job
+from Application.Jobs.tmbud_bow import  do_tmbud_bow_job
+from Application.Jobs.tmbud_bow import do_tmbud_bow_inquiry_flann_job
 ############################################################################################################################################
 # Deinterlacing jobs
 ############################################################################################################################################

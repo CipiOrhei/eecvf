@@ -23,6 +23,7 @@ import Application.Jobs.feature_detection
 import Application.Jobs.grey_comatrix
 import Application.Jobs.image_cube
 import Application.Jobs.bow
+import Application.Jobs.tmbud_bow
 if CUDA_GPU:
     import Application.Jobs.u_net
     import Application.Jobs.semseg
