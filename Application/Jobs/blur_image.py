@@ -6,7 +6,6 @@ from numba import jit
 
 from Application.Frame.global_variables import JobInitStateReturn
 from Application.Frame.transferJobPorts import get_port_from_wave, Port
-from PIL import ImageFilter, Image
 
 from Utils.log_handler import log_error_to_console
 
@@ -143,48 +142,6 @@ def main_mean_blur_func(port_list: list = None) -> bool:
                 p_out.set_valid()
             except BaseException as error:
                 log_error_to_console("MEAN BLUR JOB NOK: ", str(error))
-                pass
-        else:
-            return False
-
-        return True
-
-
-def main_unsharp_filter_func(port_list: list = None) -> bool:
-    """
-    The Unsharp filter can be used to enhance the edges of an image.
-
-    :param port_list: Param needed list of port names [input1,  wave_offset, kernel_size, sigma, output]
-                      List of ports passed as parameters should be even. Every input picture should have a output port.
-    :return: True if the job executed OK.
-    """
-    # noinspection PyPep8Naming
-    PORT_IN_POS = 0
-    # noinspection PyPep8Naming
-    PORT_IN_WAVE_IMG = 1
-    # noinspection PyPep8Naming
-    PORT_RADIUS_POS = 2
-    # noinspection PyPep8Naming
-    PORT_PERCENT_POS = 3
-    # noinspection PyPep8Naming
-    PORT_OUT_POS = 4
-
-    # check if param OK
-    if len(port_list) != 5:
-        log_error_to_console("UNSHARP FILTER JOB MAIN FUNCTION PARAM NOK", str(len(port_list)))
-        return False
-    else:
-        p_in = get_port_from_wave(name=port_list[PORT_IN_POS], wave_offset=port_list[PORT_IN_WAVE_IMG])
-        p_out = get_port_from_wave(name=port_list[PORT_OUT_POS])
-
-        if p_in.is_valid() is True:
-            try:
-                img = Image.fromarray(obj=p_in.arr)
-                p_out.arr[:] = np.array(img.filter(filter=ImageFilter.UnsharpMask(radius=port_list[PORT_RADIUS_POS],
-                                                                                  percent=port_list[PORT_PERCENT_POS])))
-                p_out.set_valid()
-            except BaseException as error:
-                log_error_to_console("UNSHARP FILTER JOB NOK: ", str(error))
                 pass
         else:
             return False

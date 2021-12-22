@@ -13,6 +13,8 @@ from Application.Config.job_create import custom_kernels_used
 import cv2
 import numpy as np
 import Application.Jobs.kernels
+from PIL import ImageFilter, Image
+
 
 """
 Module handles sharpening algorithm for an image jobs for the APPL block.
@@ -138,6 +140,107 @@ def main_sharpen_filter_func(port_list: list = None) -> bool:
 
         return True
 
+
+def main_unsharp_filter_func(port_list: list = None) -> bool:
+    """
+    The Unsharp filter can be used to enhance the edges of an image.
+
+    :param port_list: Param needed list of port names [input1,  wave_offset, kernel_size, sigma, output]
+                      List of ports passed as parameters should be even. Every input picture should have a output port.
+    :return: True if the job executed OK.
+    """
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE_IMG = 1
+    # noinspection PyPep8Naming
+    PORT_RADIUS_POS = 2
+    # noinspection PyPep8Naming
+    PORT_PERCENT_POS = 3
+    # noinspection PyPep8Naming
+    PORT_THR_POS = 4
+    # noinspection PyPep8Naming
+    PORT_OUT_POS = 5
+
+    # check if param OK
+    if len(port_list) != 6:
+        log_error_to_console("UNSHARP FILTER JOB MAIN FUNCTION PARAM NOK", str(len(port_list)))
+        return False
+    else:
+        p_in = get_port_from_wave(name=port_list[PORT_IN_POS], wave_offset=port_list[PORT_IN_WAVE_IMG])
+        p_out = get_port_from_wave(name=port_list[PORT_OUT_POS])
+
+        if p_in.is_valid() is True:
+            try:
+                img = Image.fromarray(obj=p_in.arr.copy())
+                p_out.arr[:] = np.array(img.filter(filter=ImageFilter.UnsharpMask(radius=port_list[PORT_RADIUS_POS],
+                                                                                  percent=port_list[PORT_PERCENT_POS],
+                                                                                  threshold=port_list[PORT_THR_POS])))
+                p_out.set_valid()
+            except BaseException as error:
+                log_error_to_console("UNSHARP FILTER JOB NOK: ", str(error))
+                pass
+        else:
+            return False
+
+        return True
+
+
+def main_unsharp_filter_func_long(port_list: list = None) -> bool:
+    """
+    The Unsharp filter can be used to enhance the edges of an image.
+
+    :param port_list: Param needed list of port names [input1,  wave_offset, kernel_size, sigma, output]
+                      List of ports passed as parameters should be even. Every input picture should have a output port.
+    :return: True if the job executed OK.
+    """
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE_IMG = 1
+    # noinspection PyPep8Naming
+    PORT_KERNEL_POS = 2
+    # noinspection PyPep8Naming
+    PORT_STREGHT_POS = 3
+    # noinspection PyPep8Naming
+    PORT_OUT_POS = 4
+
+    # check if param OK
+    if len(port_list) != 5:
+        log_error_to_console("UNSHARP FILTER JOB MAIN FUNCTION PARAM NOK", str(len(port_list)))
+        return False
+    else:
+        p_in = get_port_from_wave(name=port_list[PORT_IN_POS], wave_offset=port_list[PORT_IN_WAVE_IMG])
+        p_out = get_port_from_wave(name=port_list[PORT_OUT_POS])
+
+        if p_in.is_valid() is True:
+            try:
+                if 'xy' in port_list[PORT_KERNEL_POS]:
+                    kernel = eval('Application.Jobs.kernels.' + port_list[PORT_KERNEL_POS])
+                else:
+                    kernel = np.array(eval(port_list[PORT_KERNEL_POS]))
+
+                if port_list[PORT_STREGHT_POS] < 1:
+                    port_list[PORT_STREGHT_POS] = 1
+                elif port_list[PORT_STREGHT_POS] > 9:
+                    port_list[PORT_STREGHT_POS] = 9
+
+                lap = cv2.filter2D(src=p_in.arr.copy(), ddepth=cv2.CV_64F, kernel=kernel)
+                a_lap = port_list[PORT_STREGHT_POS] * lap
+                img = np.float64(p_in.arr.copy())
+                sharp = img - a_lap
+                sharp[sharp > 255] = 255
+                sharp[sharp < 0] = 0
+                p_out.arr[:] = sharp
+                p_out.set_valid()
+            except BaseException as error:
+                log_error_to_console("UNSHARP FILTER JOB NOK: ", str(error))
+                pass
+        else:
+            return False
+
+        return True
+
 ############################################################################################################################################
 # Job create functions
 ############################################################################################################################################
@@ -187,8 +290,8 @@ def do_histogram_equalization_job(port_input_name: str, save_histogram = True,
     return port_img_output
 
 
-def do_sharpen_filter_job(port_input_name: str,
-                          kernel: int = 3, port_output_name: str = None,
+def do_sharpen_filter_job(port_input_name: str, kernel: str,
+                          port_output_name: str = None,
                           is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
     """
     Sharpen filter in image processing improves spatial resolution by enhancing object boundaries but at the cost of image noise.
@@ -233,6 +336,114 @@ def do_sharpen_filter_job(port_input_name: str,
                                   max_wave=wave_offset,
                                   init_func_name='init_func_global', init_func_param=None,
                                   main_func_name='main_sharpen_filter_func',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output_name
+
+
+def do_unsharp_filter_expanded_job(port_input_name: str,  kernel: str, strenght: int,
+                                   port_output_name: str = None,
+                                   wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
+    """
+    The unsharp filter is a simple sharpening operator which derives its name from the fact that it enhances edges
+    (and other high frequency components in an image) via a procedure which subtracts an unsharp, or smoothed,
+    version of an image from the original image. The unsharp filtering technique is commonly used in the photographic
+    and printing industries for crisping edges. The implementation is done using PIL-image library.
+    By default the radius is 2 and percent is 150.
+    https://pdfs.semanticscholar.org/a9ea/aecf23f3a4b7822e4bcca924e02cd5b4dc4e.pdf
+    :param port_input_name: name of input port
+    :param wave_offset: port wave offset. If 0 it is in current wave.
+    :param kernel: smoothing kernel to use
+    :param strenght: alpha constant that represents the strenght
+    :param threshold: threshold to apply
+    :param port_output_name: name of output port
+    :param level: pyramid level to calculate at
+    :param is_rgb: if the output ports is rgb, 3 channels
+    return port_output_name
+    """
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    if isinstance(kernel, list):
+        if kernel not in custom_kernels_used:
+            custom_kernels_used.append(kernel)
+        kernel = kernel.__str__()
+    else:
+        if not isinstance(kernel, str):
+            log_setup_info_to_console("SHARPEN FILTER JOB DIDN'T RECEIVE CORRECT KERNEL")
+            return
+        else:
+            kernel = kernel.lower() + '_xy'
+
+    if port_output_name is None:
+        port_output_name = 'UNSHARP_FILER_K_' + str(kernel).replace('.', '_') + '_S_' + str(strenght) + '_' + port_input_name
+
+    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, kernel, strenght, output_port_name]
+    output_port_list = [(output_port_name, output_port_size, 'B', True)]
+
+    job_name = job_name_create(action='Unsharp filter', input_list=input_port_list, wave_offset=[wave_offset], level=level, S=str(strenght))
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  max_wave=wave_offset,
+                                  init_func_name='init_func_global', init_func_param=None,
+                                  main_func_name='main_unsharp_filter_func_long',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output_name
+
+
+def do_unsharp_filter_job(port_input_name: str,
+                          radius: int = 2, percent: int = 150, threshold=3, port_output_name: str = None,
+                          wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
+    """
+    The unsharp filter is a simple sharpening operator which derives its name from the fact that it enhances edges
+    (and other high frequency components in an image) via a procedure which subtracts an unsharp, or smoothed,
+    version of an image from the original image. The unsharp filtering technique is commonly used in the photographic
+    and printing industries for crisping edges. The implementation is done using PIL-image library.
+    By default the radius is 2 and percent is 150.
+    https://pdfs.semanticscholar.org/a9ea/aecf23f3a4b7822e4bcca924e02cd5b4dc4e.pdf
+    :param port_input_name: name of input port
+    :param wave_offset: port wave offset. If 0 it is in current wave.
+    :param radius: radius of filter
+    :param percent: percent of dark to add
+    :param threshold: threshold to apply
+    :param port_output_name: name of output port
+    :param level: pyramid level to calculate at
+    :param is_rgb: if the output ports is rgb, 3 channels
+    return port_output_name
+    """
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    if port_output_name is None:
+        port_output_name = 'UNSHARP_FILER_R_' + str(radius) + '_P_' + str(percent) + '_T_' + str(threshold) + '_' + port_input_name
+
+    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, radius, percent, threshold, output_port_name]
+    output_port_list = [(output_port_name, output_port_size, 'B', True)]
+
+    job_name = job_name_create(action='Unsharp filter', input_list=input_port_list, wave_offset=[wave_offset], level=level,
+                               R=str(radius), P=str(percent))
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  max_wave=wave_offset,
+                                  init_func_name='init_func_global', init_func_param=None,
+                                  main_func_name='main_unsharp_filter_func',
                                   main_func_param=main_func_list,
                                   output_ports=output_port_list)
 

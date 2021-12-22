@@ -1640,54 +1640,6 @@ def do_crimmins_job(port_input_name: str,
     return port_output_name
 
 
-def do_unsharp_filter_job(port_input_name: str,
-                          radius: int = 2, percent: int = 150, port_output_name: str = None,
-                          wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
-    """
-    The unsharp filter is a simple sharpening operator which derives its name from the fact that it enhances edges
-    (and other high frequency components in an image) via a procedure which subtracts an unsharp, or smoothed,
-    version of an image from the original image. The unsharp filtering technique is commonly used in the photographic
-    and printing industries for crisping edges. The implementation is done using PIL-image library.
-    By default the radius is 2 and percent is 150.
-    https://pdfs.semanticscholar.org/a9ea/aecf23f3a4b7822e4bcca924e02cd5b4dc4e.pdf
-    :param port_input_name: name of input port
-    :param wave_offset: port wave offset. If 0 it is in current wave.
-    :param radius: radius of filter
-    :param percent: percent of dark to add
-    :param port_output_name: name of output port
-    :param level: pyramid level to calculate at
-    :param is_rgb: if the output ports is rgb, 3 channels
-    return port_output_name
-    """
-    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
-
-    if port_output_name is None:
-        port_output_name = 'UNSHARP_FILER_R_' + str(radius) + '_P_' + str(percent) + '_' + port_input_name
-
-    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
-    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
-
-    input_port_list = [input_port_name]
-    main_func_list = [input_port_name, wave_offset, radius, percent, output_port_name]
-    output_port_list = [(output_port_name, output_port_size, 'B', True)]
-
-    job_name = job_name_create(action='Unsharp filter', input_list=input_port_list, wave_offset=[wave_offset], level=level,
-                               R=str(radius), P=str(percent))
-
-    d = create_dictionary_element(job_module='blur_image',
-                                  job_name=job_name,
-                                  input_ports=input_port_list,
-                                  max_wave=wave_offset,
-                                  init_func_name='init_func', init_func_param=None,
-                                  main_func_name='main_unsharp_filter_func',
-                                  main_func_param=main_func_list,
-                                  output_ports=output_port_list)
-
-    jobs_dict.append(d)
-
-    return port_output_name
-
-
 def do_isef_filter_job(port_input_name: str,
                        smoothing_factor: float = 0.9, port_output_name: str = None,
                        wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:

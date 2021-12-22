@@ -20,11 +20,16 @@ def main():
     sharpen = Application.do_sharpen_filter_job(port_input_name=grey, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1)
     sharpen_2 = Application.do_sharpen_filter_job(port_input_name=grey, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_2)
     sharpen_dil = Application.do_sharpen_filter_job(port_input_name=grey, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1)
+    um_dil = Application.do_unsharp_filter_job(port_input_name=grey, is_rgb=False)
+    um_dil = Application.do_unsharp_filter_expanded_job(port_input_name=grey, is_rgb=False, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1, strenght=1)
+    um_dil = Application.do_unsharp_filter_expanded_job(port_input_name=grey, is_rgb=False, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1, strenght=1)
 
-    sharpen = Application.do_sharpen_filter_job(port_input_name=raw, is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1)
-    sharpen_2 = Application.do_sharpen_filter_job(port_input_name=raw, is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_2)
-    sharpen_dil = Application.do_sharpen_filter_job(port_input_name=raw, is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1)
-
+    sharpen = Application.do_sharpen_filter_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1)
+    sharpen_2 = Application.do_sharpen_filter_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_2)
+    sharpen_dil = Application.do_sharpen_filter_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1)
+    um_dil = Application.do_unsharp_filter_job(port_input_name='RAW', is_rgb=True)
+    um_dil = Application.do_unsharp_filter_expanded_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1, strenght=1)
+    um_dil = Application.do_unsharp_filter_expanded_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1, strenght=1)
 
     # Application.do_histogram_job(port_input_name=grey)
     # Application.do_histogram_job(port_input_name=hist_eq)
