@@ -3,13 +3,16 @@ import os
 
 from Application.Frame.global_variables import JobInitStateReturn, global_var_handler
 from Application.Frame.transferJobPorts import get_port_from_wave
-from Utils.log_handler import log_to_console, log_to_file, log_error_to_console
+from Utils.log_handler import log_to_console, log_to_file, log_error_to_console, log_setup_info_to_console
 import config_main as CONFIG
 from Application.Config.create_config import jobs_dict, create_dictionary_element
 from config_main import PYRAMID_LEVEL
 from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create, get_module_name_from_file
 from Utils.plotting import plot_histogram_grey_image
+from Application.Config.job_create import custom_kernels_used
 import cv2
+import numpy as np
+import Application.Jobs.kernels
 
 """
 Module handles sharpening algorithm for an image jobs for the APPL block.
@@ -85,6 +88,56 @@ def main_func_histogram_equalization(param_list: list = None) -> bool:
 
         return True
 
+
+def main_sharpen_filter_func(port_list: list = None) -> bool:
+    """
+
+    :param port_list: Param needed list of port names [input, wave_offset, kernel, output]
+                      List of ports passed as parameters should be even. Every input picture should have a output port.
+    :return: True if the job executed OK.
+    """
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE_IMG = 1
+    # noinspection PyPep8Naming
+    PORT_KERNEL = 2
+    # noinspection PyPep8Naming
+    PORT_OUT_POS = 3
+
+    # check if param OK
+    if len(port_list) != 4:
+        log_error_to_console("SHARPEN FILTER JOB MAIN FUNCTION PARAM NOK", str(len(port_list)))
+        return False
+    else:
+        p_in = get_port_from_wave(name=port_list[PORT_IN_POS], wave_offset=port_list[PORT_IN_WAVE_IMG])
+        p_out = get_port_from_wave(name=port_list[PORT_OUT_POS])
+
+        if p_in.is_valid() is True:
+            try:
+                if 'xy' in port_list[PORT_KERNEL]:
+                    kernel = eval('Application.Jobs.kernels.' + port_list[PORT_KERNEL])
+                else:
+                    kernel = np.array(eval(port_list[PORT_KERNEL]))
+
+                kernel_identity = (np.zeros(kernel.shape)).astype(np.int8)
+                mid = int((kernel_identity.shape[0] - 1) / 2)
+                kernel_identity[mid, mid] = 1
+
+                kernel_high_pass = kernel_identity - kernel
+                result = cv2.filter2D(p_in.arr.copy(), -1, kernel_high_pass)
+                    # p_out.arr[:] = cv2.normalize(src=result, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+                p_out.arr[:] = result
+                p_out.set_valid()
+            except BaseException as error:
+                log_error_to_console("SHARPEN FILTER JOB NOK: ", str(error))
+                pass
+
+        else:
+            return False
+
+        return True
+
 ############################################################################################################################################
 # Job create functions
 ############################################################################################################################################
@@ -132,6 +185,60 @@ def do_histogram_equalization_job(port_input_name: str, save_histogram = True,
     jobs_dict.append(d)
 
     return port_img_output
+
+
+def do_sharpen_filter_job(port_input_name: str,
+                          kernel: int = 3, port_output_name: str = None,
+                          is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
+    """
+    Sharpen filter in image processing improves spatial resolution by enhancing object boundaries but at the cost of image noise.
+    :param port_input_name: name of input port
+    :param wave_offset: port wave offset. If 0 it is in current wave.
+    :param kernel: kernel size of sharpen filter
+    :param port_output_name: name of output port
+    :param level: pyramid level to calculate at
+    :param is_rgb: if the output ports is rgb, 3 channels
+    :return: output image port name
+    """
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    if isinstance(kernel, list):
+        if kernel not in custom_kernels_used:
+            custom_kernels_used.append(kernel)
+        kernel = kernel.__str__()
+    else:
+        if not isinstance(kernel, str):
+            log_setup_info_to_console("SHARPEN FILTER JOB DIDN'T RECEIVE CORRECT KERNEL")
+            return
+        else:
+            kernel = kernel.lower() + '_xy'
+
+    if port_output_name is None:
+        port_output_name = 'SHARPEN_K_' + str(kernel).replace('.', '_') + '_' + port_input_name
+
+
+    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, kernel, output_port_name]
+    output_port_list = [(output_port_name, output_port_size, 'B', True)]
+
+    job_name = job_name_create(action='Sharpen filter', input_list=input_port_list, wave_offset=[wave_offset], level=level,
+                               Kernel=str(kernel))
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  max_wave=wave_offset,
+                                  init_func_name='init_func_global', init_func_param=None,
+                                  main_func_name='main_sharpen_filter_func',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output_name
 
 
 if __name__ == "__main__":

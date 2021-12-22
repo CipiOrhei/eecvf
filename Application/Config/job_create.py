@@ -1927,48 +1927,6 @@ def do_anisotropic_diffusion_filter_job(port_input_name: str,
     return port_output_name
 
 
-def do_sharpen_filter_job(port_input_name: str,
-                          kernel: int = 3, port_output_name: str = None,
-                          is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
-    """
-    Sharpen filter in image processing improves spatial resolution by enhancing object boundaries but at the cost of image noise.
-    :param port_input_name: name of input port
-    :param wave_offset: port wave offset. If 0 it is in current wave.
-    :param kernel: kernel size of sharpen filter
-    :param port_output_name: name of output port
-    :param level: pyramid level to calculate at
-    :param is_rgb: if the output ports is rgb, 3 channels
-    :return: output image port name
-    """
-    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
-
-    if port_output_name is None:
-        port_output_name = 'SHARPEN_K_' + str(kernel).replace('.', '_') + '_' + port_input_name
-
-    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
-    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
-
-    input_port_list = [input_port_name]
-    main_func_list = [input_port_name, wave_offset, kernel, output_port_name]
-    output_port_list = [(output_port_name, output_port_size, 'B', True)]
-
-    job_name = job_name_create(action='Sharpen filter', input_list=input_port_list, wave_offset=[wave_offset], level=level,
-                               Kernel=str(kernel))
-
-    d = create_dictionary_element(job_module='blur_image',
-                                  job_name=job_name,
-                                  input_ports=input_port_list,
-                                  max_wave=wave_offset,
-                                  init_func_name='init_func', init_func_param=None,
-                                  main_func_name='main_sharpen_filter_func',
-                                  main_func_param=main_func_list,
-                                  output_ports=output_port_list)
-
-    jobs_dict.append(d)
-
-    return port_output_name
-
-
 def do_motion_blur_filter_job(port_input_name: str,
                               kernel_size: int, angle: float, port_output_name: str = None,
                               is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
