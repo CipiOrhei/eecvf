@@ -710,53 +710,6 @@ def main_anisotropic_diffusion_filter_func(port_list: list = None) -> bool:
         return True
 
 
-def main_sharpen_filter_func(port_list: list = None) -> bool:
-    """
-
-    :param port_list: Param needed list of port names [input, wave_offset, kernel, output]
-                      List of ports passed as parameters should be even. Every input picture should have a output port.
-    :return: True if the job executed OK.
-    """
-    # noinspection PyPep8Naming
-    PORT_IN_POS = 0
-    # noinspection PyPep8Naming
-    PORT_IN_WAVE_IMG = 1
-    # noinspection PyPep8Naming
-    PORT_KERNEL_SIZE = 2
-    # noinspection PyPep8Naming
-    PORT_OUT_POS = 3
-
-    # check if param OK
-    if len(port_list) != 4:
-        log_error_to_console("SHARPEN FILTER JOB MAIN FUNCTION PARAM NOK", str(len(port_list)))
-        return False
-    else:
-        p_in = get_port_from_wave(name=port_list[PORT_IN_POS], wave_offset=port_list[PORT_IN_WAVE_IMG])
-        p_out = get_port_from_wave(name=port_list[PORT_OUT_POS])
-
-        if p_in.is_valid() is True:
-            try:
-                if port_list[PORT_KERNEL_SIZE] != 0:
-                    kernel_sharpen_1 = (np.ones((port_list[PORT_KERNEL_SIZE], port_list[PORT_KERNEL_SIZE])) * (-1)).astype(np.int8)
-                    mid = int((port_list[PORT_KERNEL_SIZE] - 1) / 2)
-                    kernel_sharpen_1[mid, mid] = kernel_sharpen_1.size
-
-                    result = cv2.filter2D(p_in.arr, -1, kernel_sharpen_1)
-                    p_out.arr[:] = cv2.normalize(src=result, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
-                else:
-                    p_out.arr[:] = p_in.arr.copy()
-
-                p_out.set_valid()
-            except BaseException as error:
-                log_error_to_console("SHARPEN FILTER JOB NOK: ", str(error))
-                pass
-
-        else:
-            return False
-
-        return True
-
-
 def main_motion_blur_filter_func(port_list: list = None) -> bool:
     """
 
