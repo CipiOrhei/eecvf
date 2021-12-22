@@ -14,7 +14,7 @@ from Utils.log_handler import log_to_file, log_error_to_console
 from Application.Config.create_config import jobs_dict, create_dictionary_element
 from config_main import PYRAMID_LEVEL, FILTERS
 from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create, get_module_name_from_file
-from Utils.plotting import plot_histogram_grey_image
+from Utils.plotting import plot_histogram_grey_image, plot_histogram_rgb_image
 
 """
 Module handles single image jobs for the APPL block.
@@ -880,8 +880,12 @@ def main_func_histogram(param_list: list = None) -> bool:
         # check if port's you want to use are valid
         if port_in.is_valid() is True:
             try:
-                plot_histogram_grey_image(image=port_in.arr.copy(), name_folder=port_in.name, picture_name=global_var_handler.PICT_NAME.split('.')[0],
-                                              to_save=True, to_show=False)
+                if len(port_in.arr.shape) == 2:
+                    plot_histogram_grey_image(image=port_in.arr.copy(), name_folder=port_in.name, picture_name=global_var_handler.PICT_NAME.split('.')[0],
+                                                  to_save=True, to_show=False)
+                elif len(port_in.arr.shape) == 3:
+                    plot_histogram_rgb_image(image=port_in.arr.copy(), name_folder=port_in.name, picture_name=global_var_handler.PICT_NAME.split('.')[0],
+                                                  to_save=True, to_show=False)
 
             except BaseException as error:
                 log_error_to_console("HISTOGRAM JOB NOK: ", str(error))
