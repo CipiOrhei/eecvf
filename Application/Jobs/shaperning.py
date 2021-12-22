@@ -78,7 +78,7 @@ def main_func_histogram_equalization(param_list: list = None) -> bool:
                                               to_save=True, to_show=False)
                 p_out.set_valid()
             except BaseException as error:
-                log_error_to_console("JOB_NAME JOB NOK: ", str(error))
+                log_error_to_console("HISTOGRAM EQUALIZATION JOB NOK: ", str(error))
                 pass
         else:
             return False

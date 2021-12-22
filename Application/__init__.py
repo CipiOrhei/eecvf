@@ -51,6 +51,7 @@ from Application.Config.job_create import do_gamma_correction_image_job
 from Application.Config.job_create import do_pixelate_image_job
 from Application.Jobs.processing_image import do_resize_image_job
 from Application.Jobs.processing_image import do_blending_images_job
+from Application.Jobs.processing_image import do_histogram_job
 ############################################################################################################################################
 # Image blurring jobs
 ############################################################################################################################################
@@ -193,7 +194,7 @@ from Application.Jobs.feature_detection import do_a_kaze_job
 ############################################################################################################################################
 from Application.Jobs.bow import do_zubud_bow_job
 from Application.Jobs.bow import do_zubud_bow_inquiry_flann_job
-from Application.Jobs.tmbud_bow import  do_tmbud_bow_job
+from Application.Jobs.tmbud_bow import do_tmbud_bow_job
 from Application.Jobs.tmbud_bow import do_tmbud_bow_inquiry_flann_job
 ############################################################################################################################################
 # Deinterlacing jobs
