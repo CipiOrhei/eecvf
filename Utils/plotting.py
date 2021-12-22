@@ -362,6 +362,38 @@ def plot_box_benchmark_values(name_to_save: str, eval: list,
     plt.close()
 
 
+def plot_histogram_grey_image(image, name_folder, picture_name, to_show=False, to_save=False):
+    """
+    Plots the histogram of an image.
+    :param image: the image we wish to process the histogram on. Make sure it is grey.
+    :param name_folder: folder name where to output it
+    :param picture_name: name of picture. it will be used in the save name.
+    :param to_show: if we desire to show the histogram on run time
+    :param to_save: if we desire to save the histogram
+    :return: None
+    """
+    fig = plt.gcf()
+    fig.set_size_inches(w=15, h=10)
+    plt.hist(image.flatten(), bins=256, range=[0, 256], color='b')
+    plt.xlim([0, 256])
+    plt.xlabel('Pixel value', fontsize=18)
+    plt.ylabel('Pixel number', fontsize=18)
+    # plt.legend(fancybox=True, fontsize='small', loc='best')
+    plt.title(picture_name, fontsize=18)
+    file_to_save = os.path.join(CONFIG.APPL_SAVE_LOCATION, name_folder)
+    if not os.path.exists(file_to_save):
+        os.makedirs(file_to_save)
+    if to_save:
+        plt.savefig(os.path.join(file_to_save, '{}.png'.format('hist_' + picture_name)), bbox_inches='tight')
+    if to_show:
+        plt.show()
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     plot_GLCM_data(port_list=['GLCM_D_1_A_0_LC0', 'GLCM_D_1_A_3_141592653589793_LC0', 'GLCM_D_1_A_0_7853981633974483_LC0',
