@@ -24,6 +24,7 @@ import Application.Jobs.grey_comatrix
 import Application.Jobs.image_cube
 import Application.Jobs.bow
 import Application.Jobs.tmbud_bow
+import Application.Jobs.shaperning
 if CUDA_GPU:
     import Application.Jobs.u_net
     import Application.Jobs.semseg

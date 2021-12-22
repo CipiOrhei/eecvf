@@ -225,3 +225,8 @@ from Application.Jobs.sb_detection import do_sb_detection_from_lines_job
 # Image Cube creation
 ############################################################################################################################################
 from Application.Jobs.image_cube import create_image_cube
+
+############################################################################################################################################
+# Image sharpening
+############################################################################################################################################
+from Application.Jobs.shaperning import do_histogram_equalization_job
