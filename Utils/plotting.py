@@ -374,7 +374,9 @@ def plot_histogram_grey_image(image, name_folder, picture_name, to_show=False, t
     """
     fig = plt.gcf()
     fig.set_size_inches(w=15, h=10)
-    plt.hist(image.flatten(), bins=256, range=[0, 256], color='b')
+    # plt.hist(image.flatten(), bins=256, range=[0, 256], color='b')
+    histogram, bin_edges = np.histogram(image, bins=256, range=[0, 256])
+    plt.plot(bin_edges[0:-1], histogram)
     plt.xlim([0, 256])
     plt.xlabel('Pixel value', fontsize=18)
     plt.ylabel('Pixel number', fontsize=18)
@@ -388,9 +390,43 @@ def plot_histogram_grey_image(image, name_folder, picture_name, to_show=False, t
     if to_show:
         plt.show()
 
+    plt.clf()
 
 
+def plot_histogram_rgb_image(image, name_folder, picture_name, to_show=False, to_save=False):
+    """
+    Plots the histogram of an image.
+    :param image: the image we wish to process the histogram on. Make sure it is grey.
+    :param name_folder: folder name where to output it
+    :param picture_name: name of picture. it will be used in the save name.
+    :param to_show: if we desire to show the histogram on run time
+    :param to_save: if we desire to save the histogram
+    :return: None
+    """
+    fig = plt.gcf()
+    fig.set_size_inches(w=15, h=10)
+    # tuple to select colors of each channel line
+    colors = ("red", "green", "blue")
+    channel_ids = (0, 1, 2)
 
+    for channel_id, c in zip(channel_ids, colors):
+        histogram, bin_edges = np.histogram(image[:, :, channel_id], bins=256, range=(0, 256) )
+        plt.plot(bin_edges[0:-1], histogram, color=c)
+
+    # plt.hist(image.flatten(), bins=256, range=[0, 256], color='b')
+    plt.xlim([0, 256])
+    plt.xlabel('Pixel value', fontsize=18)
+    plt.ylabel('Pixel number', fontsize=18)
+    # plt.legend(fancybox=True, fontsize='small', loc='best')
+    plt.title(picture_name, fontsize=18)
+    file_to_save = os.path.join(CONFIG.APPL_SAVE_LOCATION, name_folder)
+    if not os.path.exists(file_to_save):
+        os.makedirs(file_to_save)
+    if to_save:
+        plt.savefig(os.path.join(file_to_save, '{}.png'.format('hist_' + picture_name)), bbox_inches='tight')
+    if to_show:
+        plt.show()
+    plt.clf()
 
 
 

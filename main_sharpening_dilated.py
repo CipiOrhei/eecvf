@@ -16,21 +16,28 @@ def main():
     Application.set_input_image_folder('TestData/smoke_test')
     raw = Application.do_get_image_job('RAW')
     grey = Application.do_grayscale_transform_job(port_input_name='RAW')
-    hist_eq = Application.do_histogram_equalization_job(port_input_name=grey, save_histogram=False)
-    sharpen = Application.do_sharpen_filter_job(port_input_name=grey, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1)
-    sharpen_2 = Application.do_sharpen_filter_job(port_input_name=grey, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_2)
-    sharpen_dil = Application.do_sharpen_filter_job(port_input_name=grey, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1)
-    um_dil = Application.do_unsharp_filter_job(port_input_name=grey, is_rgb=False)
-    um_dil = Application.do_unsharp_filter_expanded_job(port_input_name=grey, is_rgb=False, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1, strenght=1)
-    um_dil = Application.do_unsharp_filter_expanded_job(port_input_name=grey, is_rgb=False, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1, strenght=1)
 
-    sharpen = Application.do_sharpen_filter_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1)
-    sharpen_2 = Application.do_sharpen_filter_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_2)
-    sharpen_dil = Application.do_sharpen_filter_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1)
-    um_dil = Application.do_unsharp_filter_job(port_input_name='RAW', is_rgb=True)
-    um_dil = Application.do_unsharp_filter_expanded_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1, strenght=1)
-    um_dil = Application.do_unsharp_filter_expanded_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1, strenght=1)
+    eval_list = list()
 
+    for (input, is_rgb) in ([raw, True], (grey, False)):
+        # eval_list.append(Application.do_histogram_equalization_job(port_input_name=input, is_rgb=is_rgb, save_histogram=False))
+        eval_list.append(Application.do_sharpen_filter_job(port_input_name=input, is_rgb=is_rgb, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1))
+        eval_list.append(Application.do_sharpen_filter_job(port_input_name=input, is_rgb=is_rgb, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_2))
+        eval_list.append(Application.do_sharpen_filter_job(port_input_name=input, is_rgb=is_rgb, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1))
+        eval_list.append(Application.do_unsharp_filter_job(port_input_name=input, is_rgb=is_rgb))
+        eval_list.append(Application.do_unsharp_filter_expanded_job(port_input_name=input, is_rgb=is_rgb, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1, strenght=1))
+        eval_list.append(Application.do_unsharp_filter_expanded_job(port_input_name=input, is_rgb=is_rgb, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1, strenght=1))
+
+    for el in eval_list:
+        Application.do_histogram_job(port_input_name=el)
+    #
+    # sharpen = Application.do_sharpen_filter_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1)
+    # sharpen_2 = Application.do_sharpen_filter_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_2)
+    # sharpen_dil = Application.do_sharpen_filter_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1)
+    # um_dil = Application.do_unsharp_filter_job(port_input_name='RAW', is_rgb=True)
+    # um_dil = Application.do_unsharp_filter_expanded_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1, strenght=1)
+    # um_dil = Application.do_unsharp_filter_expanded_job(port_input_name='RAW', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1, strenght=1)
+    #
     # Application.do_histogram_job(port_input_name=grey)
     # Application.do_histogram_job(port_input_name=hist_eq)
     # Application.do_histogram_job(port_input_name=sharpen)
