@@ -64,7 +64,6 @@ from Application.Config.job_create import do_guided_filter_job
 from Application.Config.job_create import do_l0_gradient_minimization_filter_job
 from Application.Config.job_create import do_anisotropic_diffusion_filter_job
 from Application.Config.job_create import do_crimmins_job
-from Application.Config.job_create import do_unsharp_filter_job
 from Application.Config.job_create import do_isef_filter_job
 from Application.Config.job_create import do_motion_blur_filter_job
 ############################################################################################################################################
@@ -231,3 +230,5 @@ from Application.Jobs.image_cube import create_image_cube
 ############################################################################################################################################
 from Application.Jobs.shaperning import do_histogram_equalization_job
 from Application.Jobs.shaperning import do_sharpen_filter_job
+from Application.Jobs.shaperning import do_unsharp_filter_job
+from Application.Jobs.shaperning import do_unsharp_filter_expanded_job
