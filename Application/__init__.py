@@ -1,4 +1,4 @@
-from config_main import CUDA_GPU, IF_THINNING_LIB
+from config_main import CUDA_GPU
 ############################################################################################################################################
 # service jobs
 ############################################################################################################################################
@@ -51,6 +51,7 @@ from Application.Config.job_create import do_gamma_correction_image_job
 from Application.Config.job_create import do_pixelate_image_job
 from Application.Jobs.processing_image import do_resize_image_job
 from Application.Jobs.processing_image import do_blending_images_job
+from Application.Jobs.processing_image import do_histogram_job
 ############################################################################################################################################
 # Image blurring jobs
 ############################################################################################################################################
@@ -67,7 +68,6 @@ from Application.Config.job_create import do_sharpen_filter_job
 from Application.Config.job_create import do_unsharp_filter_job
 from Application.Config.job_create import do_isef_filter_job
 from Application.Config.job_create import do_motion_blur_filter_job
-from Application.Jobs.blur_image import do_weiner_filter_job
 ############################################################################################################################################
 # Image morphology jobs
 ############################################################################################################################################
@@ -155,8 +155,7 @@ from Application.Config.job_create import do_image_adaptive_threshold_job
 ############################################################################################################################################
 # Skeletonization/thinning jobs
 ############################################################################################################################################
-if IF_THINNING_LIB:
-    from Application.Config.job_create import do_thinning_guo_hall_image_job
+from Application.Config.job_create import do_thinning_guo_hall_image_job
 ############################################################################################################################################
 # Line/edge connectivity jobs
 ############################################################################################################################################
@@ -195,6 +194,8 @@ from Application.Jobs.feature_detection import do_a_kaze_job
 ############################################################################################################################################
 from Application.Jobs.bow import do_zubud_bow_job
 from Application.Jobs.bow import do_zubud_bow_inquiry_flann_job
+from Application.Jobs.tmbud_bow import do_tmbud_bow_job
+from Application.Jobs.tmbud_bow import do_tmbud_bow_inquiry_flann_job
 ############################################################################################################################################
 # Deinterlacing jobs
 ############################################################################################################################################
