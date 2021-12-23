@@ -38,6 +38,13 @@ def main():
     # Application.configure_show_pictures(ports_to_show='ALL', time_to_show=500, to_rotate=False)
     Application.run_application()
 
+    for el in range(len(eval_list)):
+        eval_list[el] += '_L0'
+
+    Benchmarking.run_SF_benchmark(input_location='Logs/application_results',
+                                   raw_image='TestData/smoke_test',
+                                   jobs_set=eval_list)
+
     Utils.close_files()
 
 
