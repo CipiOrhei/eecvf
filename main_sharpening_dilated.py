@@ -45,6 +45,9 @@ def main():
                                    raw_image='TestData/smoke_test',
                                    jobs_set=eval_list)
 
+    Benchmarking.run_Entropy_benchmark(input_location='Logs/application_results',
+                                       raw_image='TestData/smoke_test',
+                                       jobs_set=eval_list)
     Utils.close_files()
 
 
