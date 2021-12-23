@@ -84,7 +84,7 @@ def main_func_histogram_equalization(param_list: list = None) -> bool:
                     cv2.cvtColor(ycrcb, cv2.COLOR_YCR_CB2BGR, p_out.arr)
                     # p_out.arr[:]
                 if param_list[PORT_SAVE_HIST] == True:
-                    plot_histogram_grey_image(image=port_in.arr.copy(), name_folder=port_in.name, picture_name=global_var_handler.PICT_NAME.split('.')[0],
+                    plot_histogram_grey_image(image=port_in.arr.copy(), name_folder=port_in.name, picture_name='HIST_EQUAL_' + global_var_handler.PICT_NAME.split('.')[0],
                                               to_save=True, to_show=False)
                     plot_histogram_grey_image(image=p_out.arr.copy(), name_folder=p_out.name, picture_name='HIST_EQUAL_' + global_var_handler.PICT_NAME.split('.')[0],
                                               to_save=True, to_show=False)

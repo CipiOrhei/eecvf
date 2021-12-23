@@ -881,10 +881,10 @@ def main_func_histogram(param_list: list = None) -> bool:
         if port_in.is_valid() is True:
             try:
                 if len(port_in.arr.shape) == 2:
-                    plot_histogram_grey_image(image=port_in.arr.copy(), name_folder=port_in.name, picture_name=global_var_handler.PICT_NAME.split('.')[0],
+                    plot_histogram_grey_image(image=port_in.arr.copy(), name_folder='HIST_' + port_in.name, picture_name=global_var_handler.PICT_NAME.split('.')[0],
                                                   to_save=True, to_show=False)
                 elif len(port_in.arr.shape) == 3:
-                    plot_histogram_rgb_image(image=port_in.arr.copy(), name_folder=port_in.name, picture_name=global_var_handler.PICT_NAME.split('.')[0],
+                    plot_histogram_rgb_image(image=port_in.arr.copy(), name_folder='HIST_' + port_in.name, picture_name=global_var_handler.PICT_NAME.split('.')[0],
                                                   to_save=True, to_show=False)
 
             except BaseException as error:
