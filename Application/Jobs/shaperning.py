@@ -74,8 +74,15 @@ def main_func_histogram_equalization(param_list: list = None) -> bool:
         # check if port's you want to use are valid
         if port_in.is_valid() is True:
             try:
-                p_out.arr[:] = cv2.equalizeHist(port_in.arr.copy())
-
+                if len(port_in.arr.shape) == 2:
+                    p_out.arr[:] = cv2.equalizeHist(port_in.arr.copy())
+                else:
+                    ycrcb = cv2.cvtColor(port_in.arr.copy(), cv2.COLOR_BGR2YCR_CB)
+                    channels = cv2.split(ycrcb)
+                    cv2.equalizeHist(channels[0], channels[0])
+                    cv2.merge(channels, ycrcb)
+                    cv2.cvtColor(ycrcb, cv2.COLOR_YCR_CB2BGR, p_out.arr)
+                    # p_out.arr[:]
                 if param_list[PORT_SAVE_HIST] == True:
                     plot_histogram_grey_image(image=port_in.arr.copy(), name_folder=port_in.name, picture_name=global_var_handler.PICT_NAME.split('.')[0],
                                               to_save=True, to_show=False)
@@ -246,7 +253,7 @@ def main_unsharp_filter_func_long(port_list: list = None) -> bool:
 ############################################################################################################################################
 
 def do_histogram_equalization_job(port_input_name: str, save_histogram = True,
-                                  port_img_output: str = None,
+                                  port_img_output: str = None, is_rgb=False,
                                   level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
     """
     Equalizes the histogram of a grayscale image. Implementation uses opencv implementation.
@@ -258,6 +265,7 @@ def do_histogram_equalization_job(port_input_name: str, save_histogram = True,
     :param port_img_output: Name of output port
     :param save_histogram: If we desire to save the histogram from this processing
     :param level: Level of input port, please correlate with each input port name parameter
+    :param is_rgb: if output port is rgb or not
     :param wave_offset: wave of input port, please correlate with each input port name parameter
     :return: Name of output port or ports
     """
@@ -269,7 +277,7 @@ def do_histogram_equalization_job(port_input_name: str, save_histogram = True,
 
     # size can be custom as needed
     port_img_output_name = transform_port_name_lvl(name=port_img_output, lvl=level)
-    port_img_output_name_size = transform_port_size_lvl(lvl=level, rgb=False)
+    port_img_output_name_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
 
     input_port_list = [input_port_name]
     main_func_list = [input_port_name, wave_offset, port_img_output_name, save_histogram]
