@@ -13,7 +13,7 @@ def main():
 
     """
     Application.delete_folder_appl_out()
-    Application.set_input_image_folder('TestData/smoke_test')
+    Application.set_input_image_folder('TestData/sharpnnes_test')
     raw = Application.do_get_image_job('RAW')
     grey = Application.do_grayscale_transform_job(port_input_name='RAW')
 
@@ -32,6 +32,7 @@ def main():
 
     for el in eval_list:
         Application.do_histogram_job(port_input_name=el)
+        Application.do_mean_pixel_image_job(port_input_name=el)
 
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
@@ -42,11 +43,11 @@ def main():
         eval_list[el] += '_L0'
 
     Benchmarking.run_SF_benchmark(input_location='Logs/application_results',
-                                   raw_image='TestData/smoke_test',
+                                   raw_image='TestData/sharpnnes_test',
                                    jobs_set=eval_list)
 
     Benchmarking.run_Entropy_benchmark(input_location='Logs/application_results',
-                                       raw_image='TestData/smoke_test',
+                                       raw_image='TestData/sharpnnes_test',
                                        jobs_set=eval_list)
     Utils.close_files()
 

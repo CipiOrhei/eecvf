@@ -152,8 +152,9 @@ def mean_calculation(param_list: list = None) -> bool:
 
         if p_in_1.is_valid() is True:
             try:
-                p_out_1.arr[:] = int(np.mean(p_in_1.arr))
-                log_to_file(p_out_1.arr[0].__str__())
+                mean = np.mean(p_in_1.arr)
+                p_out_1.arr[:] = int(mean)
+                log_to_file(mean.__str__())
                 p_out_1.set_valid()
             except BaseException as error:
                 log_to_file('')
