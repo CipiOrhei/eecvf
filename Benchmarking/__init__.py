@@ -11,3 +11,4 @@ from Benchmarking.Config.create_benchmark_job import run_IoU_benchmark
 from Benchmarking.Config.create_benchmark_job import run_SB_IoU_benchmark
 from Benchmarking.Config.create_benchmark_job import run_CBIR_ZuBuD_benchmark
 from Benchmarking.CM_Benchmark.basic_benchmark.sf import run_SF_benchmark
+from Benchmarking.CM_Benchmark.basic_benchmark.entropy import run_Entropy_benchmark
