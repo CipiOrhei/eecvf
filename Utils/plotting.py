@@ -92,8 +92,8 @@ def plot_avg_time_jobs(input_location: str = CONFIG.LOG_KPI_FILE, table_number: 
     file.close()
 
 
-def plot_custom_list(port_list: list, name_to_save: str, input_location: str = CONFIG.LOG_KPI_FILE, table_number: int = 1,
-                     save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True, y_plot_name: str = 'Avg time [ms]'):
+def plot_custom_list(port_list: list, name_to_save: str, input_location: str = CONFIG.LOG_KPI_FILE, table_number: int = 1, set_frame_name: bool = False,
+                     save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True, y_plot_name: str = 'Avg time [ms]', set_name_replace_list=None):
     """
       Plot custom ports
       :param port_list: list of ports to plot
@@ -121,19 +121,31 @@ def plot_custom_list(port_list: list, name_to_save: str, input_location: str = C
     # keys = [el for el in list(table_dict.keys()) if '[ms]' in el]
 
     max_value = 0
-    data = list(map(float, table_dict['Frame']))
+    if set_frame_name is False:
+        data = list(map(float, table_dict['Frame']))
+    else:
+        for el in range(len(table_dict['Image Name'])):
+            table_dict['Image Name'][el] = table_dict['Image Name'][el].split('.')[0]
+        data = list(map(str, table_dict['Image Name']))
 
     for element in range(len(keys)):
         series = list(map(float, table_dict[keys[element]]))
         if max_value < max(series):
             max_value = max(series)
-        plt.plot(series, data=data, label=keys[element].split('Avg Time[ms]')[0])
+
+        set_name = keys[element].split('Avg Time[ms]')[0]
+        if set_name_replace_list is not None:
+            for el in set_name_replace_list:
+                set_name = set_name.replace(el[0], el[1])
+
+        plt.plot(data, series, label=set_name)
 
     fig = plt.gcf()
     fig.set_size_inches(15, 10)
     plt.xlabel('Frames', fontsize=18)
     plt.ylabel(y_plot_name, fontsize=18)
-    plt.xlim(int(table_dict['Frame'][0]), int(table_dict['Frame'][-1]))
+    if set_frame_name is False:
+        plt.xlim(int(table_dict['Frame'][0]), int(table_dict['Frame'][-1]))
     # plt.yticks(np.arange(0, max_value * 1.1, max_value / 20))
     # plt.xticks(np.arange(0, data[-1], round(data[-1], -1) // 20))
     plt.ylim(0)
@@ -143,7 +155,7 @@ def plot_custom_list(port_list: list, name_to_save: str, input_location: str = C
         plt.show()
 
     if save_plot is True:
-        plt.savefig(os.path.join(save_location, name_to_save + '.jpg'))
+        plt.savefig(os.path.join(save_location, name_to_save + '.jpg'), bbox_inches='tight')
 
     plt.close()
     file.close()
@@ -391,6 +403,7 @@ def plot_histogram_grey_image(image, name_folder, picture_name, to_show=False, t
         plt.show()
 
     plt.clf()
+    plt.close()
 
 
 def plot_histogram_rgb_image(image, name_folder, picture_name, to_show=False, to_save=False):
@@ -427,8 +440,71 @@ def plot_histogram_rgb_image(image, name_folder, picture_name, to_show=False, to
     if to_show:
         plt.show()
     plt.clf()
+    plt.close()
 
 
+def plot_frame_values(name_to_save: str, eval: list, data,
+                      number_decimal: int = 3, set_name_replace_list=None,
+                      save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True):
+
+    input_location = os.path.join(CONFIG.BENCHMARK_RESULTS, data)
+    subset_dict = dict()
+
+    # get files from benchmark folder
+    for dirname, dirnames, filenames in os.walk(input_location):
+        for filename in filenames:
+            # files.append(filename)
+            # try:
+            if True:
+                f = open(os.path.join(input_location, filename)).readlines()
+                set_name = filename.split('.')[0]
+
+                if set_name in eval:
+
+                    if set_name_replace_list is not None:
+                        for el in set_name_replace_list:
+                            set_name = set_name.replace(el[0], el[1])
+
+                    subset_dict[set_name] = {'average': 0, 'frames': list(), 'values': list()}
+
+                    for line in range(len(f)):
+                        if line == 0:
+                            pass
+                        elif line == (len(f)-1):
+                            tmp = f[line].split(' ')
+                            for el in range(len(tmp)-1, 0, -1):
+                                if tmp[el] != '' and tmp[el] != ' ' and tmp[el] != '\n':
+                                    subset_dict[set_name]['average'] = round(float(tmp[el]), number_decimal)
+                                    break
+
+                        else:
+                            tmp = f[line].split(' ')
+                            subset_dict[set_name]['frames'].append(tmp[0])
+                            for el in range(len(tmp)-1, 0, -1):
+                                if tmp[el] != '' and tmp[el] != ' ' and tmp[el] != '\n':
+                                    subset_dict[set_name]['values'].append(round(float(tmp[el]), number_decimal))
+                                    break
+
+            # except:
+            #     print(filename)
+
+    for set in subset_dict.keys():
+        plt.plot(subset_dict[set]['frames'], subset_dict[set]['values'], label=set)
+
+    fig = plt.gcf()
+    fig.set_size_inches(15, 10)
+    plt.xlabel('Frames', fontsize=14)
+    plt.ylabel(data, fontsize=14)
+    plt.legend(fancybox=True, fontsize='small', loc='best')
+
+    if show_plot is True:
+        plt.show()
+
+    if save_plot is True:
+        plt.savefig(os.path.join(save_location, name_to_save + '.jpg'), bbox_inches='tight')
+
+    plt.clf()
+    plt.close()
 
 
 if __name__ == "__main__":
