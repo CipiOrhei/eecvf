@@ -227,7 +227,7 @@ def main_unsharp_filter_func_long(port_list: list = None) -> bool:
                 else:
                     kernel = np.array(eval(port_list[PORT_KERNEL_POS]))
 
-                if port_list[PORT_STREGHT_POS] < 1:
+                if port_list[PORT_STREGHT_POS] < 0:
                     port_list[PORT_STREGHT_POS] = 1
                 elif port_list[PORT_STREGHT_POS] > 9:
                     port_list[PORT_STREGHT_POS] = 9
@@ -325,7 +325,7 @@ def do_sharpen_filter_job(port_input_name: str, kernel: str,
             kernel = kernel.lower() + '_xy'
 
     if port_output_name is None:
-        port_output_name = 'SHARPEN_K_' + str(kernel).replace('.', '_') + '_' + port_input_name
+        port_output_name = 'SHARPEN_' + str(kernel).replace('.', '_') + '_' + port_input_name
 
 
     output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
@@ -352,7 +352,7 @@ def do_sharpen_filter_job(port_input_name: str, kernel: str,
     return port_output_name
 
 
-def do_unsharp_filter_expanded_job(port_input_name: str,  kernel: str, strenght: int,
+def do_unsharp_filter_expanded_job(port_input_name: str,  kernel: str, strenght: float,
                                    port_output_name: str = None,
                                    wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
     """
@@ -386,7 +386,7 @@ def do_unsharp_filter_expanded_job(port_input_name: str,  kernel: str, strenght:
             kernel = kernel.lower() + '_xy'
 
     if port_output_name is None:
-        port_output_name = 'UNSHARP_FILER_K_' + str(kernel).replace('.', '_') + '_S_' + str(strenght) + '_' + port_input_name
+        port_output_name = 'UNSHARP_FILER_' + str(kernel).replace('.', '_') + '_S_' + str(strenght).replace('.', '_') + '_' + port_input_name
 
     output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
     output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
@@ -395,7 +395,7 @@ def do_unsharp_filter_expanded_job(port_input_name: str,  kernel: str, strenght:
     main_func_list = [input_port_name, wave_offset, kernel, strenght, output_port_name]
     output_port_list = [(output_port_name, output_port_size, 'B', True)]
 
-    job_name = job_name_create(action='Unsharp filter', input_list=input_port_list, wave_offset=[wave_offset], level=level, S=str(strenght))
+    job_name = job_name_create(action='Unsharp filter', input_list=input_port_list, wave_offset=[wave_offset], level=level, Kernel=str(kernel), S=str(strenght).replace('.', '_'))
 
     d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
                                   job_name=job_name,
@@ -458,6 +458,9 @@ def do_unsharp_filter_job(port_input_name: str,
     jobs_dict.append(d)
 
     return port_output_name
+
+
+
 
 
 if __name__ == "__main__":

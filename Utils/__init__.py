@@ -5,6 +5,7 @@ from Utils.plotting import plot_avg_time_jobs
 from Utils.plotting import plot_custom_list
 from Utils.plotting import plot_time_jobs
 from Utils.plotting import plot_box_benchmark_values
+from Utils.plotting import plot_frame_values
 from Utils.plotting import plot_GLCM_data
 from Utils.plot_benchmark_results import plot_f1_score_cpm
 # from Utils.table_processing import create_table_latex_data_cpm
