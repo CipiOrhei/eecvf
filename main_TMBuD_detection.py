@@ -376,7 +376,38 @@ def main_bow_inquiry(building_classes, desc_list, diff_list, desc_size_list, nOc
     Utils.close_files()
 
 
+def feature_examples():
+    Application.set_output_image_folder('Logs/application_results_feature_example')
+    Application.set_input_image_folder('TestData/TMBuD/images')
+    Application.delete_folder_appl_out()
+
+    raw_img = Application.do_get_image_job(port_output_name='RAW_IMG')
+    grey_img = Application.do_grayscale_transform_job(port_input_name='RAW_IMG', port_output_name='GREY_IMG')
+
+    Application.do_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_WEICKERT)
+    Application.do_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_PM_G1)
+    Application.do_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_PM_G2)
+    Application.do_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_CHARBONNIER)
+    # Application.do_kaze_job(port_input_name=grey_img, diffusivity=cv2.KAZE_DIFF_WEICKERT)
+
+    Application.do_a_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_WEICKERT)
+    Application.do_a_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_PM_G1)
+    Application.do_a_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_PM_G2)
+    Application.do_a_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_CHARBONNIER)
+    # Application.do_a_kaze_job(port_input_name=grey_img)
+
+    Application.create_config_file()
+    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save='ALL')
+    Application.run_application()
+    Utils.close_files()
+
+
+
 if __name__ == "__main__":
+    # feature detection examples
+    # feature_examples()
+
+
     w = 320
     h = 512
 
@@ -465,6 +496,6 @@ if __name__ == "__main__":
     #                 nOctaves_list=nOctaves_list, nLayes_list=nLayes_list, thr_list=thr_list, thr_akaze_list=thr_akaze_list, dictionarySize_list=dictionarySize_list,
     #                 class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS)
     # Utils.reopen_files()
-    main_bow_inquiry(building_classes=105, desc_list=desc_list, diff_list=diff_list, desc_size_list=desc_size_list,
-                    nOctaves_list=nOctaves_list, nLayes_list=nLayes_list, thr_list=thr_list, thr_akaze_list=thr_akaze_list, dictionarySize_list=dictionarySize_list,
-                    class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS)
+    # main_bow_inquiry(building_classes=105, desc_list=desc_list, diff_list=diff_list, desc_size_list=desc_size_list,
+    #                 nOctaves_list=nOctaves_list, nLayes_list=nLayes_list, thr_list=thr_list, thr_akaze_list=thr_akaze_list, dictionarySize_list=dictionarySize_list,
+    #                 class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS)
