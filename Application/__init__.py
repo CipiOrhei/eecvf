@@ -187,6 +187,7 @@ from Application.Jobs.grey_comatrix import do_glcm_job
 ############################################################################################################################################
 from Application.Jobs.feature_detection import do_sift_job
 from Application.Jobs.feature_detection import do_a_kaze_job
+from Application.Jobs.feature_detection import do_kaze_job
 ############################################################################################################################################
 # BOW jobs
 ############################################################################################################################################

@@ -207,10 +207,10 @@ def train_model(height, width, n_classes, epochs, steps_per_epoch, val_steps_per
     MachineLearning.set_image_validate_folder('Logs/ml_results/VAL_INPUT')
     MachineLearning.set_label_validate_folder('Logs/ml_results/VAL_LABEL')
     MachineLearning.clear_model_trained()
-    MachineLearning.do_semseg_base(model="vgg_unet", input_height=height, input_width=width, n_classes=n_classes, epochs=epochs,
+    # MachineLearning.do_semseg_base(model="vgg_unet", input_height=height, input_width=width, n_classes=n_classes, epochs=epochs,
+    #                                verify_dataset=False, steps_per_epoch=steps_per_epoch, val_steps_per_epoch=val_steps_per_epoch, optimizer_name='adam', batch_size=batch_size)
+    MachineLearning.do_semseg_base(model="resnet50_segnet", input_height=height, input_width=width, n_classes=n_classes, epochs=epochs,
                                    verify_dataset=False, steps_per_epoch=steps_per_epoch, val_steps_per_epoch=val_steps_per_epoch, optimizer_name='adam', batch_size=batch_size)
-    # MachineLearning.do_semseg_base(model="resnet50_segnet", input_height=height, input_width=width, n_classes=8, epochs=70,
-    #                                verify_dataset=False, steps_per_epoch=58, val_steps_per_epoch=148, optimizer_name='adam', batch_size=4)
     Application.set_input_image_folder(validate_input)
     Application.set_output_image_folder('Logs/application_results_semseg_iou')
     # Application.delete_folder_appl_out()
@@ -229,10 +229,10 @@ def train_model(height, width, n_classes, epochs, steps_per_epoch, val_steps_per
     #
     # COLORS = [BACKGROUND, BUILDING, SKY, GROUND, NOISE]
 
-    Application.do_semseg_base_job(port_input_name='RAW', model='vgg_unet', number_of_classes=n_classes, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
-                                   save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
-    # Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=5, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
+    # Application.do_semseg_base_job(port_input_name='RAW', model='vgg_unet', number_of_classes=n_classes, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
     #                                save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
+    Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=n_classes, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
+                                   save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
 
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
@@ -242,7 +242,8 @@ def train_model(height, width, n_classes, epochs, steps_per_epoch, val_steps_per
                                    gt_location=validate_gt,
                                    raw_image=validate_input,
                                    # jobs_set=['SEMSEG_VGG_UNET_RAW_L0', 'SEMSEG_RESNET50_SEGNET_RAW_L0'],
-                                   jobs_set=['SEMSEG_VGG_UNET_RAW_L0'],
+                                   jobs_set=['SEMSEG_RESNET50_SEGNET_RAW_L0'],
+                                   # jobs_set=['SEMSEG_VGG_UNET_RAW_L0'],
                                    class_list_name=class_names, unknown_class=0,
                                    is_rgb_gt=True, show_only_set_mean_value=True,
                                    class_list_rgb_value=class_list_rgb_value)
@@ -251,26 +252,26 @@ def train_model(height, width, n_classes, epochs, steps_per_epoch, val_steps_per
     Utils.close_files()
 
 
-def main_bow_create(building_classes):
+def main_bow_create(building_classes, desc_list, diff_list, desc_size_list, nOctaves_list, nLayes_list, thr_list, thr_akaze_list, dictionarySize_list, class_in, class_out, class_names, COLORS):
     """
     Main function of framework Please look in example_main for all functions you can use
     """
 
-    class_names = ["UNKNOWN", "BUILDING", "SKY", "GROUND", "NOISE"]
+    # class_names = ["UNKNOWN", "BUILDING", "SKY", "GROUND", "NOISE"]
+    #
+    # BACKGROUND = (0, 0, 0)
+    # SKY = (255, 0, 0)
+    # VEGETATION = (0, 255, 0)
+    # BUILDING = (125, 125, 0)
+    # WINDOW = (0, 255, 255)
+    # GROUND = (125, 125, 125)
+    # NOISE = (0, 0, 255)
+    # DOOR = (0, 125, 125)
+    #
+    # COLORS = [BACKGROUND, BUILDING, SKY, GROUND, NOISE]
 
-    BACKGROUND = (0, 0, 0)
-    SKY = (255, 0, 0)
-    VEGETATION = (0, 255, 0)
-    BUILDING = (125, 125, 0)
-    WINDOW = (0, 255, 255)
-    GROUND = (125, 125, 125)
-    NOISE = (0, 0, 255)
-    DOOR = (0, 125, 125)
 
-    COLORS = [BACKGROUND, BUILDING, SKY, GROUND, NOISE]
-
-
-    Application.set_input_image_folder('TestData/TMBuD/parsed_dataset/v3/TRAIN')
+    Application.set_input_image_folder('TestData/TMBuD/parsed_dataset/v3_2/TRAIN')
     Application.set_output_image_folder('Logs/application_results')
     Application.delete_folder_appl_out()
 
@@ -278,21 +279,7 @@ def main_bow_create(building_classes):
     Application.do_get_image_job(port_output_name='RAW', direct_grey=False)
     grey = Application.do_grayscale_transform_job(port_input_name='RAW')
     # filtered = Application.do_guided_filter_job(port_input_name=grey, radius=2, regularization=0.4, is_rgb=False)
-    filtered = Application.do_median_blur_job(port_input_name=grey, kernel_size=5, is_rgb=False)
-
-    # desc_list = [cv2.AKAZE_DESCRIPTOR_KAZE, cv2.AKAZE_DESCRIPTOR_KAZE_UPRIGHT, cv2.AKAZE_DESCRIPTOR_MLDB, cv2.AKAZE_DESCRIPTOR_MLDB_UPRIGHT]
-    desc_list = [cv2.AKAZE_DESCRIPTOR_KAZE]
-    # diff_list = [cv2.KAZE_DIFF_PM_G1, cv2.KAZE_DIFF_PM_G2, cv2.KAZE_DIFF_CHARBONNIER, cv2.KAZE_DIFF_WEICKERT]
-    diff_list = [cv2.KAZE_DIFF_PM_G1]
-    # desc_size_list = [0, 8, 16, 32, 64, 128]
-    desc_size_list = [64]
-    nOctaves_list = [5]
-    nLayes_list = [6]
-    thr_list = [0.85]
-    # thr_akaze_list = [0.0010, 0.0011, 0.0012, 0.0013]
-    thr_akaze_list = [0.0012]
-    # dictionarySize_list = [375, 400, 425]
-    dictionarySize_list = [400]
+    # filtered = Application.do_median_blur_job(port_input_name=grey, kernel_size=5, is_rgb=False)
 
     list_to_eval = list()
 
@@ -304,12 +291,12 @@ def main_bow_create(building_classes):
                         for thr in thr_list:
                             for thr_akaze in thr_akaze_list:
                                 for dict_size in dictionarySize_list:
-                                    semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='vgg_unet', number_of_classes=5, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
+                                    semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=len(class_names), level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
                                                                                   save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
 
-                                    binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=[0, 1, 2, 3, 4], class_list_out=[0, 1, 0, 0, 0])
+                                    binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out)
 
-                                    kp, des, img = Application.do_a_kaze_job(port_input_name=filtered, descriptor_channels=1, mask_port_name=binary_mask,
+                                    kp, des, img = Application.do_a_kaze_job(port_input_name=grey, descriptor_channels=1, mask_port_name=binary_mask,
                                                                              descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff,
                                                                              threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes)
 
@@ -323,48 +310,34 @@ def main_bow_create(building_classes):
     Utils.close_files()
 
 
-def main_bow_inquiry(building_classes):
+def main_bow_inquiry(building_classes, desc_list, diff_list, desc_size_list, nOctaves_list, nLayes_list, thr_list, thr_akaze_list, dictionarySize_list, class_in, class_out, class_names, COLORS):
     """
     Main function of framework Please look in example_main for all functions you can use
     """
 
-    class_names = ["UNKNOWN", "BUILDING", "SKY", "GROUND", "NOISE"]
-
-    BACKGROUND = (0, 0, 0)
-    SKY = (255, 0, 0)
-    VEGETATION = (0, 255, 0)
-    BUILDING = (125, 125, 0)
-    WINDOW = (0, 255, 255)
-    GROUND = (125, 125, 125)
-    NOISE = (0, 0, 255)
-    DOOR = (0, 125, 125)
-
-    COLORS = [BACKGROUND, BUILDING, SKY, GROUND, NOISE]
-
-    # desc_list = [cv2.AKAZE_DESCRIPTOR_KAZE, cv2.AKAZE_DESCRIPTOR_KAZE_UPRIGHT, cv2.AKAZE_DESCRIPTOR_MLDB, cv2.AKAZE_DESCRIPTOR_MLDB_UPRIGHT]
-    desc_list = [cv2.AKAZE_DESCRIPTOR_KAZE]
-    # diff_list = [cv2.KAZE_DIFF_PM_G1, cv2.KAZE_DIFF_PM_G2, cv2.KAZE_DIFF_CHARBONNIER, cv2.KAZE_DIFF_WEICKERT]
-    diff_list = [cv2.KAZE_DIFF_PM_G1]
-    # desc_size_list = [0, 8, 16, 32, 64, 128]
-    desc_size_list = [64]
-    nOctaves_list = [5]
-    nLayes_list = [6]
-    thr_list = [0.85]
-    # thr_akaze_list = [0.0010, 0.0011, 0.0012, 0.0013]
-    thr_akaze_list = [0.0012]
-    # dictionarySize_list = [375, 400, 425]
-    dictionarySize_list = [400]
+    # class_names = ["UNKNOWN", "BUILDING", "SKY", "GROUND", "NOISE"]
+    #
+    # BACKGROUND = (0, 0, 0)
+    # SKY = (255, 0, 0)
+    # VEGETATION = (0, 255, 0)
+    # BUILDING = (125, 125, 0)
+    # WINDOW = (0, 255, 255)
+    # GROUND = (125, 125, 125)
+    # NOISE = (0, 0, 255)
+    # DOOR = (0, 125, 125)
+    #
+    # COLORS = [BACKGROUND, BUILDING, SKY, GROUND, NOISE]
 
     list_to_eval = list()
 
-    Application.set_input_image_folder('TestData/TMBuD/parsed_dataset/v3/TEST')
+    Application.set_input_image_folder('TestData/TMBuD/parsed_dataset/v3_2/TEST')
     Application.set_output_image_folder('Logs/query_application')
-    Application.delete_folder_appl_out()
+    # Application.delete_folder_appl_out()
 
     Application.do_get_image_job(port_output_name='RAW', direct_grey=False)
     grey = Application.do_grayscale_transform_job(port_input_name='RAW')
     # filtered = Application.do_guided_filter_job(port_input_name=grey, radius=2, regularization=0.4, is_rgb=False)
-    filtered = Application.do_median_blur_job(port_input_name=grey, kernel_size=5, is_rgb=False)
+    # filtered = Application.do_median_blur_job(port_input_name=grey, kernel_size=5, is_rgb=False)
 
 
     for desc in desc_list:
@@ -375,12 +348,12 @@ def main_bow_inquiry(building_classes):
                         for thr in thr_list:
                             for thr_akaze in thr_akaze_list:
                                 for dict_size in dictionarySize_list:
-                                    semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='vgg_unet', number_of_classes=5, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
+                                    semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=3, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
                                                                                   save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
 
-                                    binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=[0, 1, 2, 3, 4], class_list_out=[0, 1, 0, 0, 0])
+                                    binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out)
 
-                                    kp, des, img = Application.do_a_kaze_job(port_input_name=filtered, descriptor_channels=1, mask_port_name=binary_mask,
+                                    kp, des, img = Application.do_a_kaze_job(port_input_name=grey, descriptor_channels=1, mask_port_name=binary_mask,
                                                                              descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff,
                                                                              threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes)
 
@@ -393,17 +366,48 @@ def main_bow_inquiry(building_classes):
     Application.create_config_file()
     Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save='ALL')
     # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save=[])
-    Application.run_application()
+    # Application.run_application()
 
     Benchmarking.run_CBIR_ZuBuD_benchmark(input_location='Logs/query_application/',
-                                          gt_location='TestData/TMBuD/parsed_dataset/v3/TMBuD_groundtruth.txt',
-                                          raw_image='TestData/TMBuD/parsed_dataset/v3/TEST',
+                                          gt_location='TestData/TMBuD/parsed_dataset/v3_2/TMBuD_groundtruth.txt',
+                                          raw_image='TestData/TMBuD/parsed_dataset/v3_2/TEST',
                                           jobs_set=list_to_eval)
 
     Utils.close_files()
 
 
+def feature_examples():
+    Application.set_output_image_folder('Logs/application_results_feature_example')
+    Application.set_input_image_folder('TestData/TMBuD/images')
+    Application.delete_folder_appl_out()
+
+    raw_img = Application.do_get_image_job(port_output_name='RAW_IMG')
+    grey_img = Application.do_grayscale_transform_job(port_input_name='RAW_IMG', port_output_name='GREY_IMG')
+
+    Application.do_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_WEICKERT)
+    Application.do_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_PM_G1)
+    Application.do_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_PM_G2)
+    Application.do_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_CHARBONNIER)
+    # Application.do_kaze_job(port_input_name=grey_img, diffusivity=cv2.KAZE_DIFF_WEICKERT)
+
+    Application.do_a_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_WEICKERT)
+    Application.do_a_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_PM_G1)
+    Application.do_a_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_PM_G2)
+    Application.do_a_kaze_job(port_input_name=raw_img, diffusivity=cv2.KAZE_DIFF_CHARBONNIER)
+    # Application.do_a_kaze_job(port_input_name=grey_img)
+
+    Application.create_config_file()
+    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save='ALL')
+    Application.run_application()
+    Utils.close_files()
+
+
+
 if __name__ == "__main__":
+    # feature detection examples
+    # feature_examples()
+
+
     w = 320
     h = 512
 
@@ -456,22 +460,42 @@ if __name__ == "__main__":
     # prepare_dataset_TMBuD(COLORS_TMBuD=COLORS_TMBuD, TMBuD_CORRELATION=TMBuD_CORRELATION)
     # Utils.reopen_files()
 
-    # n_classes = 3
-    # epochs = 75
-    # batch_size = 4
-    # train_nr_images = 2566
-    # val_nr_images = 95
-    # steps_per_epoch = int((train_nr_images/epochs)/batch_size)
-    # val_steps_per_epoch = int(val_nr_images/batch_size)
-    # class_names = ["UNKNOWN", "BUILDING", "NOISE"]
-    # COLORS = [(0, 0, 0), (125, 125, 0), (0, 0, 255)]
-    # validate_input = 'TestData/TMBuD/parsed_dataset/img_label_full/png'
-    # validate_gt = 'Logs/TMBuD/labels/BDT_LABELS_PNG_L0'
-    # class_list_rgb_value = [0, 87, 76]
+    n_classes = 3
+    epochs = 50
+    batch_size = 4
+    train_nr_images = 3673
+    val_nr_images = 136
+    steps_per_epoch = int((train_nr_images/epochs)/batch_size)
+    val_steps_per_epoch = int(val_nr_images/batch_size)
+    class_names = ["UNKNOWN", "BUILDING", "NOISE"]
+    COLORS = [(0, 0, 0), (125, 125, 0), (0, 0, 255)]
+    validate_input = 'TestData/TMBuD/parsed_dataset/img_label_full/png'
+    validate_gt = 'Logs/TMBuD/labels/BDT_LABELS_PNG_L0'
+    class_list_rgb_value = [0, 87, 76]
     # train_model(width=w, height=h, n_classes=n_classes, epochs=epochs, val_steps_per_epoch=val_steps_per_epoch, batch_size=batch_size, steps_per_epoch=steps_per_epoch, class_names=class_names, COLORS=COLORS,
     #             validate_input=validate_input, validate_gt=validate_gt, class_list_rgb_value=class_list_rgb_value, )
     # Utils.reopen_files()
 
-    # main_bow_create(building_classes=58)
+    # desc_list = [cv2.AKAZE_DESCRIPTOR_KAZE, cv2.AKAZE_DESCRIPTOR_KAZE_UPRIGHT, cv2.AKAZE_DESCRIPTOR_MLDB, cv2.AKAZE_DESCRIPTOR_MLDB_UPRIGHT]
+    desc_list = [cv2.AKAZE_DESCRIPTOR_KAZE]
+    # diff_list = [cv2.KAZE_DIFF_PM_G1, cv2.KAZE_DIFF_PM_G2, cv2.KAZE_DIFF_CHARBONNIER, cv2.KAZE_DIFF_WEICKERT]
+    diff_list = [cv2.KAZE_DIFF_PM_G1]
+    # desc_size_list = [0, 8, 16, 32, 64, 128]
+    desc_size_list = [64]
+    nOctaves_list = [4]
+    nLayes_list = [5]
+    thr_list = [0.82]
+    # thr_akaze_list = [0.0010, 0.0011, 0.0012, 0.0013]
+    thr_akaze_list = [0.0012]
+    # dictionarySize_list = [375, 400, 425]
+    dictionarySize_list = [400]
+    class_in = [0, 1, 2]
+    class_out = [0, 1, 0]
+
+    # main_bow_create(building_classes=105, desc_list=desc_list, diff_list=diff_list, desc_size_list=desc_size_list,
+    #                 nOctaves_list=nOctaves_list, nLayes_list=nLayes_list, thr_list=thr_list, thr_akaze_list=thr_akaze_list, dictionarySize_list=dictionarySize_list,
+    #                 class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS)
     # Utils.reopen_files()
-    main_bow_inquiry(building_classes=58)
+    # main_bow_inquiry(building_classes=105, desc_list=desc_list, diff_list=diff_list, desc_size_list=desc_size_list,
+    #                 nOctaves_list=nOctaves_list, nLayes_list=nLayes_list, thr_list=thr_list, thr_akaze_list=thr_akaze_list, dictionarySize_list=dictionarySize_list,
+    #                 class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS)
