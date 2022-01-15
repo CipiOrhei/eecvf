@@ -6,7 +6,7 @@ from typing import Tuple
 from Application.Frame import transferJobPorts
 from Application.Frame.global_variables import JobInitStateReturn, global_var_handler
 from Application.Frame.transferJobPorts import get_port_from_wave
-from Utils.log_handler import log_error_to_console, log_to_console
+from Utils.log_handler import log_error_to_console, log_to_file, log_to_console
 from Application.Config.create_config import jobs_dict, create_dictionary_element
 from config_main import PYRAMID_LEVEL, APPL_SAVE_LOCATION
 from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create, get_module_name_from_file
@@ -22,11 +22,14 @@ import numpy as np
 ############################################################################################################################################
 
 
-def init_func_sift() -> JobInitStateReturn:
+def init_func_sift(param_list: list = None) -> JobInitStateReturn:
     """
     Init function for sift algorithm
     :return: INIT or NOT_INIT state for the job
     """
+    if param_list is not None:
+        log_to_file(param_list[0])
+
     return JobInitStateReturn(True)
 
 ############################################################################################################################################
@@ -103,8 +106,10 @@ def main_func_shift(param_list: list = None) -> bool:
                     p_out_keypoints.arr[t][:] = tmp
                 p_out_keypoints.set_valid()
 
+                log_to_file(len(des).__str__())
             except BaseException as error:
                 log_error_to_console("SIFT JOB NOK: ", str(error))
+                log_to_file('')
                 pass
         else:
             return False
@@ -230,10 +235,10 @@ def main_func_a_kaze(param_list: list = None) -> bool:
 
                 p_out_keypoints.set_valid()
 
-
-
+                log_to_file(len(des).__str__())
             except BaseException as error:
                 log_error_to_console("A_KAZE JOB NOK: ", str(error))
+                log_to_file('')
                 pass
         else:
             return False
@@ -352,13 +357,16 @@ def main_func_kaze(param_list: list = None) -> bool:
 
                 p_out_keypoints.set_valid()
 
+                log_to_file(len(des).__str__())
             except BaseException as error:
                 log_error_to_console("KAZE JOB NOK: ", str(error))
+                log_to_file('')
                 pass
         else:
             return False
 
         return True
+
 
 ############################################################################################################################################
 # Job create functions
@@ -439,6 +447,8 @@ def do_sift_job(port_input_name: str,
 
     input_port_list = [input_port_name]
 
+    init_param = ['Number Kp ' + port_img_output_name]
+
     main_func_list = [input_port_name, wave_offset, number_features, number_octaves, contrast_threshold, edge_threshold, gaussian_sigma,
                       mask_port_name, port_kp_output_name, port_des_output_name, port_img_output_name]
 
@@ -451,7 +461,7 @@ def do_sift_job(port_input_name: str,
     d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
                                   job_name=job_name,
                                   input_ports=input_port_list,
-                                  init_func_name='init_func_sift', init_func_param=None,
+                                  init_func_name='init_func_sift', init_func_param=init_param,
                                   main_func_name='main_func_shift',
                                   main_func_param=main_func_list,
                                   output_ports=output_port_list)
@@ -526,6 +536,8 @@ def do_kaze_job(port_input_name: str, number_features: int = 1024,
     if mask_port_name is not None:
         mask_port_name = transform_port_name_lvl(name=mask_port_name, lvl=level)
 
+    init_param = ['Number Kp ' + port_img_output_name]
+
     input_port_list = [input_port_name]
 
     main_func_list = [input_port_name, wave_offset, number_features,
@@ -542,7 +554,7 @@ def do_kaze_job(port_input_name: str, number_features: int = 1024,
     d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
                                   job_name=job_name,
                                   input_ports=input_port_list,
-                                  init_func_name='init_func_sift', init_func_param=None,
+                                  init_func_name='init_func_sift', init_func_param=init_param,
                                   main_func_name='main_func_kaze',
                                   main_func_param=main_func_list,
                                   output_ports=output_port_list)
@@ -627,6 +639,8 @@ def do_a_kaze_job(port_input_name: str, number_features: int = 1024,
     if mask_port_name is not None:
         mask_port_name = transform_port_name_lvl(name=mask_port_name, lvl=level)
 
+    init_param = ['Number Kp ' + port_img_output_name]
+
     input_port_list = [input_port_name]
 
     main_func_list = [input_port_name, wave_offset, number_features, descriptor_type, descriptor_size, descriptor_channels,
@@ -643,7 +657,7 @@ def do_a_kaze_job(port_input_name: str, number_features: int = 1024,
     d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
                                   job_name=job_name,
                                   input_ports=input_port_list,
-                                  init_func_name='init_func_sift', init_func_param=None,
+                                  init_func_name='init_func_sift', init_func_param=init_param,
                                   main_func_name='main_func_a_kaze',
                                   main_func_param=main_func_list,
                                   output_ports=output_port_list)

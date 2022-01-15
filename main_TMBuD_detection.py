@@ -402,11 +402,90 @@ def feature_examples():
     Utils.close_files()
 
 
+def determining_sharpeness():
+    Application.delete_folder_appl_out()
+    Benchmarking.delete_folder_benchmark_out()
+    # input_source = 'TestData/TMBuD/parsed_dataset/STANDARD/img/TEST/png'
+    input_source = 'TestData/sharpnnes_test'
+
+    Application.set_output_image_folder('Logs/application_results')
+    Application.set_input_image_folder(input_source)
+
+
+    raw_img = Application.do_get_image_job(port_output_name='RAW_IMG')
+    grey_img = Application.do_grayscale_transform_job(port_input_name='RAW_IMG', port_output_name='GREY_IMG')
+    Application.do_pyramid_level_down_job(port_input_name=grey_img, is_rgb=False, port_input_lvl=CONFIG.PYRAMID_LEVEL.LEVEL_0, number_of_lvl=2)
+
+    input_list = ([CONFIG.PYRAMID_LEVEL.LEVEL_0, grey_img, '_L0', []],
+                  [CONFIG.PYRAMID_LEVEL.LEVEL_1, grey_img, '_L1', []],
+                  [CONFIG.PYRAMID_LEVEL.LEVEL_2, grey_img, '_L2', []],
+                  )
+
+    for (input_level, input_port, input_app, eval_list) in input_list:
+        sharp_list = list()
+        sharp_list.append(grey_img)
+
+        sharp_list.append(Application.do_unsharp_filter_expanded_job(port_input_name=input_port, is_rgb=False, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1, strenght=0.7, level=input_level))
+        sharp_list.append(Application.do_unsharp_filter_expanded_job(port_input_name=input_port, is_rgb=False, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_2, strenght=0.7, level=input_level))
+        sharp_list.append(Application.do_unsharp_filter_expanded_job(port_input_name=input_port, is_rgb=False, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1, strenght=0.7, level=input_level))
+        sharp_list.append(Application.do_unsharp_filter_expanded_job(port_input_name=input_port, is_rgb=False, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_2, strenght=0.7, level=input_level))
+        sharp_list.append(Application.do_unsharp_filter_expanded_job(port_input_name=input_port, is_rgb=False, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1, strenght=0.7, level=input_level))
+        sharp_list.append(Application.do_unsharp_filter_expanded_job(port_input_name=input_port, is_rgb=False, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_2, strenght=0.7, level=input_level))
+
+        for el in sharp_list:
+            # Application.do_histogram_job(port_input_name=el)
+            a, b, c = Application.do_a_kaze_job(port_input_name=el, diffusivity=cv2.KAZE_DIFF_WEICKERT, save_to_npy=False, save_to_text=False, number_features=2048, level=input_level)
+            eval_list.append(c + input_app)
+
+    Application.create_config_file()
+    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save='ALL')
+    Application.run_application()
+
+    for (input_level, input_port, input_app, eval_list) in input_list:
+        Benchmarking.run_SF_benchmark(input_location='Logs/application_results',
+                                      raw_image=input_source,
+                                      jobs_set=eval_list)
+
+        Benchmarking.run_Entropy_benchmark(input_location='Logs/application_results',
+                                           raw_image=input_source,
+                                           jobs_set=eval_list)
+
+        for data in ['Entropy', 'SF']:
+            Utils.plot_frame_values(name_to_save=data + input_app, eval=eval_list, data=data,
+                                    set_name_replace_list=[('A_KAZE_IMG_DT_5_DS_0_THR_0_001_NO_4_NOL_4_D_2_UNSHARP_FILTER_laplace_v1_', 'V1 '),
+                                                           ('A_KAZE_IMG_DT_5_DS_0_THR_0_001_NO_4_NOL_4_D_2_UNSHARP_FILTER_laplace_v2_', 'V2 '),
+                                                           ('A_KAZE_IMG_DT_5_DS_0_THR_0_001_NO_4_NOL_4_D_2', 'original'),
+                                                           ('dilated_', 'Dilated '), ('_xy', ' '), ('_S_', 'S='),
+                                                           ('_GREY_IMG_L0', ''), ('_GREY_IMG_L1', ''), ('_GREY_IMG_L2', ''), ('_', '.')],
+                                    x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=15, y_ticks_font_size=15, img_size_w=17, img_size_h=10,
+                                    legend_name=None, legend_font_size='large', dpi_save_value=1000,
+                                    save_plot=True)
+    Utils.close_files()
+
+    for (input_level, input_port, input_app, eval_list) in input_list:
+        new_port_list = list()
+        for el in eval_list:
+            new_port_list.append('Number Kp ' + el)
+
+        Utils.plot_custom_list(port_list=new_port_list, set_frame_name=True,
+                               set_name_replace_list=[('Number Kp A_KAZE_IMG_DT_5_DS_0_THR_0_001_NO_4_NOL_4_D_2_UNSHARP_FILTER_laplace_v1_', 'V1 '),
+                                                      ('Number Kp A_KAZE_IMG_DT_5_DS_0_THR_0_001_NO_4_NOL_4_D_2_UNSHARP_FILTER_laplace_v2_', 'V2 '),
+                                                      ('Number Kp A_KAZE_IMG_DT_5_DS_0_THR_0_001_NO_4_NOL_4_D_2', 'original'),
+                                                      ('dilated_', 'Dilated '), ('_xy', ' '), ('_S_', 'S='),
+                                                      ('_GREY_IMG_L0', ''), ('_GREY_IMG_L1', ''), ('_GREY_IMG_L2', ''), ('_', '.')],
+                               name_to_save='Nr_features' + input_app, y_plot_name='Number of features',
+                               x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=15, y_ticks_font_size=15, img_size_w=17, img_size_h=10,
+                               legend_name=None, legend_font_size='large', dpi_save_value=1000,
+                               show_plot=False, save_plot=True)
+
+    Utils.close_files()
+
 
 if __name__ == "__main__":
     # feature detection examples
     # feature_examples()
-
+    # determine best sharpenning parameters
+    # determining_sharpeness()
 
     w = 320
     h = 512

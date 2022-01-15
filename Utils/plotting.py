@@ -581,8 +581,8 @@ def plot_histogram_rgb_image(image, name_folder, picture_name,
 
 def plot_frame_values(name_to_save: str, eval: list, data,
                       number_decimal: int = 3, set_name_replace_list=None,
-                      x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=25, y_ticks_font_size=25, dpi_save_value=300,
-                      title_font_size=35, img_size_w=15, img_size_h=10, legend_font_size='small', legend_name='Jobs', title_name=None,
+                      x_label_font_size=30, y_label_font_size=30, x_ticks_font_size=20, y_ticks_font_size=20, dpi_save_value=300,
+                      title_font_size=35, img_size_w=15, img_size_h=10, legend_font_size='medium', legend_name='Jobs', title_name=None,
                       save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True):
     """
       Plot custom ports
