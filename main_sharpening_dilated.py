@@ -67,15 +67,17 @@ def main():
         ('HP_V1_GRAY', [set for set in eval_list if ('SHARPEN' in set and 'v1' in set and 'GRAY_RAW' in set) or set == 'GRAY_RAW_L0'],  [('SHARPEN_', 'HP_'), ('laplace_v1', 'V1'), ('_xy_GRAY_RAW_L0', '')]),
         ('HP_V2_GRAY', [set for set in eval_list if ('SHARPEN' in set and 'v2' in set and 'GRAY_RAW' in set) or set == 'GRAY_RAW_L0'],  [('SHARPEN_', 'HP_'), ('laplace_v2', 'V2'), ('_xy_GRAY_RAW_L0', '')]),
 
-        # ('UM_V1_COLOR', [set for set in eval_list if ('UNSHARP_FILER' in set and 'v1' in set and 'GRAY_RAW' not in set) or set == 'RAW_L0'], [('UNSHARP_FILER_', 'UM_'), ('laplace_v1', 'V1'), ('_xy_S_0_7_RAW_L0', '')]),
-        # ('UM_V2_COLOR', [set for set in eval_list if ('UNSHARP_FILER' in set and 'v2' in set and 'GRAY_RAW' not in set) or set == 'RAW_L0'], [('UNSHARP_FILER_', 'UM_'), ('laplace_v2', 'V2'), ('_xy_S_0_7_RAW_L0', '')]),
-        ('UM_V1_GRAY', [set for set in eval_list if ('UNSHARP_FILER' in set and 'v1' in set and 'GRAY_RAW' in set) or set == 'GRAY_RAW_L0'], [('UNSHARP_FILER_', 'UM_'), ('laplace_v1', 'V1'), ('_xy_S_0_7_GRAY_RAW_L0', '')]),
-        ('UM_V2_GRAY', [set for set in eval_list if ('UNSHARP_FILER' in set and 'v2' in set and 'GRAY_RAW' in set) or set == 'GRAY_RAW_L0'],  [('UNSHARP_FILER_', 'UM_'), ('laplace_v2', 'V2'), ('_xy_S_0_7_GRAY_RAW_L0', '')]),
+        # ('UM_V1_COLOR', [set for set in eval_list if ('UNSHARP_FILTER' in set and 'v1' in set and 'GRAY_RAW' not in set) or set == 'RAW_L0'], [('UNSHARP_FILTER', 'UM_'), ('laplace_v1', 'V1'), ('_xy_S_0_7_RAW_L0', '')]),
+        # ('UM_V2_COLOR', [set for set in eval_list if ('UNSHARP_FILTER' in set and 'v2' in set and 'GRAY_RAW' not in set) or set == 'RAW_L0'], [('UNSHARP_FILTER', 'UM_'), ('laplace_v2', 'V2'), ('_xy_S_0_7_RAW_L0', '')]),
+        ('UM_V1_GRAY', [set for set in eval_list if ('UNSHARP_FILTER' in set and 'v1' in set and 'GRAY_RAW' in set) or set == 'GRAY_RAW_L0'], [('UNSHARP_FILTER', 'UM_'), ('laplace_v1', 'V1'), ('_xy_S_0_7_GRAY_RAW_L0', '')]),
+        ('UM_V2_GRAY', [set for set in eval_list if ('UNSHARP_FILTER' in set and 'v2' in set and 'GRAY_RAW' in set) or set == 'GRAY_RAW_L0'],  [('UNSHARP_FILTER', 'UM_'), ('laplace_v2', 'V2'), ('_xy_S_0_7_GRAY_RAW_L0', '')]),
     ]
 
     for data in ['Entropy', 'SF']:
         for el in list_to_plot:
-            Utils.plot_frame_values(name_to_save=data + '_' + el[0], eval=el[1], data=data, set_name_replace_list=el[2], save_plot=True)
+            Utils.plot_frame_values(name_to_save=data + '_' + el[0], eval=el[1], data=data, set_name_replace_list=el[2], save_plot=True,
+                                    x_label_font_size=30, y_label_font_size=30, x_ticks_font_size=20, y_ticks_font_size=20,
+                                    legend_name=None, legend_font_size='medium', dpi_save_value=800)
 
     for el in list_to_plot:
         new_port_list = list()
@@ -84,6 +86,8 @@ def main():
 
         Utils.plot_custom_list(port_list=new_port_list, set_frame_name=True, set_name_replace_list=el[2],
                                name_to_save='MEAN_Px_' + el[0], y_plot_name='Pixel Value',
+                               x_label_font_size=30, y_label_font_size=30, x_ticks_font_size=20, y_ticks_font_size=20,
+                               legend_name=None, legend_font_size='medium', dpi_save_value=800,
                                show_plot=False, save_plot=True)
 
     Utils.close_files()

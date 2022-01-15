@@ -386,7 +386,7 @@ def do_unsharp_filter_expanded_job(port_input_name: str,  kernel: str, strenght:
             kernel = kernel.lower() + '_xy'
 
     if port_output_name is None:
-        port_output_name = 'UNSHARP_FILER_' + str(kernel).replace('.', '_') + '_S_' + str(strenght).replace('.', '_') + '_' + port_input_name
+        port_output_name = 'UNSHARP_FILTER_' + str(kernel).replace('.', '_') + '_S_' + str(strenght).replace('.', '_') + '_' + port_input_name
 
     output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
     output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
