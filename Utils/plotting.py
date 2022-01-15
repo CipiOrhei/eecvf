@@ -9,7 +9,6 @@ from operator import add
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 from Utils.plot_benchmark_results import color_list
 
 """
@@ -42,6 +41,8 @@ def get_table_data_from_csv(content: str, table_number: int) -> dict:
 
 
 def plot_avg_time_jobs(input_location: str = CONFIG.LOG_KPI_FILE, table_number: int = 1, save_location: str = 'Logs/',
+                       x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=25, y_ticks_font_size=25, dpi_save_value=300,
+                       title_font_size=35, img_size_w=15, img_size_h=10, legend_font_size='small', legend_name='Jobs', title_name=None,
                        show_plot: bool = False, save_plot: bool = False, eliminate_get_image=False, show_legend=True) -> None:
     """
     Plot average time of jobs.
@@ -50,6 +51,18 @@ def plot_avg_time_jobs(input_location: str = CONFIG.LOG_KPI_FILE, table_number: 
     :param show_plot if we want to show the plot
     :param save_plot if we want to save the plot
     :param show_legend add legend to plot
+    :param x_label_font_size font size of x axis label
+    :param y_label_font_size font size of y axis label
+    :param x_ticks_font_size font size of x axis ticks
+    :param y_ticks_font_size font size of y axis ticks
+    :param title_font_size font size of plot title
+    :param title_name name of plot title
+    :param legend_font_size size of legend font (xx-small, x-small, small, medium, large, x-large, xx-large)
+    :param legend_name name of legend
+    :param img_size_w save width image
+    :param img_size_h save height image
+    :param dpi_save_value save dpi of image
+            The bigger value the longer time it takes to save
     :param eliminate_get_image if we don't want the get image job plotted
     :param save_location: location to save the plots
     :return None
@@ -73,38 +86,58 @@ def plot_avg_time_jobs(input_location: str = CONFIG.LOG_KPI_FILE, table_number: 
         plt.plot(series, data=data, label=keys[element].split('Avg Time[ms]')[0])
 
     fig = plt.gcf()
-    fig.set_size_inches(15, 10)
-    plt.xlabel('Frames')
-    plt.ylabel('Avg time [ms]')
+    fig.set_size_inches(w=img_size_w, h=img_size_h)
+    plt.xlabel('Frames', fontsize=x_label_font_size)
+    plt.ylabel('Avg time [ms]', fontsize=y_label_font_size)
     plt.xlim(int(table_dict['Frame'][0]), int(table_dict['Frame'][-1]))
-    plt.yticks(np.arange(0, max_value * 1.1, max_value / 20))
-    plt.xticks(np.arange(0, data[-1], round(data[-1], -1) // 20))
+    plt.yticks(np.arange(0, max_value * 1.1, max_value / 20), fontsize=y_ticks_font_size)
+    plt.xticks(np.arange(0, data[-1], round(data[-1], -1) // 20), fontsize=x_ticks_font_size)
     plt.ylim(0)
+    if title_name is not None:
+        plt.title(title_name, fontsize=title_font_size)
     if show_legend is True:
-        plt.legend(fancybox=True, fontsize='small', title='Jobs', loc='best')
+        plt.legend(fancybox=True, fontsize=legend_font_size, title=legend_name, loc='best')
 
     if show_plot is True:
         plt.show()
 
     if save_plot is True:
-        plt.savefig(os.path.join(save_location, 'avg_time_plot.jpg'))
+        plt.savefig(os.path.join(save_location, 'avg_time_plot.png'), bbox_inches='tight', dpi=dpi_save_value)
 
+    plt.clf()
+    plt.close()
     file.close()
 
 
 def plot_custom_list(port_list: list, name_to_save: str, input_location: str = CONFIG.LOG_KPI_FILE, table_number: int = 1, set_frame_name: bool = False,
+                     x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=25, y_ticks_font_size=25, dpi_save_value=300,
+                     title_font_size=35, img_size_w=15, img_size_h=10, legend_font_size='small', legend_name=None, title_name=None,
                      save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True, y_plot_name: str = 'Avg time [ms]', set_name_replace_list=None):
     """
       Plot custom ports
-      :param port_list: list of ports to plot
-      :param name_to_save: name you want for plot
-      :param input_location: location of input data csv
-      :param y_plot_name: name of y label
-      :param show_plot: if we want to show the plot
-      :param save_plot: if we want to save the plot
-      :param table_number: what table from csv to plot
-      :param save_location: where to save
-      :return None
+        :param port_list: list of ports to plot
+        :param name_to_save: name you want for plot
+        :param input_location: location of input data csv
+        :param set_frame_name: use name of image instead of frame number on x axis
+        :param set_name_replace_list: list of string to replace for labels in legend
+        :param y_plot_name: name of y label
+        :param x_label_font_size font size of x axis label
+        :param y_label_font_size font size of y axis label
+        :param x_ticks_font_size font size of x axis ticks
+        :param y_ticks_font_size font size of y axis ticks
+        :param title_font_size font size of plot title
+        :param title_name name of plot title
+        :param legend_font_size size of legend font (xx-small, x-small, small, medium, large, x-large, xx-large)
+        :param legend_name name of legend
+        :param img_size_w save width image
+        :param img_size_h save height image
+        :param dpi_save_value save dpi of image
+                The bigger value the longer time it takes to save
+       :param show_plot: if we want to show the plot
+       :param save_plot: if we want to save the plot
+       :param table_number: what table from csv to plot
+       :param save_location: where to save
+       :return None
       """
     file = open(input_location, 'r')
     table_dict = get_table_data_from_csv(file.read(), table_number)
@@ -141,35 +174,61 @@ def plot_custom_list(port_list: list, name_to_save: str, input_location: str = C
         plt.plot(data, series, label=set_name)
 
     fig = plt.gcf()
-    fig.set_size_inches(15, 10)
-    plt.xlabel('Frames', fontsize=18)
-    plt.ylabel(y_plot_name, fontsize=18)
+    fig.set_size_inches(w=img_size_w, h=img_size_h)
+    plt.xlabel('Frames', fontsize=x_label_font_size)
+    plt.ylabel(y_plot_name, fontsize=y_label_font_size)
+
     if set_frame_name is False:
         plt.xlim(int(table_dict['Frame'][0]), int(table_dict['Frame'][-1]))
-    # plt.yticks(np.arange(0, max_value * 1.1, max_value / 20))
-    # plt.xticks(np.arange(0, data[-1], round(data[-1], -1) // 20))
+
     plt.ylim(0)
-    plt.legend(fancybox=True, fontsize='small', title='Jobs', loc='best')
+
+    if legend_name is not None:
+        plt.legend(fancybox=True, fontsize=legend_font_size, loc='best', title=legend_name)
+    else:
+        plt.legend(fancybox=True, fontsize=legend_font_size, loc='best')
+
+    plt.yticks(fontsize=y_ticks_font_size)
+    plt.xticks(fontsize=x_ticks_font_size)
+
+    if title_name is not None:
+        plt.title(title_name, fontsize=title_font_size)
 
     if show_plot is True:
         plt.show()
 
     if save_plot is True:
-        plt.savefig(os.path.join(save_location, name_to_save + '.jpg'), bbox_inches='tight')
+        plt.savefig(os.path.join(save_location, name_to_save + '.png'), bbox_inches='tight', dpi=dpi_save_value)
 
+    plt.clf()
     plt.close()
     file.close()
 
 
 def plot_GLCM_data(port_list: list, caracteristic: str, title: str,
                    input_location: str = CONFIG.LOG_KPI_FILE, table_number: int = 1, name_to_save: str = None,
+                   x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=25, y_ticks_font_size=25, dpi_save_value=300,
+                   title_font_size=35, img_size_w=15, img_size_h=10, legend_font_size='small', legend_name='Jobs', title_name=None,
                    save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True, y_plot_name: str = None):
     """
       Plot custom ports
       :param port_list: list of ports to plot
       :param name_to_save: name you want for plot
       :param input_location: location of input data csv
+      :param caracteristic: characteristic to plot
       :param y_plot_name: name of y label
+      :param x_label_font_size font size of x axis label
+      :param y_label_font_size font size of y axis label
+      :param x_ticks_font_size font size of x axis ticks
+      :param y_ticks_font_size font size of y axis ticks
+      :param title_font_size font size of plot title
+      :param title_name name of plot title
+      :param legend_font_size size of legend font (xx-small, x-small, small, medium, large, x-large, xx-large)
+      :param legend_name name of legend
+      :param img_size_w save width image
+      :param img_size_h save height image
+      :param dpi_save_value save dpi of image
+              The bigger value the longer time it takes to save
       :param show_plot: if we want to show the plot
       :param save_plot: if we want to save the plot
       :param table_number: what table from csv to plot
@@ -218,31 +277,33 @@ def plot_GLCM_data(port_list: list, caracteristic: str, title: str,
         plt.plot(series, data=data, label=label_name)
 
     fig = plt.gcf()
-    fig.set_size_inches(15, 10)
-    plt.xlabel('Frames', fontsize=18)
-    plt.ylabel(y_plot_name, fontsize=18)
+    fig.set_size_inches(w=img_size_w, h=img_size_h)
+    plt.xlabel('Frames', fontsize=x_label_font_size)
+    plt.ylabel(y_plot_name, fontsize=y_label_font_size)
     plt.xlim(int(table_dict['Frame'][0]), int(table_dict['Frame'][-1]))
-    # plt.yticks(np.arange(0, max_value * 1.1, max_value / 20))
-    # plt.xticks(np.arange(0, data[-1], round(data[-1], -1) // 20))
+    plt.yticks(fontsize=y_ticks_font_size)
+    plt.xticks(fontsize=x_ticks_font_size)
     plt.ylim(0)
-    # plt.legend(fancybox=True, fontsize='medium', title='Jobs', loc='best')
-    # plt.legend(fancybox=True, fontsize='medium', loc='center left', bbox_to_anchor=(1, 0.5))
-    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), fancybox=True, shadow=False, ncol=len(keys))
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), fancybox=True, shadow=False, ncol=len(keys), fontsize=legend_font_size, title=legend_name)
 
-    plt.title(title)
+    if title_name is not None:
+        plt.title(title_name, fontsize=title_font_size)
 
     if show_plot is True:
         plt.show()
 
     if save_plot is True:
-        plt.savefig(os.path.join(save_location, name_to_save + '.jpg'))
+        plt.savefig(os.path.join(save_location, name_to_save + '.png'), bbox_inches='tight', dpi=dpi_save_value)
 
+    plt.clf()
     plt.close()
     file.close()
 
 
 # noinspection PyUnusedLocal
 def plot_time_jobs(port_list: list, series_names: list, name_to_save: str, input_location: str = CONFIG.LOG_KPI_FILE, table_number: int = 1,
+                   x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=25, y_ticks_font_size=25, dpi_save_value=300,
+                   title_font_size=35, img_size_w=15, img_size_h=10, legend_font_size='small', legend_name='Jobs', title_name=None,
                    save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True):
     """
       Plot custom average time of jobs
@@ -250,6 +311,18 @@ def plot_time_jobs(port_list: list, series_names: list, name_to_save: str, input
       :param series_names: list of series names for plot
       :param name_to_save: name you want for plot
       :param input_location: location of input data csv
+        :param x_label_font_size font size of x axis label
+        :param y_label_font_size font size of y axis label
+        :param x_ticks_font_size font size of x axis ticks
+        :param y_ticks_font_size font size of y axis ticks
+        :param title_font_size font size of plot title
+        :param title_name name of plot title
+        :param legend_font_size size of legend font (xx-small, x-small, small, medium, large, x-large, xx-large)
+        :param legend_name name of legend
+        :param img_size_w save width image
+        :param img_size_h save height image
+        :param dpi_save_value save dpi of image
+                The bigger value the longer time it takes to save
       :param show_plot: if we want to show the plot
       :param save_plot: if we want to save the plot
       :param table_number: what table from csv to plot
@@ -280,28 +353,61 @@ def plot_time_jobs(port_list: list, series_names: list, name_to_save: str, input
         plt.plot(series, data=data, label=element.split('Avg Time[ms]')[0])
 
     fig = plt.gcf()
-    fig.set_size_inches(15, 10)
-    plt.xlabel('Frames')
-    plt.ylabel('Avg time [ms]')
+    fig.set_size_inches(w=img_size_w, h=img_size_h)
+    plt.xlabel('Frames', fontsize=x_label_font_size)
+    plt.ylabel('Avg time [ms]', fontsize=y_label_font_size)
     plt.xlim(int(table_dict['Frame'][0]), int(table_dict['Frame'][-1]))
-    plt.yticks(np.arange(0, max_value * 1.1, max_value / 20))
-    plt.xticks(np.arange(0, data[-1], round(data[-1], -1) // 20))
+    plt.yticks(np.arange(0, max_value * 1.1, max_value / 20), fontsize=y_ticks_font_size)
+    plt.xticks(np.arange(0, data[-1], round(data[-1], -1) // 20), fontsize=x_ticks_font_size)
     plt.ylim(0)
-    plt.legend(fancybox=True, fontsize='small', title='Jobs', loc='best')
+    plt.legend(fancybox=True, fontsize=legend_font_size, title=legend_name, loc='best')
+
+    if title_name is not None:
+        plt.title(title_name, fontsize=title_font_size)
 
     if show_plot is True:
         plt.show()
 
     if save_plot is True:
-        plt.savefig(os.path.join(save_location, name_to_save + '.jpg'))
+        plt.savefig(os.path.join(save_location, name_to_save + '.png'), bbox_inches='tight', dpi=dpi_save_value)
 
+    plt.clf()
     plt.close()
     file.close()
 
 
 def plot_box_benchmark_values(name_to_save: str, eval: list,
                               number_decimal: int = 3, number_of_series: int = None, data='FOM', data_subsets=None,
+                              x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=25, y_ticks_font_size=25, dpi_save_value=300,
+                              title_font_size=35, img_size_w=15, img_size_h=10, legend_font_size='small', legend_name='Jobs', title_name=None,
                               save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True):
+    """
+    Plot average time of jobs.
+    :param name_to_save name for file to save
+    :param eval list of port evaluation to include in plot
+    :param number_decimal number of decimal to use for values
+    :param number_of_series number of series
+    :param data name of eval category to plot
+    :param data_subsets subset of data to plot
+    :param show_plot if we want to show the plot
+    :param save_plot if we want to save the plot
+    :param show_legend add legend to plot
+    :param x_label_font_size font size of x axis label
+    :param y_label_font_size font size of y axis label
+    :param x_ticks_font_size font size of x axis ticks
+    :param y_ticks_font_size font size of y axis ticks
+    :param title_font_size font size of plot title
+    :param title_name name of plot title
+    :param legend_font_size size of legend font (xx-small, x-small, small, medium, large, x-large, xx-large)
+    :param legend_name name of legend
+    :param img_size_w save width image
+    :param img_size_h save height image
+    :param dpi_save_value save dpi of image
+            The bigger value the longer time it takes to save
+    :param save_location: location to save the plots
+    :return None
+    """
+
     input_location = os.path.join(CONFIG.BENCHMARK_RESULTS, data)
     subset_dict = dict()
 
@@ -352,10 +458,9 @@ def plot_box_benchmark_values(name_to_save: str, eval: list,
 
     df = dataframe.plot(kind='box',
                         labels=list(subset_dict.keys()),
-                        figsize=(15, 8), showmeans=True, grid=True)
+                        figsize=(img_size_w, img_size_h), showmeans=True, grid=True)
 
-    # print(df.box)
-    plt.ylabel(data)
+    plt.ylabel(data, fontsize=y_label_font_size)
 
     # colors = iter(random.sample(color_list, k=len(subset_dict)))
     #
@@ -369,36 +474,51 @@ def plot_box_benchmark_values(name_to_save: str, eval: list,
         plt.show()
 
     if save_plot is True:
-        plt.savefig(os.path.join(save_location, name_to_save + '.jpg'), bbox_inches='tight')
+        plt.savefig(os.path.join(save_location, name_to_save + '.png'), bbox_inches='tight', dpi=dpi_save_value)
 
+    plt.clf()
     plt.close()
 
 
-def plot_histogram_grey_image(image, name_folder, picture_name, to_show=False, to_save=False):
+def plot_histogram_grey_image(image, name_folder, picture_name,
+                              x_label_font_size=30, y_label_font_size=30, x_ticks_font_size=20, y_ticks_font_size=20, dpi_save_value=300,
+                              title_font_size=30, img_size_w=15, img_size_h=10,
+                              to_show=False, to_save=False):
     """
     Plots the histogram of an image.
     :param image: the image we wish to process the histogram on. Make sure it is grey.
     :param name_folder: folder name where to output it
     :param picture_name: name of picture. it will be used in the save name.
+    :param x_label_font_size font size of x axis label
+    :param y_label_font_size font size of y axis label
+    :param x_ticks_font_size font size of x axis ticks
+    :param y_ticks_font_size font size of y axis ticks
+    :param title_font_size font size of plot title
+    :param img_size_w save width image
+    :param img_size_h save height image
+    :param dpi_save_value save dpi of image
+            The bigger value the longer time it takes to save
     :param to_show: if we desire to show the histogram on run time
     :param to_save: if we desire to save the histogram
     :return: None
     """
     fig = plt.gcf()
-    fig.set_size_inches(w=15, h=10)
+    fig.set_size_inches(w=img_size_w, h=img_size_h)
     # plt.hist(image.flatten(), bins=256, range=[0, 256], color='b')
     histogram, bin_edges = np.histogram(image, bins=256, range=[0, 256])
     plt.plot(bin_edges[0:-1], histogram)
     plt.xlim([0, 256])
-    plt.xlabel('Pixel value', fontsize=18)
-    plt.ylabel('Pixel number', fontsize=18)
+    plt.xlabel('Pixel value', fontsize=x_label_font_size)
+    plt.ylabel('Pixel number', fontsize=y_label_font_size)
     # plt.legend(fancybox=True, fontsize='small', loc='best')
-    plt.title(picture_name, fontsize=18)
+    plt.xticks(fontsize=x_ticks_font_size)  # fontsize of the tick labels
+    plt.yticks(fontsize=y_ticks_font_size)  # fontsize of the tick labels
+    plt.title(picture_name, fontsize=title_font_size)
     file_to_save = os.path.join(CONFIG.APPL_SAVE_LOCATION, name_folder)
     if not os.path.exists(file_to_save):
         os.makedirs(file_to_save)
     if to_save:
-        plt.savefig(os.path.join(file_to_save, '{}.png'.format('hist_' + picture_name)), bbox_inches='tight')
+        plt.savefig(os.path.join(file_to_save, '{}.png'.format('hist_' + picture_name)), bbox_inches='tight', dpi=dpi_save_value)
     if to_show:
         plt.show()
 
@@ -406,18 +526,29 @@ def plot_histogram_grey_image(image, name_folder, picture_name, to_show=False, t
     plt.close()
 
 
-def plot_histogram_rgb_image(image, name_folder, picture_name, to_show=False, to_save=False):
+def plot_histogram_rgb_image(image, name_folder, picture_name,
+                             x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=25, y_ticks_font_size=25, dpi_save_value=300,
+                             title_font_size=35, img_size_w=15, img_size_h=10,
+                             to_show=False, to_save=False):
     """
     Plots the histogram of an image.
     :param image: the image we wish to process the histogram on. Make sure it is grey.
     :param name_folder: folder name where to output it
+    :param x_label_font_size font size of x axis label
+    :param y_label_font_size font size of y axis label
+    :param x_ticks_font_size font size of x axis ticks
+    :param y_ticks_font_size font size of y axis ticks
+    :param title_font_size font size of plot title
+    :param img_size_h save height image
+    :param dpi_save_value save dpi of image
+            The bigger value the longer time it takes to save
     :param picture_name: name of picture. it will be used in the save name.
     :param to_show: if we desire to show the histogram on run time
     :param to_save: if we desire to save the histogram
     :return: None
     """
     fig = plt.gcf()
-    fig.set_size_inches(w=15, h=10)
+    fig.set_size_inches(w=img_size_w, h=img_size_h)
     # tuple to select colors of each channel line
     colors = ("red", "green", "blue")
     channel_ids = (0, 1, 2)
@@ -428,25 +559,55 @@ def plot_histogram_rgb_image(image, name_folder, picture_name, to_show=False, to
 
     # plt.hist(image.flatten(), bins=256, range=[0, 256], color='b')
     plt.xlim([0, 256])
-    plt.xlabel('Pixel value', fontsize=18)
-    plt.ylabel('Pixel number', fontsize=18)
-    # plt.legend(fancybox=True, fontsize='small', loc='best')
-    plt.title(picture_name, fontsize=18)
+    plt.xlabel('Pixel value', fontsize=x_label_font_size)
+    plt.ylabel('Pixel number', fontsize=y_label_font_size)
+    plt.xticks(fontsize=x_ticks_font_size)  # fontsize of the tick labels
+    plt.yticks(fontsize=y_ticks_font_size)  # fontsize of the tick labels
+
+    plt.title(picture_name, fontsize=title_font_size)
     file_to_save = os.path.join(CONFIG.APPL_SAVE_LOCATION, name_folder)
     if not os.path.exists(file_to_save):
         os.makedirs(file_to_save)
+
     if to_save:
-        plt.savefig(os.path.join(file_to_save, '{}.png'.format('hist_' + picture_name)), bbox_inches='tight')
+        plt.savefig(os.path.join(file_to_save, '{}.png'.format('hist_' + picture_name)), bbox_inches='tight', dpi=dpi_save_value)
+
     if to_show:
         plt.show()
+
     plt.clf()
     plt.close()
 
 
 def plot_frame_values(name_to_save: str, eval: list, data,
                       number_decimal: int = 3, set_name_replace_list=None,
+                      x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=25, y_ticks_font_size=25, dpi_save_value=300,
+                      title_font_size=35, img_size_w=15, img_size_h=10, legend_font_size='small', legend_name='Jobs', title_name=None,
                       save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True):
-
+    """
+      Plot custom ports
+        :param name_to_save: name you want for plot
+        :param eval: list of ports evaluated to plot
+        :param number_decimal: number of decimals to use
+        :param set_name_replace_list: list of string to replace for labels in legend
+        :param y_plot_name: name of y label
+        :param x_label_font_size font size of x axis label
+        :param y_label_font_size font size of y axis label
+        :param x_ticks_font_size font size of x axis ticks
+        :param y_ticks_font_size font size of y axis ticks
+        :param title_font_size font size of plot title
+        :param title_name name of plot title
+        :param legend_font_size size of legend font (xx-small, x-small, small, medium, large, x-large, xx-large)
+        :param legend_name name of legend
+        :param img_size_w save width image
+        :param img_size_h save height image
+        :param dpi_save_value save dpi of image
+                The bigger value the longer time it takes to save
+       :param show_plot: if we want to show the plot
+       :param save_plot: if we want to save the plot
+       :param save_location: where to save
+       :return None
+      """
     input_location = os.path.join(CONFIG.BENCHMARK_RESULTS, data)
     subset_dict = dict()
 
@@ -454,8 +615,8 @@ def plot_frame_values(name_to_save: str, eval: list, data,
     for dirname, dirnames, filenames in os.walk(input_location):
         for filename in filenames:
             # files.append(filename)
-            # try:
-            if True:
+            try:
+            # if True:
                 f = open(os.path.join(input_location, filename)).readlines()
                 set_name = filename.split('.')[0]
 
@@ -485,23 +646,28 @@ def plot_frame_values(name_to_save: str, eval: list, data,
                                     subset_dict[set_name]['values'].append(round(float(tmp[el]), number_decimal))
                                     break
 
-            # except:
-            #     print(filename)
+            except:
+                print(filename, 'NOK TO USE FOR PLOTTING')
 
     for set in subset_dict.keys():
         plt.plot(subset_dict[set]['frames'], subset_dict[set]['values'], label=set)
 
     fig = plt.gcf()
-    fig.set_size_inches(15, 10)
-    plt.xlabel('Frames', fontsize=14)
-    plt.ylabel(data, fontsize=14)
-    plt.legend(fancybox=True, fontsize='small', loc='best')
+    fig.set_size_inches(w=img_size_w, h=img_size_h)
+    plt.xlabel('Frames', fontsize=x_label_font_size)
+    plt.ylabel(data, fontsize=y_label_font_size)
+    plt.yticks(fontsize=y_ticks_font_size)
+    plt.xticks(fontsize=x_ticks_font_size)
+    plt.legend(fancybox=True, fontsize=legend_font_size, loc='best', title=legend_name)
+
+    if title_name is not None:
+        plt.title(title_name, fontsize=title_font_size)
 
     if show_plot is True:
         plt.show()
 
     if save_plot is True:
-        plt.savefig(os.path.join(save_location, name_to_save + '.jpg'), bbox_inches='tight')
+        plt.savefig(os.path.join(save_location, name_to_save + '.png'), bbox_inches='tight', dpi=dpi_save_value)
 
     plt.clf()
     plt.close()
