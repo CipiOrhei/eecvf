@@ -31,6 +31,9 @@ def reopen_files():
     file_KPI = open(file=config_main.LOG_KPI_FILE, mode='a')
     file_log = open(file=config_main.LOG_FILE, mode='a')
 
+    import gc
+    gc.collect(generation=2)
+
 
 def is_error() -> None:
     """

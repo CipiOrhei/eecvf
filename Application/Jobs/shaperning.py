@@ -124,19 +124,24 @@ def main_sharpen_filter_func(port_list: list = None) -> bool:
 
         if p_in.is_valid() is True:
             try:
-                if 'xy' in port_list[PORT_KERNEL]:
+                if port_list[PORT_KERNEL] == None:
+                    kernel = None
+                elif 'xy' in port_list[PORT_KERNEL]:
                     kernel = eval('Application.Jobs.kernels.' + port_list[PORT_KERNEL])
                 else:
                     kernel = np.array(eval(port_list[PORT_KERNEL]))
 
-                kernel_identity = (np.zeros(kernel.shape)).astype(np.int8)
-                mid = int((kernel_identity.shape[0] - 1) / 2)
-                kernel_identity[mid, mid] = 1
+                if kernel is not None:
+                    kernel_identity = (np.zeros(kernel.shape)).astype(np.int8)
+                    mid = int((kernel_identity.shape[0] - 1) / 2)
+                    kernel_identity[mid, mid] = 1
 
-                kernel_high_pass = kernel_identity - kernel
-                result = cv2.filter2D(p_in.arr.copy(), -1, kernel_high_pass)
-                    # p_out.arr[:] = cv2.normalize(src=result, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
-                p_out.arr[:] = result
+                    kernel_high_pass = kernel_identity - kernel
+                    result = cv2.filter2D(p_in.arr.copy(), -1, kernel_high_pass)
+                        # p_out.arr[:] = cv2.normalize(src=result, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+                    p_out.arr[:] = result
+                else:
+                    p_out.arr[:] = p_in.arr[:]
                 p_out.set_valid()
             except BaseException as error:
                 log_error_to_console("SHARPEN FILTER JOB NOK: ", str(error))
@@ -222,23 +227,28 @@ def main_unsharp_filter_func_long(port_list: list = None) -> bool:
 
         if p_in.is_valid() is True:
             try:
-                if 'xy' in port_list[PORT_KERNEL_POS]:
+                if port_list[PORT_KERNEL_POS] == None:
+                    kernel = None
+                elif 'xy' in port_list[PORT_KERNEL_POS]:
                     kernel = eval('Application.Jobs.kernels.' + port_list[PORT_KERNEL_POS])
                 else:
                     kernel = np.array(eval(port_list[PORT_KERNEL_POS]))
 
-                if port_list[PORT_STREGHT_POS] < 0:
-                    port_list[PORT_STREGHT_POS] = 1
-                elif port_list[PORT_STREGHT_POS] > 9:
-                    port_list[PORT_STREGHT_POS] = 9
+                if kernel is not None:
+                    if port_list[PORT_STREGHT_POS] < 0:
+                        port_list[PORT_STREGHT_POS] = 1
+                    elif port_list[PORT_STREGHT_POS] > 9:
+                        port_list[PORT_STREGHT_POS] = 9
 
-                lap = cv2.filter2D(src=p_in.arr.copy(), ddepth=cv2.CV_64F, kernel=kernel)
-                a_lap = port_list[PORT_STREGHT_POS] * lap
-                img = np.float64(p_in.arr.copy())
-                sharp = img - a_lap
-                sharp[sharp > 255] = 255
-                sharp[sharp < 0] = 0
-                p_out.arr[:] = sharp
+                    lap = cv2.filter2D(src=p_in.arr.copy(), ddepth=cv2.CV_64F, kernel=kernel)
+                    a_lap = port_list[PORT_STREGHT_POS] * lap
+                    img = np.float64(p_in.arr.copy())
+                    sharp = img - a_lap
+                    sharp[sharp > 255] = 255
+                    sharp[sharp < 0] = 0
+                    p_out.arr[:] = sharp
+                else:
+                    p_out.arr[:] = p_in.arr[:]
                 p_out.set_valid()
             except BaseException as error:
                 log_error_to_console("UNSHARP FILTER JOB NOK: ", str(error))
@@ -313,7 +323,9 @@ def do_sharpen_filter_job(port_input_name: str, kernel: str,
     """
     input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
 
-    if isinstance(kernel, list):
+    if kernel is None:
+        kernel = None
+    elif isinstance(kernel, list):
         if kernel not in custom_kernels_used:
             custom_kernels_used.append(kernel)
         kernel = kernel.__str__()
@@ -374,7 +386,9 @@ def do_unsharp_filter_expanded_job(port_input_name: str,  kernel: str, strenght:
     """
     input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
 
-    if isinstance(kernel, list):
+    if kernel is None:
+        kernel = None
+    elif isinstance(kernel, list):
         if kernel not in custom_kernels_used:
             custom_kernels_used.append(kernel)
         kernel = kernel.__str__()

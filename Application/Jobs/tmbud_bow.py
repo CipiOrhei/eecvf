@@ -25,8 +25,9 @@ Module handles DESCRIPTION OF THE MODULE jobs for the APPL block.
 cluster_bow = dict()
 
 def flann_matching(des1,des2, comp_thr = 0.85):
-    FLANN_INDEX_KDTREE = 0
-    index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+    # FLANN_INDEX_KDTREE = 0
+    # index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+    index_params = dict(algorithm=4, trees=8 )
     search_params = dict(checks=50)  # or pass empty dictionary
     flann = cv2.FlannBasedMatcher(index_params, search_params)
 
