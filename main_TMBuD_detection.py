@@ -9,6 +9,7 @@ import config_main as CONFIG
 import Utils
 
 import cv2
+import os
 
 def prepare_dataset_labels(dataset_in, dataset_out, LabelMe_COLORS, LabelMe_BDT_CORRELATION, BDT_COLORS, BDT_CLASSES):
     """
@@ -55,7 +56,7 @@ def prepare_dataset_TMBuD(COLORS_TMBuD, TMBuD_CORRELATION):
     :return: None
     """
 
-    dataset_input_labels_tmbud = r'c:\repos\eecvf_git\TestData\TMBuD\parsed_dataset\label_full\classes'
+    dataset_input_labels_tmbud = r'c:\repos\eecvf_git\TestData\TMBuD\parsed_dataset\SEMSEG_EVAL_FULL\label_full\TEST\classes'
     dataset_processed_tmbud = 'Logs/TMBuD/labels'
 
     Application.set_input_image_folder(dataset_input_labels_tmbud)
@@ -121,13 +122,16 @@ def main_training_data(height, width, data_input_img):
     list_of_ports_to_move.append(Application.do_contrast_brightness_change_image_job(port_input_name='RAW_RESIZE', is_rgb=True, alpha=0.1, beta=50, level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
     list_of_ports_to_move.append(Application.do_pixelate_image_job(port_input_name='RAW_RESIZE', is_rgb=True, nr_pixels_to_group=3,level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
     list_of_ports_to_move.append(Application.do_pixelate_image_job(port_input_name='RAW_RESIZE', is_rgb=True, nr_pixels_to_group=2,level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
-    list_of_ports_to_move.append(Application.do_sharpen_filter_job(port_input_name='RAW_RESIZE', is_rgb=True, kernel=3, level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
+    list_of_ports_to_move.append(Application.do_sharpen_filter_job(port_input_name='RAW_RESIZE', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1, level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
+    list_of_ports_to_move.append(Application.do_unsharp_filter_expanded_job(port_input_name='RAW_RESIZE', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1, strenght=0.5, level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
+    list_of_ports_to_move.append(Application.do_unsharp_filter_expanded_job(port_input_name='RAW_RESIZE', is_rgb=True, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1, strenght=0.8, level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
 
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
     Application.run_application()
 
     for el in range(len(list_of_ports_to_move.copy())):
+        print(list_of_ports_to_move[el])
         list_of_ports_to_move[el] += '_LC0'
 
     Application.create_folder_from_list_ports(folder_name='Logs/ml_results/TRAIN_INPUT', list_port=list_of_ports_to_move)
@@ -187,7 +191,9 @@ def main_training_label(height, width, dataset_input):
     list_of_ports_to_move.append(Application.do_contrast_brightness_change_image_job(port_input_name='RAW_RESIZE', is_rgb=False, alpha=1, beta=0, port_output_name='CHANGE_ALPHA_0.1_BETA_50_RAW_RESIZE', level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
     list_of_ports_to_move.append(Application.do_pixelate_image_job(port_input_name='RAW_RESIZE', is_rgb=False, nr_pixels_to_group=3, level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
     list_of_ports_to_move.append(Application.do_pixelate_image_job(port_input_name='RAW_RESIZE', is_rgb=False, nr_pixels_to_group=2, level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
-    list_of_ports_to_move.append(Application.do_sharpen_filter_job(port_input_name='RAW_RESIZE', is_rgb=False, kernel=0, port_output_name='SHARPEN_K_3_RAW_RESIZE', level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
+    list_of_ports_to_move.append(Application.do_sharpen_filter_job(port_input_name='RAW_RESIZE', is_rgb=False, kernel=None, port_output_name='SHARPEN_laplace_v1_3x3_xy_RAW_RESIZE', level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
+    list_of_ports_to_move.append(Application.do_unsharp_filter_expanded_job(port_input_name='RAW_RESIZE', is_rgb=False, kernel=None, port_output_name='UNSHARP_FILTER_laplace_v1_3x3_xy_S_0_5_RAW_RESIZE', strenght=0.5, level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
+    list_of_ports_to_move.append(Application.do_unsharp_filter_expanded_job(port_input_name='RAW_RESIZE', is_rgb=False, kernel=None, port_output_name='UNSHARP_FILTER_laplace_v1_3x3_xy_S_0_8_RAW_RESIZE', strenght=0.8, level=CONFIG.PYRAMID_LEVEL.LEVEL_LC0))
 
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
@@ -252,34 +258,20 @@ def train_model(height, width, n_classes, epochs, steps_per_epoch, val_steps_per
     Utils.close_files()
 
 
-def main_bow_create(building_classes, desc_list, diff_list, desc_size_list, nOctaves_list, nLayes_list, thr_list, thr_akaze_list, dictionarySize_list, class_in, class_out, class_names, COLORS):
+def main_bow_create(building_classes, desc_list, diff_list, desc_size_list, nOctaves_list, nLayes_list, level, kernel_smoothing_list, smoothing_strength_list,
+                    thr_list, thr_akaze_list, dictionarySize_list, class_in, class_out, class_names, COLORS, input_file_location):
     """
     Main function of framework Please look in example_main for all functions you can use
     """
-
-    # class_names = ["UNKNOWN", "BUILDING", "SKY", "GROUND", "NOISE"]
-    #
-    # BACKGROUND = (0, 0, 0)
-    # SKY = (255, 0, 0)
-    # VEGETATION = (0, 255, 0)
-    # BUILDING = (125, 125, 0)
-    # WINDOW = (0, 255, 255)
-    # GROUND = (125, 125, 125)
-    # NOISE = (0, 0, 255)
-    # DOOR = (0, 125, 125)
-    #
-    # COLORS = [BACKGROUND, BUILDING, SKY, GROUND, NOISE]
-
-
-    Application.set_input_image_folder('TestData/TMBuD/parsed_dataset/v3_2/TRAIN')
+    Application.set_input_image_folder(input_file_location)
     Application.set_output_image_folder('Logs/application_results')
     Application.delete_folder_appl_out()
 
     # grey = Application.do_get_image_job(port_output_name='GRAY_RAW', direct_grey=True)
     Application.do_get_image_job(port_output_name='RAW', direct_grey=False)
-    grey = Application.do_grayscale_transform_job(port_input_name='RAW')
-    # filtered = Application.do_guided_filter_job(port_input_name=grey, radius=2, regularization=0.4, is_rgb=False)
-    # filtered = Application.do_median_blur_job(port_input_name=grey, kernel_size=5, is_rgb=False)
+    Application.do_pyramid_level_down_job(port_input_name='RAW', number_of_lvl=int(level[-1]), port_input_lvl=CONFIG.PYRAMID_LEVEL.LEVEL_0, is_rgb=True)
+
+    grey = Application.do_grayscale_transform_job(port_input_name='RAW', level=level, port_output_name='GRAW')
 
     list_to_eval = list()
 
@@ -291,54 +283,46 @@ def main_bow_create(building_classes, desc_list, diff_list, desc_size_list, nOct
                         for thr in thr_list:
                             for thr_akaze in thr_akaze_list:
                                 for dict_size in dictionarySize_list:
-                                    semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=len(class_names), level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
-                                                                                  save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
+                                    for kernel in kernel_smoothing_list:
+                                        for st_kernel in smoothing_strength_list:
+                                            grey_smooth = Application.do_unsharp_filter_expanded_job(port_input_name=grey, is_rgb=False, kernel=kernel, strenght=st_kernel,
+                                                                                                     level=level, port_output_name='UM_GRAW_' + kernel[-1] + '_' + str(st_kernel)[-1])
 
-                                    binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out)
+                                            semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=len(class_names), level=level,
+                                                                                          save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS,
+                                                                                          port_name_output='SEMSEG_RAW')
 
-                                    kp, des, img = Application.do_a_kaze_job(port_input_name=grey, descriptor_channels=1, mask_port_name=binary_mask,
-                                                                             descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff,
-                                                                             threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes)
+                                            binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out, level=level, port_output_name='ROI_RAW')
 
-                                    bow = Application.do_tmbud_bow_job(port_to_add=des, dictionary_size=dict_size, number_classes=building_classes)
+                                            kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=binary_mask,
+                                                                                     descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff, save_to_text=False,
+                                                                                     threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes, level=level)
+
+                                            bow = Application.do_tmbud_bow_job(port_to_add=des, dictionary_size=dict_size, number_classes=building_classes, level=level)
 
     Application.create_config_file()
-    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save='ALL')
-    # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save=[])
+    # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save='ALL')
+    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save=[])
     Application.run_application()
 
     Utils.close_files()
 
 
-def main_bow_inquiry(building_classes, desc_list, diff_list, desc_size_list, nOctaves_list, nLayes_list, thr_list, thr_akaze_list, dictionarySize_list, class_in, class_out, class_names, COLORS):
+def main_bow_inquiry(building_classes, desc_list, diff_list, desc_size_list, nOctaves_list, nLayes_list, thr_list, input_file_location,
+                     thr_akaze_list, dictionarySize_list, class_in, class_out, class_names, COLORS, level, kernel_smoothing_list, smoothing_strength_list):
     """
     Main function of framework Please look in example_main for all functions you can use
     """
-
-    # class_names = ["UNKNOWN", "BUILDING", "SKY", "GROUND", "NOISE"]
-    #
-    # BACKGROUND = (0, 0, 0)
-    # SKY = (255, 0, 0)
-    # VEGETATION = (0, 255, 0)
-    # BUILDING = (125, 125, 0)
-    # WINDOW = (0, 255, 255)
-    # GROUND = (125, 125, 125)
-    # NOISE = (0, 0, 255)
-    # DOOR = (0, 125, 125)
-    #
-    # COLORS = [BACKGROUND, BUILDING, SKY, GROUND, NOISE]
-
     list_to_eval = list()
 
-    Application.set_input_image_folder('TestData/TMBuD/parsed_dataset/v3_2/TEST')
+    Application.set_input_image_folder(input_file_location)
     Application.set_output_image_folder('Logs/query_application')
     # Application.delete_folder_appl_out()
 
     Application.do_get_image_job(port_output_name='RAW', direct_grey=False)
-    grey = Application.do_grayscale_transform_job(port_input_name='RAW')
-    # filtered = Application.do_guided_filter_job(port_input_name=grey, radius=2, regularization=0.4, is_rgb=False)
-    # filtered = Application.do_median_blur_job(port_input_name=grey, kernel_size=5, is_rgb=False)
+    Application.do_pyramid_level_down_job(port_input_name='RAW', number_of_lvl=int(level[-1]), port_input_lvl=CONFIG.PYRAMID_LEVEL.LEVEL_0, is_rgb=True)
 
+    grey = Application.do_grayscale_transform_job(port_input_name='RAW', level=level, port_output_name='GRAW')
 
     for desc in desc_list:
         for diff in diff_list:
@@ -348,25 +332,33 @@ def main_bow_inquiry(building_classes, desc_list, diff_list, desc_size_list, nOc
                         for thr in thr_list:
                             for thr_akaze in thr_akaze_list:
                                 for dict_size in dictionarySize_list:
-                                    semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=3, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
-                                                                                  save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
+                                    for kernel in kernel_smoothing_list:
+                                        for st_kernel in smoothing_strength_list:
+                                            grey_smooth = Application.do_unsharp_filter_expanded_job(port_input_name=grey, is_rgb=False, kernel=kernel, strenght=st_kernel,
+                                                                                                     level=level, port_output_name='UM_GRAW_' + kernel[-1] + '_' + str(st_kernel)[-1])
 
-                                    binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out)
+                                            semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=3, level=level,
+                                                                                          save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS,
+                                                                                          port_name_output='SEMSEG_RAW')
 
-                                    kp, des, img = Application.do_a_kaze_job(port_input_name=grey, descriptor_channels=1, mask_port_name=binary_mask,
-                                                                             descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff,
-                                                                             threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes)
+                                            binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out,
+                                                                                           level=level, port_output_name='ROI_RAW')
 
-                                    final = Application.do_tmbud_bow_inquiry_flann_job(port_to_inquiry=des, flann_thr=thr, saved_to_npy=True, number_classes=building_classes,
-                                                                                       location_of_bow='Logs/application_results',
-                                                                                       bow_port='ZuBuD_BOW_' + dict_size.__str__() + '_' + des + '_L0')
+                                            kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=binary_mask,
+                                                                                     descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff,  save_to_text=False,
+                                                                                     threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes, level=level)
 
-                                    list_to_eval.append(final + '_L0')
+                                            final = Application.do_tmbud_bow_inquiry_flann_job(port_to_inquiry=des, flann_thr=thr, saved_to_npy=True, number_classes=building_classes,
+                                                                                               location_of_bow='Logs/application_results',
+                                                                                               bow_port='ZuBuD_BOW_' + dict_size.__str__() + '_' + des + '_' + level
+                                                                                               , level=level)
+
+                                            list_to_eval.append(final + '_' + level)
 
     Application.create_config_file()
-    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save='ALL')
-    # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save=[])
-    # Application.run_application()
+    # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save='ALL')
+    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save=[])
+    Application.run_application()
 
     Benchmarking.run_CBIR_ZuBuD_benchmark(input_location='Logs/query_application/',
                                           gt_location='TestData/TMBuD/parsed_dataset/v3_2/TMBuD_groundtruth.txt',
@@ -502,7 +494,7 @@ if __name__ == "__main__":
     # dataset_input_img = r'c:\repos\eecvf\TestData\building_labels_database\eTRIMS\images\image'
     # #                          VARIOUS      BUILDING        CAR            DOOR          PAVEMENT         ROAD           SKY       VEGETATION      WINDOW
     # LabelMe_COLORS =          [(0, 0, 0), (0, 0, 128), (128, 0, 128), (0, 128, 128), (128, 128, 128), (0, 64, 128), (128, 128, 0), (0, 128, 0), (128, 0, 0)]
-    # LabelMe_BDT_CORRELATION = [     0,          1,           2,             1,           2,                 2,           2,              2,          1]
+    # LabelMe_BDT_CORRELATION = [     2,          1,           2,             1,           2,                 2,           2,              2,          1]
     # prepare_dataset_img(dataset_img_input=dataset_input_img, dataset_out=dataset_processed + '/img')
     # Utils.reopen_files()
     # prepare_dataset_labels(dataset_in=dataset_input_labels, dataset_out=dataset_processed + '/labels', LabelMe_COLORS=LabelMe_COLORS, LabelMe_BDT_CORRELATION=LabelMe_BDT_CORRELATION, BDT_COLORS=BDT_COLORS, BDT_CLASSES=BDT_CLASSES)
@@ -512,14 +504,14 @@ if __name__ == "__main__":
     # dataset_input_img = r'c:\repos\eecvf\TestData\building_labels_database\LabelMeFacade\images'
     # #                          VARIOUS      BUILDING        CAR            DOOR          PAVEMENT         ROAD           SKY       VEGETATION      WINDOW
     # eTRIMS_COLORS =          [(0, 0, 0), (0, 0, 128), (128, 0, 128), (0, 128, 128), (128, 128, 128), (0, 64, 128), (128, 128, 0), (0, 128, 0), (128, 0, 0)]
-    # eTRIMS_BDT_CORRELATION = [     0,          1,           2,             1,           2,                 2,           2,              2,          1]
+    # eTRIMS_BDT_CORRELATION = [     2,          1,           2,             1,           2,                 2,           2,              2,          1]
     # prepare_dataset_img(dataset_img_input=dataset_input_img, dataset_out=dataset_processed + '/img')
     # Utils.reopen_files()
     # prepare_dataset_labels(dataset_in=dataset_input_labels, dataset_out=dataset_processed + '/labels', LabelMe_COLORS=eTRIMS_COLORS, LabelMe_BDT_CORRELATION=eTRIMS_BDT_CORRELATION, BDT_COLORS=BDT_COLORS, BDT_CLASSES=BDT_CLASSES )
     # Utils.reopen_files()
     #
-    # dataset_input_labels = r'c:\repos\eecvf_git\TestData\TMBuD\parsed_dataset\label_full\png'
-    # dataset_input_img = r'c:\repos\eecvf_git\TestData\TMBuD\parsed_dataset\img_label_full\png'
+    # dataset_input_labels = r'c:\repos\eecvf_git\TestData\TMBuD\parsed_dataset\SEMSEG_EVAL_FULL\label_full\TRAIN\png'
+    # dataset_input_img = r'c:\repos\eecvf_git\TestData\TMBuD\parsed_dataset\SEMSEG_EVAL_FULL\img_label_full\TRAIN\png'
     # # class_names = [           "UNKNOWN", "BUILDING",      "DOOR",         "WINDOW",      "SKY",   "VEGETATION",   "GROUND",       "NOISE"]
     # TMBuD_COLORS =       [(     0, 0, 0), (125, 125, 0), (0, 125, 125), (0, 255, 255), (255, 0, 0), (0, 255, 0), (125, 125, 125), (0, 0, 255)]
     # TMBuD_BDT_CORRELATION = [     0,          1,                1,             1,           2,           2,           2,              2]
@@ -540,17 +532,20 @@ if __name__ == "__main__":
     # Utils.reopen_files()
 
     n_classes = 3
-    epochs = 50
-    batch_size = 4
-    train_nr_images = 3673
-    val_nr_images = 136
+    epochs = 350
+    batch_size = 6
+    train_nr_images = len(os.listdir(r'c:\repos\eecvf_git\Logs\ml_results\TRAIN_INPUT'))
+    # train_nr_images = 10
+    val_nr_images = len(os.listdir(r'c:\repos\eecvf_git\Logs\ml_results\VAL_INPUT'))
+    # val_nr_images = 50
     steps_per_epoch = int((train_nr_images/epochs)/batch_size)
     val_steps_per_epoch = int(val_nr_images/batch_size)
     class_names = ["UNKNOWN", "BUILDING", "NOISE"]
     COLORS = [(0, 0, 0), (125, 125, 0), (0, 0, 255)]
-    validate_input = 'TestData/TMBuD/parsed_dataset/img_label_full/png'
+    validate_input = 'TestData/TMBuD/parsed_dataset/SEMSEG_EVAL_FULL/img_label_full/TEST/png'
     validate_gt = 'Logs/TMBuD/labels/BDT_LABELS_PNG_L0'
     class_list_rgb_value = [0, 87, 76]
+
     # train_model(width=w, height=h, n_classes=n_classes, epochs=epochs, val_steps_per_epoch=val_steps_per_epoch, batch_size=batch_size, steps_per_epoch=steps_per_epoch, class_names=class_names, COLORS=COLORS,
     #             validate_input=validate_input, validate_gt=validate_gt, class_list_rgb_value=class_list_rgb_value, )
     # Utils.reopen_files()
@@ -561,20 +556,33 @@ if __name__ == "__main__":
     diff_list = [cv2.KAZE_DIFF_PM_G1]
     # desc_size_list = [0, 8, 16, 32, 64, 128]
     desc_size_list = [64]
-    nOctaves_list = [4]
+    nOctaves_list = [6]
     nLayes_list = [5]
-    thr_list = [0.82]
-    # thr_akaze_list = [0.0010, 0.0011, 0.0012, 0.0013]
+    # thr_list = [0.82, 0.85, 0.87]
+    thr_list = [0.85]
+    # thr_akaze_list = [0.0010, 0.0012, 0.0014]
     thr_akaze_list = [0.0012]
     # dictionarySize_list = [375, 400, 425]
-    dictionarySize_list = [400]
+    dictionarySize_list = [500]
     class_in = [0, 1, 2]
     class_out = [0, 1, 0]
+    pyramid_level = CONFIG.PYRAMID_LEVEL.LEVEL_1
+    kernel_smoothing = [CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1]
+    smoothing_strength = [0.7]
+    TRAIN_input_file = 'TestData/TMBuD/parsed_dataset/v3_2/TRAIN'
+    # TRAIN_input_file = 'TestData/TMBuD/parsed_dataset/v3_2_night/TRAIN'
+    TEST_input_file = 'TestData/TMBuD/parsed_dataset/v3_2/TEST'
+    # TEST_input_file = 'TestData/TMBuD/parsed_dataset/v3_2_night/TEST'
+    nr_classes = 106
+    # nr_classes = 34
 
-    # main_bow_create(building_classes=105, desc_list=desc_list, diff_list=diff_list, desc_size_list=desc_size_list,
+    # main_bow_create(building_classes=nr_classes, desc_list=desc_list, diff_list=diff_list, desc_size_list=desc_size_list,
+    #                 level=pyramid_level, kernel_smoothing_list=kernel_smoothing, smoothing_strength_list=smoothing_strength,
     #                 nOctaves_list=nOctaves_list, nLayes_list=nLayes_list, thr_list=thr_list, thr_akaze_list=thr_akaze_list, dictionarySize_list=dictionarySize_list,
-    #                 class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS)
+    #                 class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, input_file_location=TRAIN_input_file)
     # Utils.reopen_files()
-    # main_bow_inquiry(building_classes=105, desc_list=desc_list, diff_list=diff_list, desc_size_list=desc_size_list,
-    #                 nOctaves_list=nOctaves_list, nLayes_list=nLayes_list, thr_list=thr_list, thr_akaze_list=thr_akaze_list, dictionarySize_list=dictionarySize_list,
-    #                 class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS)
+
+    main_bow_inquiry(building_classes=nr_classes, desc_list=desc_list, diff_list=diff_list, desc_size_list=desc_size_list,
+                    level=pyramid_level, kernel_smoothing_list=kernel_smoothing, smoothing_strength_list=smoothing_strength,
+                    nOctaves_list=nOctaves_list, nLayes_list=nLayes_list, thr_list=thr_list, thr_akaze_list=thr_akaze_list, dictionarySize_list=dictionarySize_list,
+                    class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, input_file_location=TEST_input_file)
