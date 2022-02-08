@@ -1,11 +1,19 @@
 # noinspection PyPackageRequirements
 import cv2
 import numpy as np
+import scipy
+import skimage
 
 from numba import jit
 
 from Application.Frame.global_variables import JobInitStateReturn
-from Application.Frame.transferJobPorts import get_port_from_wave, Port
+from Application.Frame.transferJobPorts import get_port_from_wave
+from Utils.log_handler import log_to_console, log_to_file, log_error_to_console
+
+from Application.Config.create_config import jobs_dict, create_dictionary_element
+from config_main import PYRAMID_LEVEL
+from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create, get_module_name_from_file
+
 from PIL import ImageFilter, Image
 
 from Utils.log_handler import log_error_to_console
@@ -236,7 +244,7 @@ def main_bilateral_blur_func(port_list: list = None) -> bool:
 
 
 @jit(nopython=True)
-def conservative_filter(mat_in: Port.arr, kernel_size: int) -> Port.arr:
+def conservative_filter(mat_in, kernel_size: int):
     """
     Conservative filter algorithm.
     :param mat_in: original image
@@ -315,7 +323,7 @@ def main_conservative_filter_func(port_list: list = None) -> bool:
 
 
 @jit(nopython=True)
-def crimmins_func(data: Port.arr) -> Port.arr:
+def crimmins_func(data):
     """
     Crimmins smoothing algorithm
     :param data: original image
@@ -808,6 +816,116 @@ def main_motion_blur_filter_func(port_list: list = None) -> bool:
             return False
 
         return True
+
+
+# define a main function, function that will be executed at the begging of the wave
+def main_weiner_func(param_list: list = None) -> bool:
+    """
+    Main function for {job} calculation job.
+    :param param_list: Param needed to respect the following list:
+                       [enumerate list]
+    :return: True if the job executed OK.
+    """
+    # variables for position of param needed
+    # ex:
+
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE_IMG = 1
+    # noinspection PyPep8Naming
+    PORT_KERNEL_SIZE = 2
+    # noinspection PyPep8Naming
+    PORT_K_VALUE = 2
+    # noinspection PyPep8Naming
+    PORT_OUT_POS = 3
+    # verify that the number of parameters are OK.
+    if len(param_list) != 4:
+        log_error_to_console("WEINER FILTER JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
+        return False
+    else:
+        # https://github.com/tranleanh/wiener-median-comparison/blob/c3f428b3540ec8fea32a87ba88d19f3741f51d79/Wiener_Filter.py#L20
+        # https://www.researchgate.net/publication/332574579_Image_Processing_Course_Project_Image_Filtering_with_Wiener_Filter_and_Median_Filter
+        # get needed ports
+        port_in = get_port_from_wave(name=param_list[PORT_IN_POS], wave_offset=param_list[PORT_IN_WAVE_IMG])
+        p_out = get_port_from_wave(name=param_list[PORT_OUT_POS])
+
+        if port_in.is_valid() is True:
+            if True:
+            # try:
+
+                # calculate kernel
+                kernel = scipy.signal.gaussian(param_list[PORT_KERNEL_SIZE], param_list[PORT_KERNEL_SIZE] / 3).reshape(param_list[PORT_KERNEL_SIZE], 1)
+                kernel = np.dot(kernel, kernel.transpose())
+                kernel /= np.sum(kernel)
+
+                # kernel /= np.sum(kernel)
+                dummy = np.copy(port_in.arr.copy())
+                dummy = np.fft.fft2(dummy)
+                kernel = np.fft.fft2(kernel, s=port_in.arr.shape)
+                kernel = np.conj(kernel) / (np.abs(kernel) ** 2 + param_list[PORT_K_VALUE])
+                dummy = dummy * kernel
+                dummy = np.abs(np.fft.ifft2(dummy))
+
+
+                p_out.arr[:] = dummy
+                p_out.set_valid()
+
+            # except BaseException as error:
+            #     log_error_to_console("WEINER FILTER JOB NOK: ", str(error))
+            #     pass
+        else:
+            return False
+
+        return True
+
+
+############################################################################################################################################
+# Job create functions
+############################################################################################################################################
+
+def do_weiner_filter_job(port_input_name: str,
+                          kernel_size: int = 5, K_value: int = 10,
+                          port_output_name: str = None,
+                          wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
+    """
+    TBD
+    https://arxiv.org/pdf/1004.5538
+    :param port_input_name: name of input port
+    :param wave_offset: port wave offset. If 0 it is in current wave.
+    :param kernel_size: size of kernel
+    :param port_output_name: name of output port
+    :param level: pyramid level to calculate at
+    :param is_rgb: if the output ports is rgb, 3 channels
+    return port_output_name
+    """
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    if port_output_name is None:
+        port_output_name = 'WEINER_FILER_S_{}_K_{}_{}'.format(kernel_size, K_value, port_input_name)
+
+    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, kernel_size, output_port_name]
+    output_port_list = [(output_port_name, output_port_size, 'B', True)]
+
+    job_name = job_name_create(action='Weiner filter', input_list=input_port_list, wave_offset=[wave_offset], level=level,
+                               S=str(kernel_size), K=str(K_value))
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  max_wave=wave_offset,
+                                  init_func_name='init_func', init_func_param=None,
+                                  main_func_name='main_weiner_func',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output_name
 
 
 if __name__ == "__main__":

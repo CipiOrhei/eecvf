@@ -26,10 +26,11 @@ def main():
         Application.delete_folder_appl_out()
 
         grey = Application.do_get_image_job(port_output_name='GRAY_RAW', direct_grey=True)
+        weiner_filter = Application.do_weiner_filter_job(port_input_name=grey, kernel_size=5, K_value=2000, is_rgb=False)
 
         Application.create_config_file()
         Application.configure_save_pictures(ports_to_save='ALL')
-        # Application.configure_show_pictures(ports_to_show=list, time_to_show=0)
+        # Application.configure_show_pictures(ports_to_show=[weiner_filter], time_to_show=10)
 
         Application.run_application()
 

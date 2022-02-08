@@ -67,6 +67,7 @@ from Application.Config.job_create import do_sharpen_filter_job
 from Application.Config.job_create import do_unsharp_filter_job
 from Application.Config.job_create import do_isef_filter_job
 from Application.Config.job_create import do_motion_blur_filter_job
+from Application.Jobs.blur_image import do_weiner_filter_job
 ############################################################################################################################################
 # Image morphology jobs
 ############################################################################################################################################
