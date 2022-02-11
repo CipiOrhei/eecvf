@@ -14,3 +14,4 @@ from Utils.plot_benchmark_results import plot_cpm_results
 from Utils.plot_benchmark_results import plot_first_cpm_results
 from Utils.table_processing import create_latex_cpm_table_list
 from Utils.table_processing import create_latex_fom_table
+from Utils.video_creation import create_video

@@ -1,6 +1,7 @@
 # noinspection PyPackageRequirements
 import cv2
 
+import config_main
 from Application.Config.create_config import jobs_dict, create_dictionary_element
 from config_main import MORPH_CONFIG, PYRAMID_LEVEL, FILTERS, CANNY_VARIANTS, FILTERS_SECOND_ORDER, THRESHOLD_CONFIG
 from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create
@@ -87,7 +88,7 @@ def do_get_satellite_image_job(port_output_name: str = 'RAW'):
     jobs_dict.append(d)
 
 
-def do_get_video_job(port_output_name: str = 'RAW'):
+def do_get_video_job(port_output_name: str = 'RAW', rotate_image: bool = False, name_of_frame='frame{0:04d}.png'):
     """
     Function for configure the image retrieval job from video input.
     :param port_output_name: name you want to use for raw image in the application
@@ -96,8 +97,11 @@ def do_get_video_job(port_output_name: str = 'RAW'):
     output_raw_port_name = transform_port_name_lvl(name=port_output_name, lvl=PYRAMID_LEVEL.LEVEL_0)
     output_raw_port_size = transform_port_size_lvl(lvl=PYRAMID_LEVEL.LEVEL_0, rgb=True)
 
+    if rotate_image:
+        config_main.VIDEO_ROTATE = True
+
     input_port_list = None
-    main_func_list = [output_raw_port_name]
+    main_func_list = [output_raw_port_name, rotate_image, name_of_frame]
     output_port_list = [(output_raw_port_name, output_raw_port_size, 'B', True)]
 
     job_name = job_name_create(action='Get image video frame')
