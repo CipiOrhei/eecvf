@@ -178,9 +178,13 @@ def main_func_video(param_list: list = None) -> bool:
     # index of param
     # noinspection PyPep8Naming
     PORT_RAW_PICT = 0
+    # noinspection PyPep8Naming
+    PORT_ROTATE_PICT = 1
+    # noinspection PyPep8Naming
+    PORT_NAME_PICT = 2
 
     # check if param OK
-    if len(param_list) != 1:
+    if len(param_list) != 3:
         log_error_to_console("GET FRAME VIDEO MAIN FUNCTION PARAM NOK", str(len(param_list)))
         return False
     else:
@@ -188,9 +192,19 @@ def main_func_video(param_list: list = None) -> bool:
 
         try:
             # noinspection PyUnresolvedReferences
-            success, port_image.arr[:] = global_var_handler.VIDEO.read()
+            success, tmp = global_var_handler.VIDEO.read()
+
+            if param_list[PORT_ROTATE_PICT]:
+                port_image.arr[:] = cv2.rotate(tmp, cv2.ROTATE_90_CLOCKWISE)
+            else:
+                port_image.arr[:] = tmp
+
+            if param_list[PORT_NAME_PICT]:
+                global_var_handler.PICT_NAME = (param_list[PORT_NAME_PICT]).format(global_var_handler.FRAME)
+
             if success is True:
                 port_image.set_valid()
+
         except BaseException as error:
             is_error()
             # noinspection PyUnresolvedReferences

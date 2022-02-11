@@ -40,8 +40,13 @@ def get_video_capture() -> None:
     """
     global_var_handler.VIDEO = cv2.VideoCapture(config_main.APPL_INPUT_VIDEO)
     global_var_handler.NR_PICTURES = int(cv2.VideoCapture.get(global_var_handler.VIDEO, cv2.CAP_PROP_FRAME_COUNT))
-    global_var_handler.WIDTH_L0 = int(cv2.VideoCapture.get(global_var_handler.VIDEO, cv2.CAP_PROP_FRAME_WIDTH))
-    global_var_handler.HEIGHT_L0 = int(cv2.VideoCapture.get(global_var_handler.VIDEO, cv2.CAP_PROP_FRAME_HEIGHT))
+    print('AICI!!!')
+    if config_main.VIDEO_ROTATE:
+        global_var_handler.WIDTH_L0 = int(cv2.VideoCapture.get(global_var_handler.VIDEO, cv2.CAP_PROP_FRAME_HEIGHT))
+        global_var_handler.HEIGHT_L0 = int(cv2.VideoCapture.get(global_var_handler.VIDEO, cv2.CAP_PROP_FRAME_WIDTH))
+    else:
+        global_var_handler.WIDTH_L0 = int(cv2.VideoCapture.get(global_var_handler.VIDEO, cv2.CAP_PROP_FRAME_WIDTH))
+        global_var_handler.HEIGHT_L0 = int(cv2.VideoCapture.get(global_var_handler.VIDEO, cv2.CAP_PROP_FRAME_HEIGHT))
     global_var_handler.recalculate_pyramid_level_values()
 
     # noinspection PyUnresolvedReferences

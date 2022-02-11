@@ -230,319 +230,6 @@ def main_training_label(height, width, dataset_input):
     Utils.close_files()
 
 
-def train_model(height, width, n_classes, epochs, steps_per_epoch, val_steps_per_epoch, batch_size, class_names, COLORS, validate_input, validate_gt, class_list_rgb_value):
-    """
-    Train the model at hand
-    :param height: height of the image
-    :param width:  width of the image
-    :param n_classes: total number of classes
-    :param epochs: number of epochs to train
-    :param steps_per_epoch: train epoch steps
-    :param val_steps_per_epoch: validation epoch step
-    :param batch_size: batch size for training
-    :param class_names: name of classes for overlay
-    :param COLORS: colors for each class to use in overlay
-    :param validate_input: location of input data
-    :param validate_gt: location of testing data
-    :param class_list_rgb_value: correlation between class label and RGB data
-    :return: None
-    """
-    MachineLearning.set_image_input_folder('Logs/ml_results/TRAIN_INPUT')
-    MachineLearning.set_label_input_folder('Logs/ml_results/TRAIN_LABEL')
-    MachineLearning.set_image_validate_folder('Logs/ml_results/VAL_INPUT')
-    MachineLearning.set_label_validate_folder('Logs/ml_results/VAL_LABEL')
-    MachineLearning.clear_model_trained()
-
-    MachineLearning.do_semseg_base(model="resnet50_segnet", input_height=height, input_width=width, n_classes=n_classes, epochs=epochs,
-                                   verify_dataset=False, steps_per_epoch=steps_per_epoch, val_steps_per_epoch=val_steps_per_epoch, optimizer_name='adam', batch_size=batch_size)
-
-    Application.set_input_image_folder(validate_input)
-    Application.set_output_image_folder('Logs/application_results_semseg_iou')
-    Application.delete_folder_appl_out()
-    Application.do_get_image_job(port_output_name='RAW')
-
-    Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=n_classes, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
-                                   save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
-
-    Application.create_config_file()
-    Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
-    Application.run_application()
-
-    Benchmarking.run_IoU_benchmark(input_location='Logs/application_results_semseg_iou/',
-                                   gt_location=validate_gt,
-                                   raw_image=validate_input,
-                                   jobs_set=['SEMSEG_RESNET50_SEGNET_RAW_L0'],
-                                   class_list_name=class_names, unknown_class=0,
-                                   is_rgb_gt=True, show_only_set_mean_value=True,
-                                   class_list_rgb_value=class_list_rgb_value)
-
-    Utils.close_files()
-
-
-def main_bow_create(building_classes, desc_list, diff_list, desc_size_list, nOctaves_list, nLayes_list, level, kernel_smoothing_list, smoothing_strength_list,
-                    thr_list, thr_akaze_list, dictionarySize_list, class_in, class_out, class_names, COLORS, input_file_location, use_gps, gps_file):
-    """
-    The offline part of the proposed algorithm. All the parameters are passed as list in order to permit multiple runs.
-    :param building_classes: number of classes in ROI filtering
-    :param desc_list: list of descriptors to use
-    :param diff_list: list of diffusion functions to use
-    :param desc_size_list: list of descriptor sizes to use
-    :param nOctaves_list: list of number of octaves to use in AKAZE generation
-    :param nLayes_list: list of number of layers to use in AKAZE generation
-    :param thr_akaze_list: list of threshold values for AKAZE generation
-    :param level: pyramid levels to use
-    :param kernel_smoothing_list: list of kernel to use for UM filtering
-    :param smoothing_strength_list: list of kernel smoothing strengths to use for UM filtering
-    :param dictionarySize_list: list of dictionary cluster sizes to use
-    :param thr_list: list of distance threshold to use for BOF FLANN search sizes to use
-    :param class_in: list of input classes to use for correlation
-    :param class_out: list of output of classes to use for correlation
-    :param class_names: list of class names for output class labels
-    :param COLORS: list of colors for output class labels
-    :param input_file_location: location of input images
-    :param use_gps: if we want to use GPS tags in creating the BOF
-    :param gps_file: location of GPS file
-    :return: None
-    """
-    Application.set_input_image_folder(input_file_location)
-    Application.set_output_image_folder('Logs/application_results')
-    Application.delete_folder_appl_out()
-
-    Application.do_get_image_job(port_output_name='RAW', direct_grey=False)
-    Application.do_pyramid_level_down_job(port_input_name='RAW', number_of_lvl=int(level[-1]), port_input_lvl=CONFIG.PYRAMID_LEVEL.LEVEL_0, is_rgb=True)
-
-    grey = Application.do_grayscale_transform_job(port_input_name='RAW', level=level, port_output_name='GRAW')
-    Application.do_get_data_TMBuD_csv_job(csv_field='Coordinates Landmark', file_location=gps_file, port_img_output='GPS_LANDMARK', level=level)
-
-    for desc in desc_list:
-        for diff in diff_list:
-            for desc_size in desc_size_list:
-                for nOctaves in nOctaves_list:
-                    for nLayes in nLayes_list:
-                        for thr in thr_list:
-                            for thr_akaze in thr_akaze_list:
-                                for dict_size in dictionarySize_list:
-                                    for kernel in kernel_smoothing_list:
-                                        for st_kernel in smoothing_strength_list:
-                                            grey_smooth = Application.do_unsharp_filter_expanded_job(port_input_name=grey, is_rgb=False, kernel=kernel, strenght=st_kernel,
-                                                                                                     level=level, port_output_name='UM_GRAW_' + kernel[-1] + '_' + str(st_kernel)[-1])
-                                            # change between these comments if we want to run a version without ROI
-                                            # kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=grey_smooth,
-                                            #                                          descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff, save_to_text=False,
-                                            #                                          threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes, level=level)
-
-                                            semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=len(class_names), level=level,
-                                                                                          save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS,
-                                                                                          port_name_output='SEMSEG_RAW')
-
-                                            binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out, level=level, port_output_name='ROI_RAW')
-
-                                            kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=binary_mask,
-                                                                                     descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff, save_to_text=False,
-                                                                                     threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes, level=level)
-
-                                            bow = Application.do_tmbud_bow_job(port_to_add=des, dictionary_size=dict_size, use_gps=use_gps, gps_port='GPS_LANDMARK',
-                                                                               number_classes=building_classes, level=level)
-
-    Application.create_config_file()
-    # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save='ALL')
-    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save=[])
-    Application.run_application()
-
-    Utils.close_files()
-
-
-def main_bow_inquiry(building_classes, desc_list, diff_list, desc_size_list, nOctaves_list, nLayes_list, thr_list, input_file_location, distance, use_gps,
-                     thr_akaze_list, dictionarySize_list, class_in, class_out, class_names, COLORS, level, kernel_smoothing_list, smoothing_strength_list,
-                     threshold_matching, csv_landmark, gt_location, gps_file):
-    """
-    The online part of the proposed algorithm. All the parameters are passed as list in order to permit multiple runs.
-    :param building_classes: number of classes in ROI filtering
-    :param desc_list: list of descriptors to use
-    :param diff_list: list of diffusion functions to use
-    :param desc_size_list: list of descriptor sizes to use
-    :param nOctaves_list: list of number of octaves to use in AKAZE generation
-    :param nLayes_list: list of number of layers to use in AKAZE generation
-    :param thr_akaze_list: list of threshold values for AKAZE generation
-    :param level: pyramid levels to use
-    :param kernel_smoothing_list: list of kernel to use for UM filtering
-    :param smoothing_strength_list: list of kernel smoothing strengths to use for UM filtering
-    :param dictionarySize_list: list of dictionary cluster sizes to use
-    :param thr_list: list of distance threshold to use for BOF FLANN search sizes to use
-    :param class_in: list of input classes to use for correlation
-    :param class_out: list of output of classes to use for correlation
-    :param class_names: list of class names for output class labels
-    :param COLORS: list of colors for output class labels
-    :param input_file_location: location of input images
-    :param use_gps: if we want to use GPS tags in creating the BOF
-    :param gps_file: location of GPS file
-    :param threshold_matching: minimum percent of features matched to be taken in consideration
-    :param csv_landmark: csv file location for landmarks name - object class
-    :param gt_location: location of ground truth location
-    :return: None
-    """
-    list_to_eval = list()
-
-    Application.set_input_image_folder(input_file_location)
-    Application.set_output_image_folder('Logs/query_application')
-    Application.delete_folder_appl_out()
-
-    Application.do_get_image_job(port_output_name='RAW', direct_grey=False)
-    Application.do_pyramid_level_down_job(port_input_name='RAW', number_of_lvl=int(level[-1]), port_input_lvl=CONFIG.PYRAMID_LEVEL.LEVEL_0, is_rgb=True)
-
-    grey = Application.do_grayscale_transform_job(port_input_name='RAW', level=level, port_output_name='GRAW')
-    Application.do_get_data_TMBuD_csv_job(csv_field='Coordinates image', file_location=gps_file, port_img_output='GPS_LANDMARK',
-                                          level=level)
-
-    for desc in desc_list:
-        for diff in diff_list:
-            for desc_size in desc_size_list:
-                for nOctaves in nOctaves_list:
-                    for nLayes in nLayes_list:
-                        for thr in thr_list:
-                            for thr_akaze in thr_akaze_list:
-                                for dict_size in dictionarySize_list:
-                                    for kernel in kernel_smoothing_list:
-                                        for st_kernel in smoothing_strength_list:
-                                            for dist in distance:
-                                                grey_smooth = Application.do_unsharp_filter_expanded_job(port_input_name=grey, is_rgb=False, kernel=kernel, strenght=st_kernel,
-                                                                                                         level=level, port_output_name='UM_GRAW_' + kernel[-1] + '_' + str(st_kernel)[-1])
-                                                #
-                                                # kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=grey_smooth,
-                                                #                                          descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff,  save_to_text=False,
-                                                #                                          threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes, level=level)
-
-                                                semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=3, level=level,
-                                                                                              save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS,
-                                                                                              port_name_output='SEMSEG_RAW')
-
-                                                binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out,
-                                                                                               level=level, port_output_name='ROI_RAW')
-
-                                                kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=binary_mask,
-                                                                                         descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff,  save_to_text=False,
-                                                                                         threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes, level=level)
-
-                                                final = Application.do_tmbud_bow_inquiry_flann_job(port_to_inquiry_des=des, port_to_inquiry_kp=kp, port_to_inquire_img=grey, level=level,
-                                                                                                   saved_to_npy=True, saved_to_text=False, number_classes=building_classes, save_img_detection=True,
-                                                                                                   flann_thr=thr, threshold_matching=threshold_matching, name_landmark_port=csv_landmark, mask_port=binary_mask,
-                                                                                                   location_of_bow='Logs/application_results', use_gps=use_gps, gps_port='GPS_LANDMARK', distante_accepted=dist,
-                                                                                                   bow_port='ZuBuD_BOW_' + dict_size.__str__() + '_' + des + '_' + level,
-                                                                                                   )
-
-                                                list_to_eval.append(final + '_' + level)
-
-    Application.create_config_file()
-    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save='ALL')
-    # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save=[])
-    Application.run_application()
-
-    Benchmarking.run_CBIR_ZuBuD_benchmark(input_location='Logs/query_application/',
-                                          gt_location=gt_location,
-                                          raw_image=input_file_location,
-                                          jobs_set=list_to_eval)
-
-    Utils.close_files()
-
-
-def main_bow_inquiry_movie(building_classes, desc_list, diff_list, desc_size_list, nOctaves_list, nLayes_list, thr_list, input_file_location, distance, use_gps,
-                           thr_akaze_list, dictionarySize_list, class_in, class_out, class_names, COLORS, level, kernel_smoothing_list, smoothing_strength_list,
-                           threshold_matching, csv_landmark):
-    """
-    The online part of the proposed algorithm. All the parameters are passed as list in order to permit multiple runs.
-    :param building_classes: number of classes in ROI filtering
-    :param desc_list: list of descriptors to use
-    :param diff_list: list of diffusion functions to use
-    :param desc_size_list: list of descriptor sizes to use
-    :param nOctaves_list: list of number of octaves to use in AKAZE generation
-    :param nLayes_list: list of number of layers to use in AKAZE generation
-    :param thr_akaze_list: list of threshold values for AKAZE generation
-    :param level: pyramid levels to use
-    :param kernel_smoothing_list: list of kernel to use for UM filtering
-    :param smoothing_strength_list: list of kernel smoothing strengths to use for UM filtering
-    :param dictionarySize_list: list of dictionary cluster sizes to use
-    :param thr_list: list of distance threshold to use for BOF FLANN search sizes to use
-    :param class_in: list of input classes to use for correlation
-    :param class_out: list of output of classes to use for correlation
-    :param class_names: list of class names for output class labels
-    :param COLORS: list of colors for output class labels
-    :param input_file_location: location of input images
-    :param use_gps: if we want to use GPS tags in creating the BOF
-    :param gps_file: location of GPS file
-    :param threshold_matching: minimum percent of features matched to be taken in consideration
-    :param csv_landmark: csv file location for landmarks name - object class
-    :param gt_location: location of ground truth location
-    :return: None
-    """
-    list_to_eval = list()
-
-    Application.set_input_image_folder(input_file_location)
-    Application.set_output_image_folder('Logs/query_application')
-    Application.delete_folder_appl_out()
-
-    Application.set_input_video(r'c:\repos\CM_dataset\movies\20201104_155714.mp4')
-    # Application.set_input_video(r'c:\repos\CM_dataset\movies\20201229_154044.mp4')
-
-    Application.do_get_video_job(port_output_name='RAW')
-    # Application.do_rotate_image_job(port_input_name='RAW_1', is_rgb=True, angle=-90, reshape=False, extend_border=False, do_interpolation=True, port_output_name='RAW')
-
-    # Application.do_get_image_job(port_output_name='RAW', direct_grey=False)
-    Application.do_pyramid_level_down_job(port_input_name='RAW', number_of_lvl=int(level[-1]), port_input_lvl=CONFIG.PYRAMID_LEVEL.LEVEL_0, is_rgb=True)
-
-    grey = Application.do_grayscale_transform_job(port_input_name='RAW', level=level, port_output_name='GRAW')
-    Application.do_get_data_TMBuD_csv_job(csv_field='Coordinates image', file_location=r'c:\repos\CM_dataset\movies\20201104_155714.csv', port_img_output='GPS_LANDMARK', level=level)
-    # Application.do_get_data_TMBuD_csv_job(csv_field='Coordinates image', file_location=r'c:\repos\CM_dataset\movies\20201229_154044.csv', port_img_output='GPS_LANDMARK', level=level)
-
-    for desc in desc_list:
-        for diff in diff_list:
-            for desc_size in desc_size_list:
-                for nOctaves in nOctaves_list:
-                    for nLayes in nLayes_list:
-                        for thr in thr_list:
-                            for thr_akaze in thr_akaze_list:
-                                for dict_size in dictionarySize_list:
-                                    for kernel in kernel_smoothing_list:
-                                        for st_kernel in smoothing_strength_list:
-                                            for dist in distance:
-                                                grey_smooth = Application.do_unsharp_filter_expanded_job(port_input_name=grey, is_rgb=False, kernel=kernel, strenght=st_kernel,
-                                                                                                         level=level, port_output_name='UM_GRAW_' + kernel[-1] + '_' + str(st_kernel)[-1])
-
-                                                # kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=grey_smooth,
-                                                #                                          descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff,  save_to_text=False,
-                                                #                                          threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes, level=level)
-
-                                                semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=3, level=level,
-                                                                                              save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS,
-                                                                                              port_name_output='SEMSEG_RAW')
-
-                                                binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out,
-                                                                                               level=level, port_output_name='ROI_RAW')
-
-                                                kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=binary_mask,
-                                                                                         descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff,  save_to_text=False,
-                                                                                         threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes, level=level)
-
-                                                final = Application.do_tmbud_bow_inquiry_flann_job(port_to_inquiry_des=des, port_to_inquiry_kp=kp, port_to_inquire_img=grey, level=level,
-                                                                                                   saved_to_npy=True, saved_to_text=False, number_classes=building_classes, save_img_detection=True,
-                                                                                                   flann_thr=thr, threshold_matching=threshold_matching, name_landmark_port=csv_landmark,
-                                                                                                   location_of_bow='Logs/application_results', use_gps=use_gps, gps_port='GPS_LANDMARK', distante_accepted=dist,
-                                                                                                   bow_port='ZuBuD_BOW_' + dict_size.__str__() + '_' + des + '_' + level,
-                                                                                                   port_out_image='FINAL'
-                                                                                                   )
-
-                                                list_to_eval.append(final + '_' + level)
-
-    Application.create_config_file()
-    # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save=[])
-    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save=['RAW_L1', 'OVERLAY_SEMSEG_RAW_L1', 'A_KAZE_IMG_DT_3_DS_64_THR_0_001_NO_4_NOL_6_D_0_UM_GRAW_7_5_MASKED_BY_ROI_RAW_L1', 'FINAL_L1'])
-
-    # Application.configure_show_pictures(ports_to_show=['FINAL_L1'], time_to_show=1)
-    # Application.configure_show_pictures(ports_to_show=['RAW_L1', 'OVERLAY_SEMSEG_RAW_L1', 'A_KAZE_IMG_DT_3_DS_64_THR_0_001_NO_4_NOL_6_D_0_UM_GRAW_7_5_MASKED_BY_ROI_RAW_L1', 'FINAL_L1'], time_to_show=1)
-
-    Application.run_application()
-    Utils.close_files()
-
-
 def feature_examples():
     """
     Create AKAZE feature for each diffusion function on RGB and grey images
@@ -646,6 +333,298 @@ def determining_sharpness():
     Utils.close_files()
 
 
+def train_model(height, width, n_classes, epochs, steps_per_epoch, val_steps_per_epoch, batch_size, class_names, COLORS, validate_input, validate_gt, class_list_rgb_value):
+    """
+    Train the model at hand
+    :param height: height of the image
+    :param width:  width of the image
+    :param n_classes: total number of classes
+    :param epochs: number of epochs to train
+    :param steps_per_epoch: train epoch steps
+    :param val_steps_per_epoch: validation epoch step
+    :param batch_size: batch size for training
+    :param class_names: name of classes for overlay
+    :param COLORS: colors for each class to use in overlay
+    :param validate_input: location of input data
+    :param validate_gt: location of testing data
+    :param class_list_rgb_value: correlation between class label and RGB data
+    :return: None
+    """
+    MachineLearning.set_image_input_folder('Logs/ml_results/TRAIN_INPUT')
+    MachineLearning.set_label_input_folder('Logs/ml_results/TRAIN_LABEL')
+    MachineLearning.set_image_validate_folder('Logs/ml_results/VAL_INPUT')
+    MachineLearning.set_label_validate_folder('Logs/ml_results/VAL_LABEL')
+    MachineLearning.clear_model_trained()
+
+    MachineLearning.do_semseg_base(model="resnet50_segnet", input_height=height, input_width=width, n_classes=n_classes, epochs=epochs,
+                                   verify_dataset=False, steps_per_epoch=steps_per_epoch, val_steps_per_epoch=val_steps_per_epoch, optimizer_name='adam', batch_size=batch_size)
+
+    Application.set_input_image_folder(validate_input)
+    Application.set_output_image_folder('Logs/application_results_semseg_iou')
+    Application.delete_folder_appl_out()
+    Application.do_get_image_job(port_output_name='RAW')
+
+    Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=n_classes, level=CONFIG.PYRAMID_LEVEL.LEVEL_0,
+                                   save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
+
+    Application.create_config_file()
+    Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=False)
+    Application.run_application()
+
+    Benchmarking.run_IoU_benchmark(input_location='Logs/application_results_semseg_iou/',
+                                   gt_location=validate_gt,
+                                   raw_image=validate_input,
+                                   jobs_set=['SEMSEG_RESNET50_SEGNET_RAW_L0'],
+                                   class_list_name=class_names, unknown_class=0,
+                                   is_rgb_gt=True, show_only_set_mean_value=True,
+                                   class_list_rgb_value=class_list_rgb_value)
+
+    Utils.close_files()
+
+
+def main_bow_create(building_classes, desc, diff, desc_size, nOctaves, nLayes, level, kernel_smoothing, smoothing_strength,
+                    thr, thr_akaze, dictionarySize, class_in, class_out, class_names, COLORS, input_file_location, use_gps, gps_file):
+    """
+    The offline part of the proposed algorithm. All the parameters are passed as list in order to permit multiple runs.
+    :param building_classes: number of classes in ROI filtering
+    :param desc: descriptors to use
+    :param diff: diffusion functions to use
+    :param desc_size: descriptor sizes to use
+    :param nOctaves: number of octaves to use in AKAZE generation
+    :param nLayes: number of layers to use in AKAZE generation
+    :param thr_akaze: threshold values for AKAZE generation
+    :param level: pyramid levels to use
+    :param kernel_smoothing: kernel to use for UM filtering
+    :param smoothing_strength: kernel smoothing strengths to use for UM filtering
+    :param dictionarySize: dictionary cluster sizes to use
+    :param thr: distance threshold to use for BOF FLANN search sizes to use
+    :param class_in: list of input classes to use for correlation
+    :param class_out: list of output of classes to use for correlation
+    :param class_names: list of class names for output class labels
+    :param COLORS: list of colors for output class labels
+    :param input_file_location: location of input images
+    :param use_gps: if we want to use GPS tags in creating the BOF
+    :param gps_file: location of GPS file
+    :return: None
+    """
+    Application.set_input_image_folder(input_file_location)
+    Application.set_output_image_folder('Logs/application_results')
+    Application.delete_folder_appl_out()
+
+    Application.do_get_image_job(port_output_name='RAW', direct_grey=False)
+    Application.do_pyramid_level_down_job(port_input_name='RAW', number_of_lvl=int(level[-1]), port_input_lvl=CONFIG.PYRAMID_LEVEL.LEVEL_0, is_rgb=True)
+
+    grey = Application.do_grayscale_transform_job(port_input_name='RAW', level=level, port_output_name='GRAW')
+    Application.do_get_data_TMBuD_csv_job(csv_field='Coordinates Landmark', file_location=gps_file, port_img_output='GPS_LANDMARK', level=level)
+
+    grey_smooth = Application.do_unsharp_filter_expanded_job(port_input_name=grey, is_rgb=False, kernel=kernel_smoothing, strenght=smoothing_strength,
+                                                             level=level, port_output_name='UM_GRAW_' + kernel_smoothing[-1] + '_' + str(smoothing_strength)[-1])
+
+    semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=len(class_names), level=level, port_name_output='SEMSEG_RAW',
+                                                  save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
+
+    binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out, level=level, port_output_name='ROI_RAW')
+
+    kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=binary_mask,
+                                             descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff, save_to_text=False,
+                                             threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes, level=level)
+
+    Application.do_tmbud_bow_job(port_to_add=des, dictionary_size=dictionarySize, use_gps=use_gps, gps_port='GPS_LANDMARK',
+                                 number_classes=building_classes, level=level)
+
+    Application.create_config_file()
+    # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save='ALL')
+    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save=[])
+    Application.run_application()
+
+    Utils.close_files()
+
+
+def main_bow_inquiry(building_classes, desc, diff, desc_size, nOctaves, nLayes, thr, input_file_location, distance, use_gps,
+                     thr_akaze, dictionarySize, class_in, class_out, class_names, COLORS, level, kernel_smoothing, smoothing_strength,
+                     threshold_matching, csv_landmark, gt_location, gps_file, boxing, tracking, roi):
+    """
+    The online part of the proposed algorithm. All the parameters are passed as list in order to permit multiple runs.
+    :param building_classes: number of classes in ROI filtering
+    :param desc: list of descriptors to use
+    :param diff: list of diffusion functions to use
+    :param desc_size: list of descriptor sizes to use
+    :param nOctaves: list of number of octaves to use in AKAZE generation
+    :param nLayes: list of number of layers to use in AKAZE generation
+    :param thr_akaze: list of threshold values for AKAZE generation
+    :param level: pyramid levels to use
+    :param kernel_smoothing: list of kernel to use for UM filtering
+    :param smoothing_strength: list of kernel smoothing strengths to use for UM filtering
+    :param dictionarySize: list of dictionary cluster sizes to use
+    :param thr: list of distance threshold to use for BOF FLANN search sizes to use
+    :param class_in: list of input classes to use for correlation
+    :param class_out: list of output of classes to use for correlation
+    :param class_names: list of class names for output class labels
+    :param COLORS: list of colors for output class labels
+    :param input_file_location: location of input images
+    :param use_gps: if we want to use GPS tags in creating the BOF
+    :param gps_file: location of GPS file
+    :param boxing: if we want to add a box on detection
+    :param roi: if we want to add a semseg overlay
+    :param tracking: if we want to use tracking
+    :param threshold_matching: minimum percent of features matched to be taken in consideration
+    :param csv_landmark: csv file location for landmarks name - object class
+    :param gt_location: location of ground truth location
+    :return: None
+    """
+    list_to_eval = list()
+
+    Application.set_input_image_folder(input_file_location)
+    Application.set_output_image_folder('Logs/query_application')
+    Application.delete_folder_appl_out()
+
+    Application.do_get_image_job(port_output_name='RAW', direct_grey=False)
+    Application.do_pyramid_level_down_job(port_input_name='RAW', number_of_lvl=int(level[-1]), port_input_lvl=CONFIG.PYRAMID_LEVEL.LEVEL_0, is_rgb=True)
+
+    grey = Application.do_grayscale_transform_job(port_input_name='RAW', level=level, port_output_name='GRAW')
+    Application.do_get_data_TMBuD_csv_job(csv_field='Coordinates image', file_location=gps_file, port_img_output='GPS_LANDMARK',
+                                          level=level)
+
+    grey_smooth = Application.do_unsharp_filter_expanded_job(port_input_name=grey, is_rgb=False, kernel=kernel_smoothing, strenght=smoothing_strength,
+                                                             level=level, port_output_name='UM_GRAW_' + kernel_smoothing[-1] + '_' + str(smoothing_strength)[-1])
+
+    semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=3, level=level, port_name_output='SEMSEG_RAW',
+                                                  save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS)
+
+    binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out, level=level, port_output_name='ROI_RAW')
+
+    kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=binary_mask,
+                                             descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff,  save_to_text=False,
+                                             threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes, level=level)
+
+    if roi:
+        mask = binary_mask
+    else:
+        mask = None
+
+    final = Application.do_tmbud_bow_inquiry_flann_job(port_to_inquiry_des=des, port_to_inquiry_kp=kp, port_to_inquire_img=grey, level=level,
+                                                       saved_to_npy=True, saved_to_text=False, number_classes=building_classes, save_img_detection=True,
+                                                       flann_thr=thr, threshold_matching=threshold_matching, name_landmark_port=csv_landmark,
+                                                       mask_port=mask, if_tracking=tracking, if_box_on_detection=boxing,
+                                                       location_of_bow='Logs/application_results', use_gps=use_gps, gps_port='GPS_LANDMARK', distante_accepted=distance,
+                                                       bow_port='ZuBuD_BOW_' + dictionarySize.__str__() + '_' + des + '_' + level,
+                                                       port_out_image='FINAL')
+
+    list_to_eval.append(final + '_' + level)
+
+    Application.create_config_file()
+    # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save='ALL')
+    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save=[])
+    Application.configure_show_pictures(ports_to_show=['FINAL_L2'], time_to_show=100)
+    Application.run_application()
+
+    Benchmarking.run_CBIR_ZuBuD_benchmark(input_location='Logs/query_application/',
+                                          gt_location=gt_location,
+                                          raw_image=input_file_location,
+                                          jobs_set=list_to_eval)
+
+    Utils.close_files()
+
+
+def main_bow_inquiry_movie(building_classes, desc, diff, desc_size, nOctaves, nLayes, thr, input_file_location, distance, use_gps,
+                     thr_akaze, dictionarySize, class_in, class_out, class_names, COLORS, level, kernel_smoothing, smoothing_strength,
+                     threshold_matching, csv_landmark, gt_location, gps_file, boxing, tracking, roi):
+    """
+    The online part of the proposed algorithm. All the parameters are passed as list in order to permit multiple runs.
+    :param building_classes: number of classes in ROI filtering
+    :param desc: list of descriptors to use
+    :param diff: list of diffusion functions to use
+    :param desc_size: list of descriptor sizes to use
+    :param nOctaves: list of number of octaves to use in AKAZE generation
+    :param nLayes: list of number of layers to use in AKAZE generation
+    :param thr_akaze: list of threshold values for AKAZE generation
+    :param level: pyramid levels to use
+    :param kernel_smoothing: list of kernel to use for UM filtering
+    :param smoothing_strength: list of kernel smoothing strengths to use for UM filtering
+    :param dictionarySize: list of dictionary cluster sizes to use
+    :param thr: list of distance threshold to use for BOF FLANN search sizes to use
+    :param class_in: list of input classes to use for correlation
+    :param class_out: list of output of classes to use for correlation
+    :param class_names: list of class names for output class labels
+    :param COLORS: list of colors for output class labels
+    :param input_file_location: location of input images
+    :param use_gps: if we want to use GPS tags in creating the BOF
+    :param gps_file: location of GPS file
+    :param boxing: if we want to add a box on detection
+    :param roi: if we want to add a semseg overlay
+    :param tracking: if we want to use tracking
+    :param threshold_matching: minimum percent of features matched to be taken in consideration
+    :param csv_landmark: csv file location for landmarks name - object class
+    :param gt_location: location of ground truth location
+    :return: None
+    """
+    list_to_eval = list()
+
+    Application.set_input_image_folder(input_file_location)
+    Application.set_output_image_folder('Logs/query_application')
+    Application.delete_folder_appl_out()
+
+    # Application.set_input_video(r'c:\repos\CM_dataset\movies\20201104_155714.mp4')
+    # file_csv = r'c:\repos\CM_dataset\movies\20201104_155714.csv'
+    # distance = 70
+    # threshold_matching = 1.5
+
+    Application.set_input_video(r'c:\repos\CM_dataset\movies\20201229_154044.mp4')
+    file_csv = r'c:\repos\CM_dataset\movies\20201229_154044.csv'
+    distance = 65
+    # for L1
+    threshold_matching = 1.5
+    # for L2
+    # threshold_matching = 1.5
+
+    Application.do_get_video_job(port_output_name='RAW', rotate_image=False, name_of_frame='qimg{0:04d}.png')
+    Application.do_pyramid_level_down_job(port_input_name='RAW', number_of_lvl=int(level[-1]), port_input_lvl=CONFIG.PYRAMID_LEVEL.LEVEL_0, is_rgb=True)
+    grey = Application.do_grayscale_transform_job(port_input_name='RAW', level=level, port_output_name='GRAW')
+    Application.do_get_data_TMBuD_csv_job(csv_field='Coordinates image', file_location=file_csv, port_img_output='GPS_LANDMARK', level=level)
+
+    grey_smooth = Application.do_unsharp_filter_expanded_job(port_input_name=grey, is_rgb=False, kernel=kernel_smoothing, strenght=smoothing_strength,
+                                                             level=level, port_output_name='UM_GRAW_' + kernel_smoothing[-1] + '_' + str(smoothing_strength)[-1])
+
+    semseg_image = Application.do_semseg_base_job(port_input_name='RAW', model='resnet50_segnet', number_of_classes=3, level=level,
+                                                  save_img_augmentation=True, save_overlay=True, save_legend_in_image=True, list_class_name=class_names, list_colors_to_use=COLORS,
+                                                  port_name_output='SEMSEG_RAW')
+
+    binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out, level=level, port_output_name='ROI_RAW')
+
+    kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=binary_mask,
+                                             descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff,  save_to_text=False,
+                                             threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes, level=level)
+    if roi:
+        mask = binary_mask
+    else:
+        mask = None
+
+    final = Application.do_tmbud_bow_inquiry_flann_job(port_to_inquiry_des=des, port_to_inquiry_kp=kp, port_to_inquire_img=grey, level=level,
+                                                       saved_to_npy=True, saved_to_text=False, number_classes=building_classes, save_img_detection=True,
+                                                       flann_thr=thr, threshold_matching=threshold_matching, name_landmark_port=csv_landmark,
+                                                       mask_port=mask, if_tracking=tracking, if_box_on_detection=boxing,
+                                                       location_of_bow='Logs/application_results', use_gps=use_gps, gps_port='GPS_LANDMARK', distante_accepted=distance,
+                                                       bow_port='ZuBuD_BOW_' + dictionarySize.__str__() + '_' + des + '_' + level,
+                                                       port_out_image='FINAL')
+
+    Application.create_config_file()
+
+    ports_to_save = ['RAW_' + level, 'OVERLAY_SEMSEG_RAW_' + level, img + '_' + level, 'FINAL_' + level]
+    ports_to_show = ['FINAL_' + level]
+
+    # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save=ports_to_save)
+    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=False, ports_to_save='ALL')
+    Application.configure_show_pictures(ports_to_show=ports_to_show, time_to_show=1)
+
+    Application.run_application()
+    Utils.close_files()
+
+    name = (file_csv.split('.')[0]).split('\\')[-1]
+    print(name)
+    Utils.create_video(port_list=ports_to_save, folder_of_ports='Logs/query_application', fps=15, name='{}_details.mp4'.format(name))
+    Utils.create_video(port_list=ports_to_show, folder_of_ports='Logs/query_application', fps=25, name='{}_output.mp4'.format(name))
+
+
 if __name__ == "__main__":
     # feature detection examples
     # feature_examples()
@@ -722,42 +701,6 @@ if __name__ == "__main__":
     #             validate_input=validate_input, validate_gt=validate_gt, class_list_rgb_value=class_list_rgb_value, )
     # Utils.reopen_files()
 
-    # desc_list = [cv2.AKAZE_DESCRIPTOR_KAZE, cv2.AKAZE_DESCRIPTOR_KAZE_UPRIGHT, cv2.AKAZE_DESCRIPTOR_MLDB, cv2.AKAZE_DESCRIPTOR_MLDB_UPRIGHT]
-    # diff_list = [cv2.KAZE_DIFF_PM_G1, cv2.KAZE_DIFF_PM_G2, cv2.KAZE_DIFF_CHARBONNIER, cv2.KAZE_DIFF_WEICKERT]
-
-    print('Number of arguments:', len(sys.argv), 'arguments.')
-    print('Argument List:', sys.argv)
-    config = sys.argv[1]
-    desc_list = [int(sys.argv[2])]
-    diff_list = [int(sys.argv[3])]
-    desc_size_list = [int(sys.argv[4])]
-    nOctaves_list = [int(sys.argv[5])]
-    nLayes_list = [int(sys.argv[6])]
-    thr_list = [float(sys.argv[7])]
-    thr_akaze_list = [float(sys.argv[8])]
-    dictionarySize_list = [int(sys.argv[9])]
-    kernel_smoothing = [sys.argv[10]]
-    smoothing_strength = [float(sys.argv[11])]
-    use_gps = bool(sys.argv[12])
-    distance_list = [float(sys.argv[13])]
-
-    # desc_list = [cv2.AKAZE_DESCRIPTOR_KAZE]
-    # diff_list = [cv2.KAZE_DIFF_PM_G1]
-    # desc_size_list = [8]
-    # nOctaves_list = [6]
-    # nLayes_list = [3]
-    # thr_akaze_list = [0.001]
-    # thr_list = [0.8]
-    # dictionarySize_list = [300]
-    # kernel_smoothing = [CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1]
-    # smoothing_strength = [0.9]
-    # use_gps = True
-    # distance_list=[100]
-
-    pyramid_level = CONFIG.PYRAMID_LEVEL.LEVEL_2
-    thr_match_procent = 1
-    class_in = [0, 1, 2]
-    class_out = [0, 1, 0]
 
     # TRAIN_input_file = r'c:\repos\Building detection\ZuBud_dataset\png_ZuBuD_parsed'
     # TEST_input_file = r'c:\repos\Building detection\ZuBud_dataset\qimage'
@@ -769,13 +712,13 @@ if __name__ == "__main__":
     # gt_location = r"c:\repos\Building detection\ZuBuD+\ground_truth_balanced.txt"
     # nr_classes = 201
 
-    # TRAIN_input_file = 'TestData/TMBuD/parsed_dataset/v3_2/TRAIN'
-    # TEST_input_file = 'TestData/TMBuD/parsed_dataset/v3_2/TEST'
-    # csv_landmark = 'TestData/TMBuD/parsed_dataset/v3_2/landmarks.csv'
-    # gt_location = 'TestData/TMBuD/parsed_dataset/v3_2/TMBuD_groundtruth.txt'
-    # train_csv_file = 'TestData/TMBuD/parsed_dataset/v3_2/train_data.csv'
-    # test_csv_file = 'TestData/TMBuD/parsed_dataset/v3_2/test_data.csv'
-    # nr_classes = 125
+    TRAIN_input_file = 'TestData/TMBuD/parsed_dataset/v3_2/TRAIN'
+    TEST_input_file = 'TestData/TMBuD/parsed_dataset/v3_2/TEST'
+    csv_landmark = 'TestData/TMBuD/parsed_dataset/v3_2/landmarks.csv'
+    gt_location = 'TestData/TMBuD/parsed_dataset/v3_2/TMBuD_groundtruth.txt'
+    train_csv_file = 'TestData/TMBuD/parsed_dataset/v3_2/train_data.csv'
+    test_csv_file = 'TestData/TMBuD/parsed_dataset/v3_2/test_data.csv'
+    nr_classes = 125
 
     # TRAIN_input_file = 'TestData/TMBuD/parsed_dataset/v3_2_night/TRAIN'
     # TEST_input_file = 'TestData/TMBuD/parsed_dataset/v3_2_night/TEST'
@@ -785,37 +728,79 @@ if __name__ == "__main__":
     # test_csv_file = 'TestData/TMBuD/parsed_dataset/v3_2_night/test_data.csv'
     # nr_classes = 56
 
-    TRAIN_input_file = 'TestData/TMBuD/parsed_dataset/v3_n/TRAIN'
-    TEST_input_file = 'TestData/TMBuD/parsed_dataset/v3_n/TEST'
-    csv_landmark = 'TestData/TMBuD/parsed_dataset/v3_n/landmarks.csv'
-    gt_location = 'TestData/TMBuD/parsed_dataset/v3_n/TMBuD_groundtruth.txt'
-    train_csv_file = 'TestData/TMBuD/parsed_dataset/v3_n/train_data.csv'
-    test_csv_file = 'TestData/TMBuD/parsed_dataset/v3_n/test_data.csv'
-    nr_classes = 125
+    # TRAIN_input_file = 'TestData/TMBuD/parsed_dataset/v3_n/TRAIN'
+    # TEST_input_file = 'TestData/TMBuD/parsed_dataset/v3_n/TEST'
+    # csv_landmark = 'TestData/TMBuD/parsed_dataset/v3_n/landmarks.csv'
+    # gt_location = 'TestData/TMBuD/parsed_dataset/v3_n/TMBuD_groundtruth.txt'
+    # train_csv_file = 'TestData/TMBuD/parsed_dataset/v3_n/train_data.csv'
+    # test_csv_file = 'TestData/TMBuD/parsed_dataset/v3_n/test_data.csv'
+    # nr_classes = 125
+
+    # desc_list = [cv2.AKAZE_DESCRIPTOR_KAZE, cv2.AKAZE_DESCRIPTOR_KAZE_UPRIGHT, cv2.AKAZE_DESCRIPTOR_MLDB, cv2.AKAZE_DESCRIPTOR_MLDB_UPRIGHT]
+    # diff_list = [cv2.KAZE_DIFF_PM_G1, cv2.KAZE_DIFF_PM_G2, cv2.KAZE_DIFF_CHARBONNIER, cv2.KAZE_DIFF_WEICKERT]
+
+    print('Number of arguments:', len(sys.argv), 'arguments.')
+    print('Argument List:', sys.argv)
+    config = sys.argv[1]
+    desc_list = int(sys.argv[2])
+    diff_list = int(sys.argv[3])
+    desc_size_list = int(sys.argv[4])
+    nOctaves_list = int(sys.argv[5])
+    nLayes_list = int(sys.argv[6])
+    thr_list = float(sys.argv[7])
+    thr_akaze_list = float(sys.argv[8])
+    dictionarySize_list = int(sys.argv[9])
+    kernel_smoothing = sys.argv[10]
+    smoothing_strength = float(sys.argv[11])
+    use_gps = bool(sys.argv[12])
+    distance_list = float(sys.argv[13])
+
+    # desc_list = cv2.AKAZE_DESCRIPTOR_KAZE
+    # diff_list = cv2.KAZE_DIFF_PM_G1
+    # desc_size_list = 8
+    # nOctaves_list = 6
+    # nLayes_list = 3
+    # thr_akaze_list = 0.001
+    # thr_list = 0.8
+    # dictionarySize_list = 300
+    # kernel_smoothing = CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1
+    # smoothing_strength = 0.9
+    # use_gps = True
+    # distance_list = 100
+
+    pyramid_level = CONFIG.PYRAMID_LEVEL.LEVEL_2
+    class_in = [0, 1, 2]
+    class_out = [0, 1, 0]
+
+    thr_match_procent = 1
+    tracking = True
+    boxing = False
+    overlay_semseg = True
 
     Utils.reopen_files()
 
     if config == 'create_bow':
     # if True:
-        main_bow_create(building_classes=nr_classes, desc_list=desc_list, diff_list=diff_list, desc_size_list=desc_size_list,
-                        level=pyramid_level, kernel_smoothing_list=kernel_smoothing, smoothing_strength_list=smoothing_strength,
-                        nOctaves_list=nOctaves_list, nLayes_list=nLayes_list, thr_list=thr_list, thr_akaze_list=thr_akaze_list, dictionarySize_list=dictionarySize_list,
+        main_bow_create(building_classes=nr_classes, desc=desc_list, diff=diff_list, desc_size=desc_size_list,
+                        level=pyramid_level, kernel_smoothing=kernel_smoothing, smoothing_strength=smoothing_strength,
+                        nOctaves=nOctaves_list, nLayes=nLayes_list, thr=thr_list, thr_akaze=thr_akaze_list, dictionarySize=dictionarySize_list,
                         class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, input_file_location=TRAIN_input_file, use_gps=use_gps, gps_file=train_csv_file)
         Utils.reopen_files()
 
+    # if config == 'inquiry':
+    # if True:
+    #     main_bow_inquiry(building_classes=nr_classes, desc=desc_list, diff=diff_list, desc_size=desc_size_list,
+    #                      level=pyramid_level, kernel_smoothing=kernel_smoothing, smoothing_strength=smoothing_strength,
+    #                      nOctaves=nOctaves_list, nLayes=nLayes_list, thr=thr_list, thr_akaze=thr_akaze_list, dictionarySize=dictionarySize_list,
+    #                      class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, gt_location=gt_location, tracking=tracking, boxing=boxing, roi=overlay_semseg,
+    #                      input_file_location=TEST_input_file, distance=distance_list, use_gps=use_gps, threshold_matching=thr_match_procent, csv_landmark=csv_landmark, gps_file=test_csv_file)
+    #     Utils.reopen_files()
+
     if config == 'inquiry':
     # if True:
-        main_bow_inquiry(building_classes=nr_classes, desc_list=desc_list, diff_list=diff_list, desc_size_list=desc_size_list,
-                        level=pyramid_level, kernel_smoothing_list=kernel_smoothing, smoothing_strength_list=smoothing_strength,
-                        nOctaves_list=nOctaves_list, nLayes_list=nLayes_list, thr_list=thr_list, thr_akaze_list=thr_akaze_list, dictionarySize_list=dictionarySize_list,
-                        class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, gt_location=gt_location,
-                         input_file_location=TEST_input_file, distance=distance_list, use_gps=use_gps, threshold_matching=thr_match_procent, csv_landmark=csv_landmark, gps_file=test_csv_file)
+        main_bow_inquiry_movie(building_classes=nr_classes, desc=desc_list, diff=diff_list, desc_size=desc_size_list,
+                               level=pyramid_level, kernel_smoothing=kernel_smoothing, smoothing_strength=smoothing_strength,
+                               nOctaves=nOctaves_list, nLayes=nLayes_list, thr=thr_list, thr_akaze=thr_akaze_list, dictionarySize=dictionarySize_list,
+                               class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, gt_location=gt_location, tracking=tracking, boxing=boxing, roi=overlay_semseg,
+                               input_file_location=TEST_input_file, distance=distance_list, use_gps=use_gps, threshold_matching=thr_match_procent, csv_landmark=csv_landmark, gps_file=test_csv_file)
         Utils.reopen_files()
-
-    # if config == 'inquiry':
-        # main_bow_inquiry_movie(building_classes=nr_classes, desc_list=desc_list, diff_list=diff_list, desc_size_list=desc_size_list,
-        #                 level=pyramid_level, kernel_smoothing_list=kernel_smoothing, smoothing_strength_list=smoothing_strength,
-        #                 nOctaves_list=nOctaves_list, nLayes_list=nLayes_list, thr_list=thr_list, thr_akaze_list=thr_akaze_list, dictionarySize_list=dictionarySize_list,
-        #                 class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS,
-        #                  input_file_location=TEST_input_file, distance=distance_list, use_gps=use_gps, threshold_matching=thr_match_procent,csv_landmark=csv_landmark)
-        # Utils.reopen_files()

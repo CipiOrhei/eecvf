@@ -15,6 +15,7 @@ JSON_FILE_NAME = 'new_config'
 # Application configuration
 IMAGE_INPUT = 0
 VIDEO_INPUT = 1
+VIDEO_ROTATE = False
 CAMERA_INPUT = 2
 IMAGE_TXT_INPUT = 3
 # Please take care that this values are rewritten by the service jobs
