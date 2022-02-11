@@ -46,7 +46,8 @@ class Port:
                    'l': 'np.int_',
                    'L': 'np.uint',
                    'f': 'np.single',
-                   'd': 'np.double'}
+                   'd': 'np.double',
+                   'u': 'np.unicode_'}
         self.arr = np.zeros(size, dtype=eval(eq_dict[port_type]))
         self.is_image = is_image
 

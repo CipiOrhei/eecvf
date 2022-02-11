@@ -165,5 +165,16 @@ def save_keypoint_to_array(kp: cv2.KeyPoint):
     return tmp_array
 
 
+def return_kp_cv2_object(kp_array):
+    """
+    Function to transfer data from array to cv2.KeyPoint.
+    :param array of data from key-points
+    :return: mat: cv2.KeyPoint object
+    """
+    kp = cv2.KeyPoint(x=kp_array[3], y=kp_array[4], _size=kp_array[6], _angle=kp_array[0], _response=kp_array[5], _octave=int(kp_array[2]), _class_id=int(kp_array[1]))
+
+    return kp
+
+
 if __name__ == "__main__":
     pass
