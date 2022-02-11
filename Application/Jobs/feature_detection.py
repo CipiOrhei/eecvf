@@ -178,6 +178,7 @@ def main_func_a_kaze(param_list: list = None) -> bool:
         # check if port's you want to use are valid
         if p_in.is_valid() is True:
             try:
+            # if True:
                 a_kaze_obj = cv2.AKAZE_create(descriptor_type=param_list[PORT_IN_DESC_TYPE], descriptor_size=param_list[PORT_IN_DESC_SIZE],
                                               descriptor_channels=param_list[PORT_IN_DESC_CHANNELS], threshold=param_list[PORT_IN_THR],
                                               nOctaves=param_list[PORT_IN_N_OCTAVES], nOctaveLayers=param_list[PORT_IN_N_OCTAVES_LAYERS],
@@ -193,7 +194,8 @@ def main_func_a_kaze(param_list: list = None) -> bool:
                 # for idx in range(min(len(des), param_list[PORT_IN_NR_FEATURES])):
                 #     p_out_des.arr[idx][:] = des[idx]
 
-                p_out_des.arr = np.float32(des)
+                if des is not None:
+                    p_out_des.arr = np.float32(des)
 
                 file_to_save = os.path.join(APPL_SAVE_LOCATION, p_out_des.name)
 
@@ -235,7 +237,11 @@ def main_func_a_kaze(param_list: list = None) -> bool:
 
                 p_out_keypoints.set_valid()
 
-                log_to_file(len(des).__str__())
+                if des is None:
+                    log_to_file("0")
+                else:
+                    log_to_file(len(des).__str__())
+
             except BaseException as error:
                 log_error_to_console("A_KAZE JOB NOK: ", str(error))
                 log_to_file('')
@@ -564,7 +570,7 @@ def do_kaze_job(port_input_name: str, number_features: int = 1024,
     return port_kp_output, port_des_output, port_img_output
 
 
-def do_a_kaze_job(port_input_name: str, number_features: int = 1024,
+def do_a_kaze_job(port_input_name: str, number_features: int = 4*1024,
                   descriptor_type: int = cv2.AKAZE_DESCRIPTOR_MLDB, descriptor_size: int = 0, descriptor_channels: int = 3,
                   threshold: float = 0.001, nr_octaves: int = 4, nr_octave_layers: int = 4, diffusivity: int = cv2.KAZE_DIFF_PM_G1,
                   save_to_text: bool = True, save_to_npy: bool = True,
@@ -598,7 +604,7 @@ def do_a_kaze_job(port_input_name: str, number_features: int = 1024,
     :param port_img_output: Output port name for image
     :param level: pyramid level to calculate at
     :param wave_offset: port wave offset. If 0 it is in current wave.
-    :return: output image port name
+    :return: port_kp_output, port_des_output, port_img_output
     """
 
     input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
