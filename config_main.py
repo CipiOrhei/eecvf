@@ -1,11 +1,12 @@
 import sys
+import cv2
 
 """
 Module handles the configuration of the EECVF.
 Please do not change this file, only if necessary and service does not exist for that change.
 """
 
-CUDA_GPU = True
+CUDA_GPU = 0 != cv2.cuda.getCudaEnabledDeviceCount()
 WIN_OS = sys.platform.startswith('win')
 LINUX_OS = sys.platform.startswith('linux')
 

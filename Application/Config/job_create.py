@@ -4900,6 +4900,7 @@ def do_edge_label_job(port_input_name: str,
 
     if port_output_name is None:
         port_output_name = 'EDGE_LABELED_RGB_' + str(connectivity) + '_' + port_input_name
+    if port_output_label_name is None:
         port_output_label_name = 'EDGE_LABELED_' + str(connectivity) + '_' + port_input_name
 
     output_port_name_rgb = transform_port_name_lvl(name=port_output_name, lvl=level)
