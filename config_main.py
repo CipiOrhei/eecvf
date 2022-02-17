@@ -7,6 +7,7 @@ Please do not change this file, only if necessary and service does not exist for
 """
 
 CUDA_GPU = 0 != cv2.cuda.getCudaEnabledDeviceCount()
+IF_THINNING_LIB = False
 WIN_OS = sys.platform.startswith('win')
 LINUX_OS = sys.platform.startswith('linux')
 

@@ -1,4 +1,4 @@
-from config_main import CUDA_GPU
+from config_main import CUDA_GPU, IF_THINNING_LIB
 import importlib
 
 import Application.Jobs.get_image
@@ -11,7 +11,7 @@ import Application.Jobs.edge_gradient_magnitude
 import Application.Jobs.processing_image
 import Application.Jobs.kernels
 import Application.Jobs.edge_directional_magnitude
-if importlib.find_loader('thinning_py3') is not None:
+if IF_THINNING_LIB:
     import Application.Jobs.thinning
 import Application.Jobs.edge_second_order
 import Application.Jobs.morphological_operations
