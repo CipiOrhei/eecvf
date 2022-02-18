@@ -570,7 +570,7 @@ def do_kaze_job(port_input_name: str, number_features: int = 1024,
     return port_kp_output, port_des_output, port_img_output
 
 
-def do_a_kaze_job(port_input_name: str, number_features: int = 4*1024,
+def do_a_kaze_job(port_input_name: str, number_features: int = 1024,
                   descriptor_type: int = cv2.AKAZE_DESCRIPTOR_MLDB, descriptor_size: int = 0, descriptor_channels: int = 3,
                   threshold: float = 0.001, nr_octaves: int = 4, nr_octave_layers: int = 4, diffusivity: int = cv2.KAZE_DIFF_PM_G1,
                   save_to_text: bool = True, save_to_npy: bool = True,

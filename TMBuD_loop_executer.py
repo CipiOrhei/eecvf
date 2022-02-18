@@ -16,10 +16,10 @@ nOctaves_list = [6]
 nLayes_list = [3]
 thr_list = [0.8]
 thr_akaze_list = [0.0010]
-dictionarySize_list = [350]
+dictionarySize_list = [450]
 kernel_smoothing = [CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1]
 smoothing_strength = [0.9]
-use_gps = True
+use_gps = False
 distance_list = [100]
 
 total = len(desc_list) * len(diff_list) * len(desc_size_list) * len(nOctaves_list) * len(nLayes_list) * len(thr_list) * len(dictionarySize_list) * len(kernel_smoothing) * len(smoothing_strength) * len(distance_list) * len(thr_akaze_list)
@@ -36,8 +36,8 @@ for desc in desc_list:
                                 for kernel in kernel_smoothing:
                                     for st_kernel in smoothing_strength:
                                         for dist_w in distance_list:
-                                            os.system("python main_TMBuD_detection.py create_bow " + str(desc) + "\t" + str(diff) + "\t" + str(desc_size) + "\t" + str(nOctaves) + "\t" + str(nLayes) + "\t" + str(thr) + "\t" + str(thr_akaze) +
-                                                      "\t" + str(dict_size) + "\t" + str(kernel) + "\t" + str(st_kernel) + "\t" + str(use_gps) + "\t" + str(dist_w))
+                                            # os.system("python main_TMBuD_detection.py create_bow " + str(desc) + "\t" + str(diff) + "\t" + str(desc_size) + "\t" + str(nOctaves) + "\t" + str(nLayes) + "\t" + str(thr) + "\t" + str(thr_akaze) +
+                                            #           "\t" + str(dict_size) + "\t" + str(kernel) + "\t" + str(st_kernel) + "\t" + str(use_gps) + "\t" + str(dist_w))
 
                                             os.system("python main_TMBuD_detection.py inquiry " + str(desc) + "\t" + str(diff) + "\t" + str(desc_size) + "\t" + str(nOctaves) + "\t" + str(nLayes) + "\t" + str(thr) + "\t" + str(thr_akaze) +
                                                       "\t" + str(dict_size) + "\t" + str(kernel) + "\t" + str(st_kernel) + "\t" + str(use_gps) + "\t" + str(dist_w))
