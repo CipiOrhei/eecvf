@@ -14,7 +14,7 @@ matplotlib~=3.2.1
 numpy~=1.18.4
 numba~=0.51.0
 networkx
-# opencv-python~=4.2.0.34
+# opencv-python~=4.4.0
 opencv-contrib-python~=4.4.0
 Pillow~=7.1.2
 Pillow-PIL

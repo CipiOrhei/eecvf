@@ -19,7 +19,7 @@ def main():
     Main function of framework
     Please look in example_main for all functions you can use
     """
-    Application.set_input_video('TestData/test_video_heritage/Palatul Apelor.mp4')
+    Application.set_input_video('TestData/smoke_movies/car_camera_movie.mp4')
 
     Application.delete_folder_appl_out()
     Benchmarking.delete_folder_benchmark_out()
@@ -65,10 +65,11 @@ def main():
         , 'RAW_' + str(level)
     ]
 
-    Application.configure_show_pictures(ports_to_show=list_to_show, time_to_show=1)
-    # Application.configure_show_pictures(ports_to_show=['RAW_L0'], time_to_show=1)
+    Application.configure_show_pictures(ports_to_show=['RAW_L0'], time_to_show=1)
 
     Application.run_application()
+
+    Utils.close_files()
 
 
 if __name__ == "__main__":
