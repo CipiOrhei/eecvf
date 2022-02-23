@@ -7,6 +7,7 @@ Cython~=0.29.18
 decorator
 imageio
 imgaug==0.4.0
+geopy
 Keras~=2.3.1
 Keras-Applications
 Keras-Preprocessing
