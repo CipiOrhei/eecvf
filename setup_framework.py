@@ -18,4 +18,4 @@ if __name__ == '__main__':
     subprocess.call([py, '-m', 'pip', 'install', '--upgrade', 'pip'])
     subprocess.call([py, '-m', 'pip', 'install', 'numpy'])
     subprocess.call([py, '-m', 'pip', 'install', '-r', __install_list__])
-    subprocess.call([py, '-m', 'pip', 'install', 'opencv-contrib-python-headless~=4.4.0'])
+    subprocess.call([py, '-m', 'pip', 'install', 'opencv-contrib-python-headless~=4.5.1'])

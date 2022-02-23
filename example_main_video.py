@@ -65,7 +65,7 @@ def main():
         , 'RAW_' + str(level)
     ]
 
-    Application.configure_show_pictures(ports_to_show=['RAW_L0'], time_to_show=1)
+    Application.configure_show_pictures(ports_to_show=list_to_show, time_to_show=1)
 
     Application.run_application()
 

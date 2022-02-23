@@ -14,8 +14,8 @@ matplotlib~=3.2.1
 numpy~=1.18.4
 numba~=0.51.0
 networkx
-# opencv-python~=4.4.0
-opencv-contrib-python~=4.4.0
+# opencv-python~=4.5.0
+opencv-contrib-python~=4.5.0
 Pillow~=7.1.2
 Pillow-PIL
 pandas==1.1.5
@@ -27,7 +27,7 @@ tqdm~=4.46.0
 thinning_py3
 wheel
 theano
-cntk
+# cntk
 ###### Requirements with Version Specifiers ######
 #   See https://www.python.org/dev/peps/pep-0440/#version-specifiers
 tensorflow == 1.15.0
