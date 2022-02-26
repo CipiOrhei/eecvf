@@ -155,8 +155,8 @@ from Application.Config.job_create import do_image_adaptive_threshold_job
 ############################################################################################################################################
 # Skeletonization/thinning jobs
 ############################################################################################################################################
-if IF_THINNING_LIB:
-    from Application.Config.job_create import do_thinning_guo_hall_image_job
+# if IF_THINNING_LIB:
+#     from Application.Config.job_create import do_thinning_guo_hall_image_job
 ############################################################################################################################################
 # Line/edge connectivity jobs
 ############################################################################################################################################

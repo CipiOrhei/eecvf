@@ -11,8 +11,8 @@ import Application.Jobs.edge_gradient_magnitude
 import Application.Jobs.processing_image
 import Application.Jobs.kernels
 import Application.Jobs.edge_directional_magnitude
-if IF_THINNING_LIB:
-    import Application.Jobs.thinning
+# if IF_THINNING_LIB:
+#     import Application.Jobs.thinning
 import Application.Jobs.edge_second_order
 import Application.Jobs.morphological_operations
 import Application.Jobs.line_hough

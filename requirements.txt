@@ -24,14 +24,14 @@ scikit-image~=0.17.2
 scipy~=1.1.0
 six
 tqdm~=4.46.0
-thinning_py3
+#thinning_py3
 wheel
 theano
 # cntk
 ###### Requirements with Version Specifiers ######
 #   See https://www.python.org/dev/peps/pep-0440/#version-specifiers
-tensorflow == 1.15.0
-tensorflow-gpu == 1.15.0
+tensorflow ~= 1.15.0
+tensorflow-gpu
 #
 ###### Refer to other requirements files ######
 #
