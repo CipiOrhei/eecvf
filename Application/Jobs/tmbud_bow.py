@@ -413,8 +413,15 @@ def bow_zubud_flann_inquiry_main_func(param_list: list = None) -> bool:
 
         # Blue color in BGR
         color_box = (255, 255, 0)
+        # color_box = (155, 0, 0)
         color_text = (0, 255, 0)
+        # color_text = (155, 0, 0)
         color_features = (0, 0, 255)
+
+        # Line thickness of 2 px
+        thickness = 1
+
+
 
         for key in cluster_bow[param_list[PORT_IN_PORT_BOW]].list_clustered_bows.keys():
             try:
@@ -458,6 +465,7 @@ def bow_zubud_flann_inquiry_main_func(param_list: list = None) -> bool:
                     new_kp.append(return_kp_cv2_object(port_in_kp.arr[m.queryIdx]))
 
                 img1_miss_matched_kp = cv2.drawKeypoints(port_in_img.arr, new_kp, None, color=color_features, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+                # img1_miss_matched_kp = cv2.drawKeypoints(port_in_img.arr, [], None, color=color_features, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
                 file = open(param_list[PORT_LOCATION_CSV_LANDMARKS], "r")
                 # get dictionary fields from csv header
@@ -509,10 +517,6 @@ def bow_zubud_flann_inquiry_main_func(param_list: list = None) -> bool:
                         start_point = (int(min_left * 0.75), int(min_up * 0.85))
                         end_point = (int(max_right * 1.25), int(max_down * 1.15))
 
-
-                        # Line thickness of 2 px
-                        thickness = 1
-
                         port_out_img.arr[:] = cv2.rectangle(img=port_out_img.arr, pt1=start_point, pt2=end_point, color=color_box, thickness=thickness)
 
                 x = int(tmp[0][-4:])
@@ -563,8 +567,6 @@ def bow_zubud_flann_inquiry_main_func(param_list: list = None) -> bool:
                             start_point = (max(int(min_left * 0.75), 2), max(int(min_up * 0.85),2))
                             end_point = (min(int(max_right * 1.25), port_out_img.arr.shape[1] - 2) , min(int(max_down * 1.15), port_out_img.arr.shape[0]-2))
 
-                            # Line thickness of 2 px
-                            thickness = 1
 
                             port_out_img.arr[:] = cv2.rectangle(img=port_out_img.arr, pt1=start_point, pt2=end_point, color=color_box, thickness=thickness)
 

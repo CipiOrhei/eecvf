@@ -583,11 +583,11 @@ def main_bow_inquiry_movie(building_classes, desc, diff, desc_size, nOctaves, nL
     # # for L1
     # threshold_matching = 3
 
-    # Application.set_input_video(r'c:\repos\CM_dataset\movies\20200620_101159.mp4')
-    # file_csv = r'c:\repos\CM_dataset\movies\20200620_101159.csv'
-    # distance = 40
-    # # for L1
-    # threshold_matching = 2
+    Application.set_input_video(r'c:\repos\CM_dataset\movies\20200620_101159.mp4')
+    file_csv = r'c:\repos\CM_dataset\movies\20200620_101159.csv'
+    distance = 40
+    # for L1
+    threshold_matching = 2
 
     # Application.set_input_video(r'c:\repos\CM_dataset\movies\20200620_101333.mp4')
     # file_csv = r'c:\repos\CM_dataset\movies\20200620_101333.csv'
@@ -595,11 +595,17 @@ def main_bow_inquiry_movie(building_classes, desc, diff, desc_size, nOctaves, nL
     # # for L1
     # threshold_matching = 2
 
-    Application.set_input_video(r'c:\repos\CM_dataset\movies\20200620_111754.mp4')
-    file_csv = r'c:\repos\CM_dataset\movies\20200620_111754.csv'
-    distance = 60
-    # for L1
-    threshold_matching = 2
+    # Application.set_input_video(r'c:\repos\CM_dataset\movies\20200620_111754.mp4')
+    # file_csv = r'c:\repos\CM_dataset\movies\20200620_111754.csv'
+    # distance = 60
+    # # for L1
+    # threshold_matching = 2
+    #
+    # Application.set_input_video(r'c:\repos\CM_dataset\movies\20200620_104607.mp4')
+    # file_csv = r'c:\repos\CM_dataset\movies\20200620_104607.csv'
+    # distance = 110
+    # # for L1
+    # threshold_matching = 2
 
 
 
@@ -626,6 +632,7 @@ def main_bow_inquiry_movie(building_classes, desc, diff, desc_size, nOctaves, nL
     else:
         mask = None
 
+    # final = Application.do_tmbud_bow_inquiry_flann_job(port_to_inquiry_des=des, port_to_inquiry_kp=kp, port_to_inquire_img='RAW', level=level,
     final = Application.do_tmbud_bow_inquiry_flann_job(port_to_inquiry_des=des, port_to_inquiry_kp=kp, port_to_inquire_img=grey, level=level,
                                                        saved_to_npy=True, saved_to_text=False, number_classes=building_classes, save_img_detection=True,
                                                        flann_thr=thr, threshold_matching=threshold_matching, name_landmark_port=csv_landmark,
@@ -767,68 +774,68 @@ if __name__ == "__main__":
     # desc_list = [cv2.AKAZE_DESCRIPTOR_KAZE, cv2.AKAZE_DESCRIPTOR_KAZE_UPRIGHT, cv2.AKAZE_DESCRIPTOR_MLDB, cv2.AKAZE_DESCRIPTOR_MLDB_UPRIGHT]
     # diff_list = [cv2.KAZE_DIFF_PM_G1, cv2.KAZE_DIFF_PM_G2, cv2.KAZE_DIFF_CHARBONNIER, cv2.KAZE_DIFF_WEICKERT]
 
-    # print('Number of arguments:', len(sys.argv), 'arguments.')
-    # print('Argument List:', sys.argv)
-    # config = sys.argv[1]
-    # desc_list = int(sys.argv[2])
-    # diff_list = int(sys.argv[3])
-    # desc_size_list = int(sys.argv[4])
-    # nOctaves_list = int(sys.argv[5])
-    # nLayes_list = int(sys.argv[6])
-    # thr_list = float(sys.argv[7])
-    # thr_akaze_list = float(sys.argv[8])
-    # dictionarySize_list = int(sys.argv[9])
-    # kernel_smoothing = sys.argv[10]
-    # smoothing_strength = float(sys.argv[11])
-    # use_gps = bool(sys.argv[12])
-    # distance_list = float(sys.argv[13])
+    print('Number of arguments:', len(sys.argv), 'arguments.')
+    print('Argument List:', sys.argv)
+    config = sys.argv[1]
+    desc_list = int(sys.argv[2])
+    diff_list = int(sys.argv[3])
+    desc_size_list = int(sys.argv[4])
+    nOctaves_list = int(sys.argv[5])
+    nLayes_list = int(sys.argv[6])
+    thr_list = float(sys.argv[7])
+    thr_akaze_list = float(sys.argv[8])
+    dictionarySize_list = int(sys.argv[9])
+    kernel_smoothing = sys.argv[10]
+    smoothing_strength = float(sys.argv[11])
+    use_gps = bool(sys.argv[12])
+    distance_list = float(sys.argv[13])
 
-    desc_list = cv2.AKAZE_DESCRIPTOR_KAZE
-    diff_list = cv2.KAZE_DIFF_PM_G1
-    desc_size_list = 8
-    nOctaves_list = 6
-    nLayes_list = 3
-    thr_akaze_list = 0.001
-    thr_list = 0.8
-    dictionarySize_list = 450
-    kernel_smoothing = CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1
-    smoothing_strength = 0.9
-    use_gps = False
-    distance_list = 100
+    # desc_list = cv2.AKAZE_DESCRIPTOR_KAZE
+    # diff_list = cv2.KAZE_DIFF_PM_G1
+    # desc_size_list = 8
+    # nOctaves_list = 6
+    # nLayes_list = 3
+    # thr_akaze_list = 0.001
+    # thr_list = 0.8
+    # dictionarySize_list = 450
+    # kernel_smoothing = CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_7x7_1
+    # smoothing_strength = 0.9
+    # use_gps = False
+    # distance_list = 100
 
     pyramid_level = CONFIG.PYRAMID_LEVEL.LEVEL_1
     class_in = [0, 1, 2]
     class_out = [0, 1, 0]
 
     thr_match_procent = 1
-    tracking = False
+    tracking = True
     boxing = False
     overlay_semseg = True
 
     Utils.reopen_files()
 
-    # if config == 'create_bow':
+    if config == 'create_bow':
     # if True:
-    #     main_bow_create(building_classes=nr_classes, desc=desc_list, diff=diff_list, desc_size=desc_size_list,
-    #                     level=pyramid_level, kernel_smoothing=kernel_smoothing, smoothing_strength=smoothing_strength,
-    #                     nOctaves=nOctaves_list, nLayes=nLayes_list, thr=thr_list, thr_akaze=thr_akaze_list, dictionarySize=dictionarySize_list,
-    #                     class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, input_file_location=TRAIN_input_file, use_gps=use_gps, gps_file=train_csv_file)
-    #     Utils.reopen_files()
-
-    # if config == 'inquiry':
-    if True:
-        main_bow_inquiry(building_classes=nr_classes, desc=desc_list, diff=diff_list, desc_size=desc_size_list,
-                         level=pyramid_level, kernel_smoothing=kernel_smoothing, smoothing_strength=smoothing_strength,
-                         nOctaves=nOctaves_list, nLayes=nLayes_list, thr=thr_list, thr_akaze=thr_akaze_list, dictionarySize=dictionarySize_list,
-                         class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, gt_location=gt_location, tracking=tracking, boxing=boxing, roi=overlay_semseg,
-                         input_file_location=TEST_input_file, distance=distance_list, use_gps=use_gps, threshold_matching=thr_match_procent, csv_landmark=csv_landmark, gps_file=test_csv_file)
+        main_bow_create(building_classes=nr_classes, desc=desc_list, diff=diff_list, desc_size=desc_size_list,
+                        level=pyramid_level, kernel_smoothing=kernel_smoothing, smoothing_strength=smoothing_strength,
+                        nOctaves=nOctaves_list, nLayes=nLayes_list, thr=thr_list, thr_akaze=thr_akaze_list, dictionarySize=dictionarySize_list,
+                        class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, input_file_location=TRAIN_input_file, use_gps=use_gps, gps_file=train_csv_file)
         Utils.reopen_files()
 
     # if config == 'inquiry':
-    # # if True:
-    #     main_bow_inquiry_movie(building_classes=nr_classes, desc=desc_list, diff=diff_list, desc_size=desc_size_list,
-    #                            level=pyramid_level, kernel_smoothing=kernel_smoothing, smoothing_strength=smoothing_strength,
-    #                            nOctaves=nOctaves_list, nLayes=nLayes_list, thr=thr_list, thr_akaze=thr_akaze_list, dictionarySize=dictionarySize_list,
-    #                            class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, gt_location=gt_location, tracking=tracking, boxing=boxing, roi=overlay_semseg,
-    #                            input_file_location=TEST_input_file, distance=distance_list, use_gps=use_gps, threshold_matching=thr_match_procent, csv_landmark=csv_landmark, gps_file=test_csv_file)
+    # if True:
+    #     main_bow_inquiry(building_classes=nr_classes, desc=desc_list, diff=diff_list, desc_size=desc_size_list,
+    #                      level=pyramid_level, kernel_smoothing=kernel_smoothing, smoothing_strength=smoothing_strength,
+    #                      nOctaves=nOctaves_list, nLayes=nLayes_list, thr=thr_list, thr_akaze=thr_akaze_list, dictionarySize=dictionarySize_list,
+    #                      class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, gt_location=gt_location, tracking=tracking, boxing=boxing, roi=overlay_semseg,
+    #                      input_file_location=TEST_input_file, distance=distance_list, use_gps=use_gps, threshold_matching=thr_match_procent, csv_landmark=csv_landmark, gps_file=test_csv_file)
     #     Utils.reopen_files()
+
+    if config == 'inquiry':
+    # # if True:
+        main_bow_inquiry_movie(building_classes=nr_classes, desc=desc_list, diff=diff_list, desc_size=desc_size_list,
+                               level=pyramid_level, kernel_smoothing=kernel_smoothing, smoothing_strength=smoothing_strength,
+                               nOctaves=nOctaves_list, nLayes=nLayes_list, thr=thr_list, thr_akaze=thr_akaze_list, dictionarySize=dictionarySize_list,
+                               class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, gt_location=gt_location, tracking=tracking, boxing=boxing, roi=overlay_semseg,
+                               input_file_location=TEST_input_file, distance=distance_list, use_gps=use_gps, threshold_matching=thr_match_procent, csv_landmark=csv_landmark, gps_file=test_csv_file)
+        Utils.reopen_files()
