@@ -3,8 +3,6 @@ import matplotlib.pylab as plt
 import numpy as np
 
 
-
-
 def load_image_from_file(path):
     """
     load the image from a file located at path
@@ -156,6 +154,7 @@ def main():
     rbg = only_truecolors("TestData/labs/lab1/SKI27.png")
     save_pixels_to_image(rbg, "TestData/labs/lab1/SKI27.jpg")
     plt.imshow(rbg)
+    
 
     #3. Diplay the image on truecolors RGB
     car = load_image_from_file("TestData/labs/lab1/SKI27.jpg")
@@ -173,15 +172,16 @@ def main():
     car = load_image_from_file("TestData/labs/lab1/SKI27.jpg")
     another_car = transform_image(car, r = 10, g = 200, b = 45)
     save_pixels_to_image(another_car, "TestData/labs/lab1/SKI27_another.jpg")
+    
 
     #6. Make 20 different cars!
 
-    #8. What is wrong with you? Let the pixels not changed 
+    #7. What is wrong with you? Let the pixels not changed 
     #car = load_image_from_file("TestData/labs/lab1/SKI27.jpg")
     another_car = transform_image(car, r = 50, g = 20, b = 245)
     save_pixels_to_image(another_car, "TestData/labs/lab1/SKI27_another2.jpg")
 
-    #9. How can we see the RGB colors?
+    #8. How can we see the RGB colors?
     #car = load_image_from_file("TestData/labs/lab1/SKI27.jpg")
     color = "red"
     color_plane_car = filter_color(car, color)
@@ -195,17 +195,17 @@ def main():
     color_plane_car = filter_color(car, color)
     save_pixels_to_image(color_plane_car, "TestData/labs/lab1/SKI27_" + color + ".jpg")
 
-    #10. What is the greay scale image?
+    #9. What is the greay scale image?
     #car = load_image_from_file("TestData/labs/lab1/SKI27.jpg")
     grayscale_car = filter_gray(car)
     save_pixels_to_image(grayscale_car, "TestData/labs/lab1/SKI27_grayscale.jpg")
 
-    #11. What is and bitplane? How are they look like?
+    #10. What is and bitplane? How are they look like?
     bit_planes = plane_image(car)
     for index in range(len(bit_planes)):
         save_pixels_to_image(bit_planes[index], "TestData/labs/lab1/SKI27_bit_plane_"+ str(index) +".jpg")
 
-    #12. We need the image histogram? What's that?!
+    #11. We need the image histogram? What's that?!
     histogram(car)
 
 if __name__ == "__main__":
