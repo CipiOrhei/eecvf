@@ -726,13 +726,15 @@ def do_flip_image_job(port_input_name: str,
 
 
 def do_zoom_image_job(port_input_name: str,
-                      zoom_factor: float,
+                      zoom_factor: float, w_offset: int = 0, h_offset:int = 0,
                       do_interpolation: bool = True, port_output_name: str = None,
                       level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0, is_rgb: bool = False) -> str:
     """
     Function for zooming an image in or out.
     :param port_input_name: name of input port
     :param zoom_factor: zoom factor
+    :param w_offset: offset on width
+    :param h_offset: offset on height
     :param do_interpolation: zoom with interpolation
     :param port_output_name: name of output port
     :param wave_offset: port wave offset. If 0 it is in current wave.
@@ -743,7 +745,7 @@ def do_zoom_image_job(port_input_name: str,
     input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
 
     if port_output_name is None:
-        port_output_name = 'ZOOM_' + str(zoom_factor) + '_'
+        port_output_name = 'ZOOM_' + str(zoom_factor) + '_' + str(w_offset) + '_' + str(h_offset) + '_'
 
         if do_interpolation is False:
             port_output_name += 'NO_INTERPOLATION_'
@@ -754,7 +756,7 @@ def do_zoom_image_job(port_input_name: str,
     output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
 
     input_port_list = [input_port_name]
-    main_func_list = [input_port_name, wave_offset, zoom_factor, do_interpolation, output_port_name]
+    main_func_list = [input_port_name, wave_offset, zoom_factor, w_offset, h_offset, do_interpolation, output_port_name]
     output_port_list = [(output_port_name, output_port_size, 'B', True)]
 
     job_name = job_name_create(action='Zoom', input_list=input_port_list, wave_offset=[wave_offset], level=level,
