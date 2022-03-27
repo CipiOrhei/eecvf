@@ -571,11 +571,15 @@ def zoom_main(param_list: list = None) -> bool:
     # noinspection PyPep8Naming
     PORT_IN_ZOOM = 2
     # noinspection PyPep8Naming
-    PORT_IN_INTERPOLATION_ZOOM = 3
+    PORT_IN_W_OFFSET = 3
     # noinspection PyPep8Naming
-    PORT_OUT_IMG_POS = 4
+    PORT_IN_H_OFFSET = 4
+    # noinspection PyPep8Naming
+    PORT_IN_INTERPOLATION_ZOOM = 5
+    # noinspection PyPep8Naming
+    PORT_OUT_IMG_POS = 6
 
-    if len(param_list) != 5:
+    if len(param_list) != 7:
         log_error_to_console("ZOOM IMAGE JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
         return False
     else:
@@ -583,7 +587,8 @@ def zoom_main(param_list: list = None) -> bool:
         p_out = get_port_from_wave(name=param_list[PORT_OUT_IMG_POS])
 
         if p_in_image.is_valid() is True:
-            try:
+            # try:
+            if True:
                 h, w = p_in_image.arr.shape[:2]
                 zoom_tuple = (param_list[PORT_IN_ZOOM],) * 2 + (1,) * (p_in_image.arr.ndim - 2)
 
@@ -594,36 +599,35 @@ def zoom_main(param_list: list = None) -> bool:
                     interpolation_order = 0
                     interpolation_prefilter = False
 
-                new_h = np.ceil(param_list[PORT_IN_ZOOM] * h - 0.5)
-                new_w = np.ceil(param_list[PORT_IN_ZOOM] * w - 0.5)
-
-                top_h = int(abs(new_h - h) // 2)
-                top_w = int(abs(new_w - w) // 2)
-
                 # Zooming out
                 if param_list[PORT_IN_ZOOM] < 1.0:
                     # Bounding box of the zoomed-out image within the output array
+                    new_h = int(np.ceil(param_list[PORT_IN_ZOOM] * h - 0.5))
+                    new_w = int(np.ceil(param_list[PORT_IN_ZOOM] * w - 0.5))
                     # Zero-padding
+                    padding_w = (w - new_w) // 2
+                    padding_h = (h - new_h) // 2
                     out = np.zeros_like(p_in_image.arr)
-                    out[top_h:h - top_h, top_w:w - top_w] = ndimage.zoom(input=p_in_image.arr.copy(),
-                                                                         zoom=zoom_tuple,
-                                                                         order=interpolation_order, prefilter=interpolation_prefilter)
-                    p_out.arr[:] = out[:]
+                    out[padding_h:new_h + padding_h, padding_w:new_w + padding_w] = \
+                        ndimage.zoom(input=p_in_image.arr.copy(), zoom=zoom_tuple, order=interpolation_order, prefilter=interpolation_prefilter)
+                    p_out.arr[:,:] = out[:,:]
+                    # p_out.arr = out
                 # Zooming in
                 elif param_list[PORT_IN_ZOOM] > 1.0:
                     out = ndimage.zoom(input=p_in_image.arr.copy(),
                                        zoom=zoom_tuple,
                                        order=interpolation_order, prefilter=interpolation_prefilter)
 
-                    p_out.arr[:] = out[top_h:top_h + h, top_w:top_w + w]
+                    p_out.arr[:,:] = out[param_list[PORT_IN_H_OFFSET]:h + param_list[PORT_IN_H_OFFSET], param_list[PORT_IN_W_OFFSET]:w + param_list[PORT_IN_W_OFFSET]]
+
                 # If zoom_factor == 1, just return the input array
                 else:
                     p_out.arr[:] = p_in_image.arr
 
                 p_out.set_valid()
-            except BaseException as error:
-                log_error_to_console("FLIP IMAGE JOB NOK: ", str(error))
-                pass
+            # except BaseException as error:
+            #     log_error_to_console("FLIP IMAGE JOB NOK: ", str(error))
+            #     pass
         else:
             return False
 
