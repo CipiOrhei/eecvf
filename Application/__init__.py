@@ -233,6 +233,7 @@ from Application.Jobs.shaperning import do_histogram_equalization_job
 from Application.Jobs.shaperning import do_sharpen_filter_job
 from Application.Jobs.shaperning import do_unsharp_filter_job
 from Application.Jobs.shaperning import do_unsharp_filter_expanded_job
+from Application.Jobs.shaperning import do_unsharp_filter_dilated_2dwt_job
 ############################################################################################################################################
 # Get external data
 ############################################################################################################################################

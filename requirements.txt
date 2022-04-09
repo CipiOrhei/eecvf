@@ -17,12 +17,16 @@ numba~=0.51.0
 networkx
 # opencv-python~=4.2.0.34
 opencv-contrib-python~=4.4.0
+piq
 Pillow~=7.1.2
 Pillow-PIL
+PyWavelets
 scikit-image~=0.17.2
 scipy~=1.1.0
 six
 tqdm~=4.46.0
+torch
+torchvision
 thinning_py3
 wheel
 theano
