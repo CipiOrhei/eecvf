@@ -14,7 +14,7 @@ def main_paper():
 
     """
     Application.delete_folder_appl_out()
-    Application.set_input_image_folder('TestData/sharpnnes_test2')
+    Application.set_input_image_folder('TestData/sharpnnes_test')
     raw = Application.do_get_image_job('RAW')
     grey = Application.do_grayscale_transform_job(port_input_name='RAW')
 
@@ -48,19 +48,19 @@ def main_paper():
         eval_list[el] += '_L0'
 
     Benchmarking.run_SF_benchmark(input_location='Logs/application_results',
-                                   raw_image='TestData/sharpnnes_test2',
+                                   raw_image='TestData/sharpnnes_test',
                                    jobs_set=eval_list)
 
     Benchmarking.run_Entropy_benchmark(input_location='Logs/application_results',
-                                       raw_image='TestData/sharpnnes_test2',
+                                       raw_image='TestData/sharpnnes_test',
                                        jobs_set=eval_list)
 
     Benchmarking.run_RMSC_benchmark(input_location='Logs/application_results',
-                                    raw_image='TestData/sharpnnes_test2',
+                                    raw_image='TestData/sharpnnes_test',
                                     jobs_set=eval_list)
 
     Benchmarking.run_BRISQUE_benchmark(input_location='Logs/application_results',
-                                    raw_image='TestData/sharpnnes_test2',
+                                    raw_image='TestData/sharpnnes_test',
                                     jobs_set=eval_list)
 
     # list(name, list_to_eval, list_to_replace)

@@ -358,8 +358,12 @@ def main_um_dilated_2dwt(port_list: list = None) -> bool:
                     coeffs = LL, (LH, HL, HH)
                     inverse = pywt.idwt2(coeffs, port_list[PORT_WAVELENGT])
 
-                    inverse[inverse > 255] = 255
-                    inverse[inverse < 0] = 0
+
+
+                    # inverse[inverse > 255] = 255
+                    # inverse[inverse < 0] = 0
+
+                    inverse = cv2.normalize(src=inverse, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
 
                     p_out.arr[:] = inverse
                 else:
