@@ -13,3 +13,4 @@ from Benchmarking.Config.create_benchmark_job import run_CBIR_ZuBuD_benchmark
 from Benchmarking.CM_Benchmark.basic_benchmark.sf import run_SF_benchmark
 from Benchmarking.CM_Benchmark.basic_benchmark.entropy import run_Entropy_benchmark
 from Benchmarking.CM_Benchmark.basic_benchmark.rmsc import run_RMSC_benchmark
+from Benchmarking.CM_Benchmark.basic_benchmark.brisque import run_BRISQUE_benchmark
