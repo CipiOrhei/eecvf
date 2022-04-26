@@ -920,7 +920,7 @@ def do_pixelate_image_job(port_input_name: str,
 ############################################################################################################################################
 
 
-def do_matrix_difference_job(port_input_name_1: str, port_input_name_2: str,
+def do_matrix_difference_job(port_input_name_1: str, port_input_name_2: str, save_cmap: bool = False,
                              port_output_name: str = None, normalize_image: bool = True, result_is_image: bool = True,
                              wave_offset_port_1: int = 0, wave_offset_port_2: int = 0,
                              is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
@@ -932,6 +932,7 @@ def do_matrix_difference_job(port_input_name_1: str, port_input_name_2: str,
     :param wave_offset_port_2: port wave offset. If 0 it is in current wave.
     :param port_output_name: result matrix
     :param normalize_image: if we want the resulting image to be normalized
+    :param save_cmap: save heatmap of differences
     :param result_is_image: if the resulted port is an image. If the result is a value set to false.
     :param level:  pyramid level to calculate at
     :param is_rgb: if the output ports is rgb, 3 channels
@@ -946,9 +947,18 @@ def do_matrix_difference_job(port_input_name_1: str, port_input_name_2: str,
     output_port = transform_port_name_lvl(name=port_output_name, lvl=level)
     output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
 
+    if save_cmap is True:
+        port_output_name_cmap = 'CMAP_' + port_output_name
+
+        output_port_cmap = transform_port_name_lvl(name=port_output_name_cmap, lvl=level)
+        output_port_size_cmap = transform_port_size_lvl(lvl=level, rgb=True)
+
     input_port_list = [input_port_1, input_port_2]
-    main_func_list = [input_port_1, wave_offset_port_1, input_port_2, wave_offset_port_2, output_port, normalize_image]
+    main_func_list = [input_port_1, wave_offset_port_1, input_port_2, wave_offset_port_2, output_port, normalize_image, save_cmap]
     output_port_list = [(output_port, output_port_size, 'B', result_is_image)]
+
+    if save_cmap is True:
+        output_port_list.append((output_port_cmap, output_port_size_cmap, 'B', True))
 
     job_name = job_name_create(action='Difference', input_list=input_port_list, wave_offset=[wave_offset_port_1, wave_offset_port_2],
                                level=level)

@@ -42,8 +42,10 @@ def difference_2_matrix(param_list: list = None) -> bool:
     PORT_OUT_VAL_POS = 4
     # noinspection PyPep8Naming
     PORT_IN_NORMALIZE = 5
+    # noinspection PyPep8Naming
+    PORT_IN_CMAP = 6
 
-    if len(param_list) != 6:
+    if len(param_list) != 7:
         log_error_to_console("MATRIX DIFFERENCE CALCULATION INTENSITY JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
         return False
     else:
@@ -51,18 +53,46 @@ def difference_2_matrix(param_list: list = None) -> bool:
         p_in_2 = get_port_from_wave(name=param_list[PORT_IN_2_POS], wave_offset=param_list[PORT_IN_WAVE_2])
         p_out = get_port_from_wave(name=param_list[PORT_OUT_VAL_POS])
 
+        if param_list[PORT_IN_CMAP] is True:
+            p_out_cmap = get_port_from_wave(name='CMAP_' + param_list[PORT_OUT_VAL_POS])
+
         if p_in_1.is_valid() is True and p_in_2.is_valid() is True:
             if p_in_1.arr.shape == p_in_2.arr.shape:
-                try:
-                    img = cv2.subtract(src1=p_in_1.arr, src2=p_in_2.arr)
+                # try:
+                if True:
+                    img = cv2.subtract(src1=p_in_1.arr.astype('int32'), src2=p_in_2.arr.astype('int32'))
+
                     if param_list[PORT_IN_NORMALIZE] is True:
-                        ret, img = cv2.threshold(src=img, thresh=2, maxval=255, type=cv2.THRESH_BINARY)
+                        img = abs(img)
+
+                        img = cv2.normalize(src=img, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+                        # ret, img = cv2.threshold(src=img, thresh=2, maxval=255, type=cv2.THRESH_BINARY)
+
+                    if param_list[PORT_IN_CMAP] is True:
+                        import matplotlib.pyplot as plt
+                        # import color_utils
+                        # a colormap and a normalization instance
+                        cmap = plt.cm.cividis
+                        # cmap = plt.cm.bone
+                        norm = plt.Normalize(vmin=img.min(), vmax=img.max())
+
+                        # map the normalized data to colors
+                        # image is now RGBA (512x512x4)
+                        cmap_img = cmap(norm(img)).astype('float32')
+                        cmap_img = cv2.cvtColor(cmap_img, cv2.COLOR_RGBA2BGR)
+                        cmap_img = cv2.normalize(src=cmap_img, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+
+                        p_out_cmap.arr[:] = cmap_img[:]
+                        p_out_cmap.set_valid()
+
+                        # cv2.imshow('t', p_out_cmap.arr)
+                        # cv2.waitKey(0)
 
                     p_out.arr = img
                     p_out.set_valid()
-                except BaseException as error:
-                    log_error_to_console("MATRIX DIFFERENCE JOB NOK: ", str(error))
-                    pass
+                # except BaseException as error:
+                #     log_error_to_console("MATRIX DIFFERENCE JOB NOK: ", str(error))
+                #     pass
             else:
                 log_error_to_console("MATRIX DIFFERENCE INPUTS NOT SAME SHAPE", str(len(param_list)))
                 return False

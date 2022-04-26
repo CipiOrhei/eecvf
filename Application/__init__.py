@@ -234,6 +234,7 @@ from Application.Jobs.shaperning import do_sharpen_filter_job
 from Application.Jobs.shaperning import do_unsharp_filter_job
 from Application.Jobs.shaperning import do_unsharp_filter_expanded_job
 from Application.Jobs.shaperning import do_unsharp_filter_dilated_2dwt_job
+from Application.Jobs.shaperning import do_um_2dwt_fusion
 ############################################################################################################################################
 # Get external data
 ############################################################################################################################################
