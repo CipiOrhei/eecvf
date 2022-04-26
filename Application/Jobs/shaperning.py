@@ -27,7 +27,7 @@ Module handles sharpening algorithm for an image jobs for the APPL block.
 ############################################################################################################################################
 
 def um(img, kernel, strength):
-    lap = cv2.filter2D(src=img.copy(), ddepth=cv2.CV_64F, kernel=kernel)
+    lap = cv2.filter2D(src=img.copy(), ddepth=cv2.CV_64F, kernel=kernel).astype('int32')
     a_lap = strength * lap
     img = np.float64(img.copy())
     sharp = img - a_lap
@@ -269,6 +269,51 @@ def main_unsharp_filter_func_long(port_list: list = None) -> bool:
 
         return True
 
+from numba import jit
+
+@jit(nopython=True)
+def fusion_test(coef_list, octavs, fuison_logic):
+    LL = np.zeros_like(coef_list[0][0])
+    LH = np.zeros_like(coef_list[0][1][0])
+    HL = np.zeros_like(coef_list[0][1][1])
+    HH = np.zeros_like(coef_list[0][1][2])
+
+    for i in range(coef_list[0][1][0].shape[0]):
+        for j in range(coef_list[0][1][0].shape[1]):
+            l_ll = list()
+            l_lh = list()
+            l_hl = list()
+            l_hh = list()
+
+            for k in range(octavs):
+                l_ll.append(coef_list[k][0][i][j])
+                l_lh.append(coef_list[k][1][0][i][j])
+                l_hl.append(coef_list[k][1][1][i][j])
+                l_hh.append(coef_list[k][1][2][i][j])
+
+            # if port_list[PORT_FUSION_POS] == 'mean':
+            #     LL[i][j] = np.mean(l_ll)
+            #     LH[i][j] = np.mean(l_lh)
+            #     HL[i][j] = np.mean(l_hl)
+            #     HH[i][j] = np.mean(l_hh)
+            if fuison_logic == 'average':
+                LL[i][j] = sum(l_ll)/octavs
+                LH[i][j] = sum(l_lh)/octavs
+                HL[i][j] = sum(l_hl)/octavs
+                HH[i][j] = sum(l_hh)/octavs
+            elif fuison_logic == 'max':
+                LL[i][j] = max(l_ll)
+                LH[i][j] = max(l_lh)
+                HL[i][j] = max(l_hl)
+                HH[i][j] = max(l_hh)
+            elif fuison_logic == 'min':
+                LL[i][j] = min(l_ll)
+                LH[i][j] = min(l_lh)
+                HL[i][j] = min(l_hl)
+                HH[i][j] = min(l_hh)
+
+    return LL, (LH, HL, HH)
+
 
 def main_um_dilated_2dwt(port_list: list = None) -> bool:
     """
@@ -292,9 +337,11 @@ def main_um_dilated_2dwt(port_list: list = None) -> bool:
     PORT_WAVELENGT = 5
     # noinspection PyPep8Naming
     PORT_OUT_POS = 6
+    # noinspection PyPep8Naming
+    PORT_FUSION_POS = 7
 
     # check if param OK
-    if len(port_list) != 7:
+    if len(port_list) != 8:
         log_error_to_console("UM DILATED 2DWT JOB MAIN FUNCTION PARAM NOK", str(len(port_list)))
         return False
     else:
@@ -321,7 +368,7 @@ def main_um_dilated_2dwt(port_list: list = None) -> bool:
 
                     for l in range(port_list[PORT_FUSION_LVL]):
                         res_um = um(img=p_in.arr, kernel=dilate(kernel, l), strength=port_list[PORT_STREGHT_POS])
-                        coef_list.append(pywt.dwt2(res_um, port_list[PORT_WAVELENGT]))
+                        coef_list.append(pywt.dwt2(res_um.astype('int32'), port_list[PORT_WAVELENGT]))
 
                     LL = np.zeros_like(coef_list[0][0])
                     LH = np.zeros_like(coef_list[0][1][0])
@@ -341,33 +388,123 @@ def main_um_dilated_2dwt(port_list: list = None) -> bool:
                                 l_hl.append(coef_list[k][1][1][i][j])
                                 l_hh.append(coef_list[k][1][2][i][j])
 
-                            # LL[i][j] = np.mean(l_ll)
-                            # LH[i][j] = np.mean(l_lh)
-                            # HL[i][j] = np.mean(l_hl)
-                            # HH[i][j] = np.mean(l_hh)
+                            # if port_list[PORT_FUSION_POS] == 'mean':
+                            #     LL[i][j] = np.mean(l_ll)
+                            #     LH[i][j] = np.mean(l_lh)
+                            #     HL[i][j] = np.mean(l_hl)
+                            #     HH[i][j] = np.mean(l_hh)
+                            if port_list[PORT_FUSION_POS] == 'average':
+                                LL[i][j] = np.average(l_ll)
+                                LH[i][j] = np.average(l_lh)
+                                HL[i][j] = np.average(l_hl)
+                                HH[i][j] = np.average(l_hh)
+                            elif port_list[PORT_FUSION_POS] == 'max':
+                                LL[i][j] = max(l_ll)
+                                LH[i][j] = max(l_lh)
+                                HL[i][j] = max(l_hl)
+                                HH[i][j] = max(l_hh)
+                            elif port_list[PORT_FUSION_POS] == 'min':
+                                LL[i][j] = min(l_ll)
+                                LH[i][j] = min(l_lh)
+                                HL[i][j] = min(l_hl)
+                                HH[i][j] = min(l_hh)
 
-                            LL[i][j] = np.average(l_ll)
-                            LH[i][j] = np.average(l_lh)
-                            HL[i][j] = np.average(l_hl)
-                            HH[i][j] = np.average(l_hh)
-
-                            # LL[i][j] = max(l_ll)
-                            # LH[i][j] = max(l_lh)
-                            # HL[i][j] = max(l_hl)
-                            # HH[i][j] = max(l_hh)
                     coeffs = LL, (LH, HL, HH)
+
+                    # coeffs = fusion_test(coef_list=coef_list, octavs=port_list[PORT_FUSION_LVL], fuison_logic=port_list[PORT_FUSION_POS])
+
                     inverse = pywt.idwt2(coeffs, port_list[PORT_WAVELENGT])
-
-
-
-                    # inverse[inverse > 255] = 255
-                    # inverse[inverse < 0] = 0
 
                     inverse = cv2.normalize(src=inverse, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
 
                     p_out.arr[:] = inverse
                 else:
                     p_out.arr[:] = p_in.arr[:]
+                p_out.set_valid()
+            # except BaseException as error:
+            #     log_error_to_console("UM DILATED 2DWT JOB NOK: ", str(error))
+            #     pass
+        else:
+            return False
+
+        return True
+
+
+def main_um_2dwt_fusion(port_list: list = None) -> bool:
+    """
+    The Unsharp filter can be used to enhance the edges of an image.
+
+    :param port_list: Param needed list of port names [input1,  wave_offset, kernel_size, sigma, output]
+                      List of ports passed as parameters should be even. Every input picture should have a output port.
+    :return: True if the job executed OK.
+    """
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE_IMG = 1
+    # noinspection PyPep8Naming
+    PORT_O_POS = 2
+    # noinspection PyPep8Naming
+    PORT_M_POS = 3
+    # noinspection PyPep8Naming
+    PORT_K_LVL = 4
+    # noinspection PyPep8Naming
+    PORT_S_LVL = 5
+    # noinspection PyPep8Naming
+    PORT_WAVELET = 6
+    # noinspection PyPep8Naming
+    PORT_OUT_POS = 7
+
+    # check if param OK
+    if len(port_list) != 8:
+        log_error_to_console("UM 2DWT FUSION JOB MAIN FUNCTION PARAM NOK", str(len(port_list)))
+        return False
+    else:
+        p_in = get_port_from_wave(name=port_list[PORT_IN_POS], wave_offset=port_list[PORT_IN_WAVE_IMG])
+        p_out = get_port_from_wave(name=port_list[PORT_OUT_POS])
+
+        if p_in.is_valid() is True:
+            # try:
+            if True:
+                coef_list = list()
+                for octav in range(port_list[PORT_O_POS]):
+                    arg = port_list[PORT_S_LVL] * port_list[PORT_K_LVL] ** octav
+                    img_blur = cv2.GaussianBlur(src=p_in.arr.copy(), ksize=(0, 0), sigmaX=arg)
+
+                    res_um = (port_list[PORT_M_POS] + 1) * p_in.arr.copy().astype('int32') - port_list[PORT_M_POS] * img_blur.astype('int32')
+
+                    coef_list.append(pywt.dwt2(res_um, port_list[PORT_WAVELET]))
+
+                LL = np.zeros_like(coef_list[0][0])
+                LH = np.zeros_like(coef_list[0][1][0])
+                HL = np.zeros_like(coef_list[0][1][1])
+                HH = np.zeros_like(coef_list[0][1][2])
+
+                for i in range(coef_list[0][1][0].shape[0]):
+                    for j in range(coef_list[0][1][0].shape[1]):
+                        l_ll = list()
+                        l_lh = list()
+                        l_hl = list()
+                        l_hh = list()
+
+                        for k in range(port_list[PORT_O_POS]):
+                            l_ll.append(coef_list[k][0][i][j])
+                            l_lh.append(coef_list[k][1][0][i][j])
+                            l_hl.append(coef_list[k][1][1][i][j])
+                            l_hh.append(coef_list[k][1][2][i][j])
+
+                        LL[i][j] = max(l_ll)
+                        LH[i][j] = max(l_lh)
+                        HL[i][j] = max(l_hl)
+                        HH[i][j] = max(l_hh)
+
+                coeffs = LL, (LH, HL, HH)
+                inverse = pywt.idwt2(coeffs, port_list[PORT_WAVELET])
+
+                inverse = cv2.normalize(src=inverse, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+
+                p_out.arr[:] = inverse
+
                 p_out.set_valid()
             # except BaseException as error:
             #     log_error_to_console("UM DILATED 2DWT JOB NOK: ", str(error))
@@ -542,7 +679,7 @@ def do_unsharp_filter_expanded_job(port_input_name: str,  kernel: str, strenght:
     return port_output_name
 
 
-def do_unsharp_filter_dilated_2dwt_job(port_input_name: str,  kernel: str, strenght: float, levels_fusion: int, wave_lenght: str,
+def do_unsharp_filter_dilated_2dwt_job(port_input_name: str,  kernel: str, strenght: float, levels_fusion: int, wave_lenght: str, fusion_rule: str,
                                        port_output_name: str = None,
                                        wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
     """
@@ -573,13 +710,14 @@ def do_unsharp_filter_dilated_2dwt_job(port_input_name: str,  kernel: str, stren
             kernel = kernel.lower() + '_xy'
 
     if port_output_name is None:
-        port_output_name = 'UM_DILATED_2DWT_' + str(kernel).replace('.', '_') + '_S_' + str(strenght).replace('.', '_') + '_L_' + levels_fusion.__str__() + '_' + wave_lenght.upper() + '_' + port_input_name
+        port_output_name = 'UM_DILATED_2DWT_' + str(kernel).replace('.', '_') + '_S_' + str(strenght).replace('.', '_') + '_L_' + \
+                           levels_fusion.__str__() + '_' + wave_lenght.upper() + '_F_' + fusion_rule + '_' + port_input_name
 
     output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
     output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
 
     input_port_list = [input_port_name]
-    main_func_list = [input_port_name, wave_offset, kernel, strenght, levels_fusion, wave_lenght, output_port_name]
+    main_func_list = [input_port_name, wave_offset, kernel, strenght, levels_fusion, wave_lenght, output_port_name, fusion_rule]
     output_port_list = [(output_port_name, output_port_size, 'B', True)]
 
     job_name = job_name_create(action='UM dilated 2DWT', input_list=input_port_list, wave_offset=[wave_offset], level=level, Kernel=str(kernel),
@@ -591,6 +729,57 @@ def do_unsharp_filter_dilated_2dwt_job(port_input_name: str,  kernel: str, stren
                                   max_wave=wave_offset,
                                   init_func_name='init_func_global', init_func_param=None,
                                   main_func_name='main_um_dilated_2dwt',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output_name
+
+
+def do_um_2dwt_fusion(port_input_name: str,  octaves: int, m: int, k: float, s: float, wavelet: str,
+                                       port_output_name: str = None,
+                                       wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
+    """
+    The proposed approach uses a multi-scale scheme and a wavelet based fusion algorithm. Specifically, the input image is initially processed by a cluster
+    of un-sharp filters with different variance. The final image is then obtained with the aid of wavelet fusion. The application of the unsharp filters with
+    different size Gaussian filters emphasizes important information in different frequency bands. It is shown that the proposed technique can be used as a
+    preprocessing stage to general image fusion approaches. The quality of the resulting images is evaluated using three different sharpening indices.
+    https://ieeexplore.ieee.org/document/6916146
+    :param port_input_name: name of input port
+    :param wave_offset: port wave offset. If 0 it is in current wave.
+    :param octaves: number of octaves
+    :param m: variable that controls the amount of smoothing with typical values in the range [1,2]
+    :param k: coefficient to differ between two successive filters
+    :param s: Gaussian filters standard deviation
+    :param wavelet: wavelet to use ['haar', 'db4', 'bior3.5']
+    :param port_output_name: name of output port
+    :param level: pyramid level to calculate at
+    :param is_rgb: if the output ports is rgb, 3 channels
+    return port_output_name
+    """
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    if port_output_name is None:
+        port_output_name = 'UM_2DWT_FUSION_O_' + str(octaves).replace('.', '_') +\
+                           '_m_' + str(m) + '_k_' + str(k).replace('.', '_') + '_s_' + str(s) + '_' + wavelet.upper() + '_' + port_input_name
+
+    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, octaves, m, k, s, wavelet, output_port_name]
+    output_port_list = [(output_port_name, output_port_size, 'B', True)]
+
+    job_name = job_name_create(action='UM dilated 2DWT', input_list=input_port_list, wave_offset=[wave_offset], level=level, octaves=str(octaves),
+                               m=str(m).replace('.', '_'), k=str(k).replace('.', '_'), s=str(s).replace('.', '_'), wavelet=wavelet)
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  max_wave=wave_offset,
+                                  init_func_name='init_func_global', init_func_param=None,
+                                  main_func_name='main_um_2dwt_fusion',
                                   main_func_param=main_func_list,
                                   output_ports=output_port_list)
 
