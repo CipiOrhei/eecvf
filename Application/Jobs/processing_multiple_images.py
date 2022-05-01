@@ -76,6 +76,9 @@ def difference_2_matrix(param_list: list = None) -> bool:
                         # cmap = plt.cm.bone
                         norm = plt.Normalize(vmin=img.min(), vmax=img.max())
 
+                        if len(img.shape) == 3:
+                            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
                         # map the normalized data to colors
                         # image is now RGBA (512x512x4)
                         cmap_img = cmap(norm(img)).astype('float32')
