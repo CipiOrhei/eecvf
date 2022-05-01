@@ -280,37 +280,17 @@ def fusion_test(coef_list, octavs, fuison_logic):
 
     for i in range(coef_list[0][1][0].shape[0]):
         for j in range(coef_list[0][1][0].shape[1]):
-            l_ll = list()
-            l_lh = list()
-            l_hl = list()
-            l_hh = list()
-
             for k in range(octavs):
-                l_ll.append(coef_list[k][0][i][j])
-                l_lh.append(coef_list[k][1][0][i][j])
-                l_hl.append(coef_list[k][1][1][i][j])
-                l_hh.append(coef_list[k][1][2][i][j])
+                param = 1
+                LL[i][j] += coef_list[k][0][i][j] * (param)
+                LH[i][j] += coef_list[k][1][0][i][j] * (param)
+                HL[i][j] += coef_list[k][1][1][i][j] * (param)
+                HH[i][j] += coef_list[k][1][2][i][j] * (param)
 
-            # if port_list[PORT_FUSION_POS] == 'mean':
-            #     LL[i][j] = np.mean(l_ll)
-            #     LH[i][j] = np.mean(l_lh)
-            #     HL[i][j] = np.mean(l_hl)
-            #     HH[i][j] = np.mean(l_hh)
-            if fuison_logic == 'average':
-                LL[i][j] = sum(l_ll)/octavs
-                LH[i][j] = sum(l_lh)/octavs
-                HL[i][j] = sum(l_hl)/octavs
-                HH[i][j] = sum(l_hh)/octavs
-            elif fuison_logic == 'max':
-                LL[i][j] = max(l_ll)
-                LH[i][j] = max(l_lh)
-                HL[i][j] = max(l_hl)
-                HH[i][j] = max(l_hh)
-            elif fuison_logic == 'min':
-                LL[i][j] = min(l_ll)
-                LH[i][j] = min(l_lh)
-                HL[i][j] = min(l_hl)
-                HH[i][j] = min(l_hh)
+            LL[i][j] /= octavs
+            LH[i][j] /= octavs
+            HL[i][j] /= octavs
+            HH[i][j] /= octavs
 
     return LL, (LH, HL, HH)
 
@@ -366,56 +346,27 @@ def main_um_dilated_2dwt(port_list: list = None) -> bool:
 
                     coef_list = list()
 
+                    in_img = p_in.arr.copy()
+
+                    if len(p_in.arr.shape) == 3:
+                        img_ycbcr = cv2.cvtColor(p_in.arr, cv2.COLOR_BGR2YCR_CB)
+                        in_img = img_ycbcr[:, :, 0]
+
                     for l in range(port_list[PORT_FUSION_LVL]):
-                        res_um = um(img=p_in.arr, kernel=dilate(kernel, l), strength=port_list[PORT_STREGHT_POS])
+                        res_um = um(img=in_img, kernel=dilate(kernel, l), strength=port_list[PORT_STREGHT_POS])
                         coef_list.append(pywt.dwt2(res_um.astype('int32'), port_list[PORT_WAVELENGT]))
 
-                    LL = np.zeros_like(coef_list[0][0])
-                    LH = np.zeros_like(coef_list[0][1][0])
-                    HL = np.zeros_like(coef_list[0][1][1])
-                    HH = np.zeros_like(coef_list[0][1][2])
 
-                    for i in range(coef_list[0][1][0].shape[0]):
-                        for j in range(coef_list[0][1][0].shape[1]):
-                            l_ll = list()
-                            l_lh = list()
-                            l_hl = list()
-                            l_hh = list()
-
-                            for k in range(port_list[PORT_FUSION_LVL]):
-                                l_ll.append(coef_list[k][0][i][j])
-                                l_lh.append(coef_list[k][1][0][i][j])
-                                l_hl.append(coef_list[k][1][1][i][j])
-                                l_hh.append(coef_list[k][1][2][i][j])
-
-                            # if port_list[PORT_FUSION_POS] == 'mean':
-                            #     LL[i][j] = np.mean(l_ll)
-                            #     LH[i][j] = np.mean(l_lh)
-                            #     HL[i][j] = np.mean(l_hl)
-                            #     HH[i][j] = np.mean(l_hh)
-                            if port_list[PORT_FUSION_POS] == 'average':
-                                LL[i][j] = np.average(l_ll)
-                                LH[i][j] = np.average(l_lh)
-                                HL[i][j] = np.average(l_hl)
-                                HH[i][j] = np.average(l_hh)
-                            elif port_list[PORT_FUSION_POS] == 'max':
-                                LL[i][j] = max(l_ll)
-                                LH[i][j] = max(l_lh)
-                                HL[i][j] = max(l_hl)
-                                HH[i][j] = max(l_hh)
-                            elif port_list[PORT_FUSION_POS] == 'min':
-                                LL[i][j] = min(l_ll)
-                                LH[i][j] = min(l_lh)
-                                HL[i][j] = min(l_hl)
-                                HH[i][j] = min(l_hh)
-
-                    coeffs = LL, (LH, HL, HH)
-
-                    # coeffs = fusion_test(coef_list=coef_list, octavs=port_list[PORT_FUSION_LVL], fuison_logic=port_list[PORT_FUSION_POS])
+                    coeffs = fusion_test(coef_list=coef_list, octavs=port_list[PORT_FUSION_LVL], fuison_logic=port_list[PORT_FUSION_POS])
 
                     inverse = pywt.idwt2(coeffs, port_list[PORT_WAVELENGT])
 
                     inverse = cv2.normalize(src=inverse, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+
+                    if len(p_in.arr.shape) == 3:
+                        img_ycbcr[:, :, 0] = inverse
+
+                        inverse = cv2.cvtColor(img_ycbcr, cv2.COLOR_YCR_CB2BGR)
 
                     p_out.arr[:] = inverse
                 else:
@@ -428,6 +379,34 @@ def main_um_dilated_2dwt(port_list: list = None) -> bool:
             return False
 
         return True
+
+
+@jit(nopython=True)
+def fusion_max(coef_list, octavs):
+    LL = np.zeros_like(coef_list[0][0])
+    LH = np.zeros_like(coef_list[0][1][0])
+    HL = np.zeros_like(coef_list[0][1][1])
+    HH = np.zeros_like(coef_list[0][1][2])
+
+    for i in range(coef_list[0][1][0].shape[0]):
+        for j in range(coef_list[0][1][0].shape[1]):
+            l_ll = list()
+            l_lh = list()
+            l_hl = list()
+            l_hh = list()
+
+            for k in range(octavs):
+                l_ll.append(coef_list[k][0][i][j])
+                l_lh.append(coef_list[k][1][0][i][j])
+                l_hl.append(coef_list[k][1][1][i][j])
+                l_hh.append(coef_list[k][1][2][i][j])
+
+            LL[i][j] = max(l_ll)
+            LH[i][j] = max(l_lh)
+            HL[i][j] = max(l_hl)
+            HH[i][j] = max(l_hh)
+
+    return LL, (LH, HL, HH)
 
 
 def main_um_2dwt_fusion(port_list: list = None) -> bool:
@@ -467,41 +446,32 @@ def main_um_2dwt_fusion(port_list: list = None) -> bool:
             # try:
             if True:
                 coef_list = list()
+
+                in_img = p_in.arr.copy()
+
+                if len(p_in.arr.shape) == 3 :
+                    img_ycbcr = cv2.cvtColor(p_in.arr, cv2.COLOR_BGR2YCR_CB)
+                    in_img = img_ycbcr[:,:,0]
+
                 for octav in range(port_list[PORT_O_POS]):
                     arg = port_list[PORT_S_LVL] * port_list[PORT_K_LVL] ** octav
-                    img_blur = cv2.GaussianBlur(src=p_in.arr.copy(), ksize=(0, 0), sigmaX=arg)
+                    img_blur = cv2.GaussianBlur(src=in_img.copy(), ksize=(0, 0), sigmaX=arg)
 
-                    res_um = (port_list[PORT_M_POS] + 1) * p_in.arr.copy().astype('int32') - port_list[PORT_M_POS] * img_blur.astype('int32')
+                    res_um = (port_list[PORT_M_POS] + 1) * in_img.copy().astype('int32') - port_list[PORT_M_POS] * img_blur.astype('int32')
 
                     coef_list.append(pywt.dwt2(res_um, port_list[PORT_WAVELET]))
 
-                LL = np.zeros_like(coef_list[0][0])
-                LH = np.zeros_like(coef_list[0][1][0])
-                HL = np.zeros_like(coef_list[0][1][1])
-                HH = np.zeros_like(coef_list[0][1][2])
 
-                for i in range(coef_list[0][1][0].shape[0]):
-                    for j in range(coef_list[0][1][0].shape[1]):
-                        l_ll = list()
-                        l_lh = list()
-                        l_hl = list()
-                        l_hh = list()
-
-                        for k in range(port_list[PORT_O_POS]):
-                            l_ll.append(coef_list[k][0][i][j])
-                            l_lh.append(coef_list[k][1][0][i][j])
-                            l_hl.append(coef_list[k][1][1][i][j])
-                            l_hh.append(coef_list[k][1][2][i][j])
-
-                        LL[i][j] = max(l_ll)
-                        LH[i][j] = max(l_lh)
-                        HL[i][j] = max(l_hl)
-                        HH[i][j] = max(l_hh)
-
-                coeffs = LL, (LH, HL, HH)
+                coeffs = fusion_max(coef_list, port_list[PORT_O_POS])
                 inverse = pywt.idwt2(coeffs, port_list[PORT_WAVELET])
 
                 inverse = cv2.normalize(src=inverse, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+
+                if len(p_in.arr.shape) == 3:
+                    img_ycbcr[:, :, 0] = inverse
+
+                    inverse = cv2.cvtColor(img_ycbcr, cv2.COLOR_YCR_CB2BGR)
+
 
                 p_out.arr[:] = inverse
 
