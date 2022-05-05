@@ -1,7 +1,7 @@
 # noinspection PyPackageRequirements
 from typing import Tuple
 
-import thinning
+# import thinning
 # Do not delete used indirectly
 # noinspection PyUnresolvedReferences
 from Application.Frame import transferJobPorts
