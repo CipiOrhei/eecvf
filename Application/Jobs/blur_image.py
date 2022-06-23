@@ -9,7 +9,6 @@ from numba import jit
 from Application.Frame.global_variables import JobInitStateReturn
 from Application.Frame.transferJobPorts import get_port_from_wave
 from Utils.log_handler import log_to_console, log_to_file, log_error_to_console
-
 from Application.Config.create_config import jobs_dict, create_dictionary_element
 from config_main import PYRAMID_LEVEL
 from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create, get_module_name_from_file

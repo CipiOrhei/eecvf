@@ -58,13 +58,21 @@ def main_func(param_list: list = None) -> bool:
             try:
                 tmp = np.zeros(port_out_img.arr.shape)
 
-                if len(port_in.arr.shape) == 3:
+                if (len(port_in.arr.shape) == 3) and (type(param_list[PORT_IN_CLASS_INPUT][0]) == type(list())):
                     for el in range(len(param_list[PORT_IN_CLASS_INPUT])):
                         t1 = (port_in.arr[:, :, 0] == param_list[PORT_IN_CLASS_INPUT][el][0])
                         t2 = (port_in.arr[:, :, 1] == param_list[PORT_IN_CLASS_INPUT][el][1])
                         t3 = (port_in.arr[:, :, 2] == param_list[PORT_IN_CLASS_INPUT][el][2])
 
                         tmp += np.bitwise_and(t1, np.bitwise_and(t2, t3)) * param_list[PORT_IN_CLASS_OUTPUT][el]
+
+                elif len(port_in.arr.shape) == 3 and len(port_out_img.arr.shape) == 2:
+                    for el in range(len(param_list[PORT_IN_CLASS_INPUT])):
+                        r = port_in.arr[:,:,0]
+                        r = r == param_list[PORT_IN_CLASS_INPUT][el]
+                        r = r[:] * param_list[PORT_IN_CLASS_OUTPUT][el]
+                        tmp += (port_in.arr[:,:,0] == param_list[PORT_IN_CLASS_INPUT][el]) * param_list[PORT_IN_CLASS_OUTPUT][el]
+
                 elif len(port_in.arr.shape) == 2 and len(port_out_img.arr.shape) == 2:
                     for el in range(len(param_list[PORT_IN_CLASS_INPUT])):
                         tmp += (port_in.arr == param_list[PORT_IN_CLASS_INPUT][el]) * param_list[PORT_IN_CLASS_OUTPUT][el]

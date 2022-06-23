@@ -18,12 +18,12 @@ networkx
 # opencv-python~=4.5.0
 opencv-contrib-python~=4.5.0
 piq
+piq
 Pillow~=7.1.2
 Pillow-PIL
 PyWavelets
 pandas==1.1.5
-seaborn==0.11.2scikit-image~=0.17.2
-scipy~=1.1.0
+seaborn==0.11.2scipy~=1.1.0
 six
 tqdm~=4.46.0
 torch
