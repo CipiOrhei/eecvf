@@ -69,7 +69,7 @@ def run_CM_benchmark_BRISQUE():
                 else:
                     path_img_al = os.path.join(config_main.BENCHMARK_INPUT_LOCATION, set, file + img_extension)
 
-                img_al = cv2.imread(path_img_al)
+                img_al = cv2.imread(path_img_al, cv2.IMREAD_GRAYSCALE)
 
                 try:
                     # Define a transform to convert the image to tensor
@@ -78,8 +78,7 @@ def run_CM_benchmark_BRISQUE():
                     # Convert the image to PyTorch tensor
                     tensor = transform(img_al)
                     tensor = torch.unsqueeze(tensor, dim=0)
-
-                    val = min(piq.brisque(tensor).item() / 100, 1.0)
+                    val = piq.brisque(tensor, data_range=255).item()
 
                     avg += val
                     count += 1

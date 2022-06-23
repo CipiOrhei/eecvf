@@ -278,19 +278,53 @@ def fusion_test(coef_list, octavs, fuison_logic):
     HL = np.zeros_like(coef_list[0][1][1])
     HH = np.zeros_like(coef_list[0][1][2])
 
-    for i in range(coef_list[0][1][0].shape[0]):
-        for j in range(coef_list[0][1][0].shape[1]):
-            for k in range(octavs):
-                param = 1
-                LL[i][j] += coef_list[k][0][i][j] * (param)
-                LH[i][j] += coef_list[k][1][0][i][j] * (param)
-                HL[i][j] += coef_list[k][1][1][i][j] * (param)
-                HH[i][j] += coef_list[k][1][2][i][j] * (param)
+    if fuison_logic == 'max':
+        LL, (LH, HL, HH) = fusion_max(coef_list, octavs)
 
-            LL[i][j] /= octavs
-            LH[i][j] /= octavs
-            HL[i][j] /= octavs
-            HH[i][j] /= octavs
+    elif fuison_logic == 'average_1':
+        for i in range(coef_list[0][1][0].shape[0]):
+            for j in range(coef_list[0][1][0].shape[1]):
+                for k in range(octavs):
+                    param = k
+                    LL[i][j] += coef_list[k][0][i][j] * (param)
+                    LH[i][j] += coef_list[k][1][0][i][j] * (param)
+                    HL[i][j] += coef_list[k][1][1][i][j] * (param)
+                    HH[i][j] += coef_list[k][1][2][i][j] * (param)
+
+                LL[i][j] /= octavs
+                LH[i][j] /= octavs
+                HL[i][j] /= octavs
+                HH[i][j] /= octavs
+
+    elif fuison_logic == 'average_2':
+        for i in range(coef_list[0][1][0].shape[0]):
+            for j in range(coef_list[0][1][0].shape[1]):
+                for k in range(octavs):
+                    param = octavs - k
+                    LL[i][j] += coef_list[k][0][i][j] * (param)
+                    LH[i][j] += coef_list[k][1][0][i][j] * (param)
+                    HL[i][j] += coef_list[k][1][1][i][j] * (param)
+                    HH[i][j] += coef_list[k][1][2][i][j] * (param)
+
+                LL[i][j] /= octavs
+                LH[i][j] /= octavs
+                HL[i][j] /= octavs
+                HH[i][j] /= octavs
+
+    elif fuison_logic == 'average_3':
+        for i in range(coef_list[0][1][0].shape[0]):
+            for j in range(coef_list[0][1][0].shape[1]):
+                for k in range(octavs):
+                    param = 1
+                    LL[i][j] += coef_list[k][0][i][j] * (param)
+                    LH[i][j] += coef_list[k][1][0][i][j] * (param)
+                    HL[i][j] += coef_list[k][1][1][i][j] * (param)
+                    HH[i][j] += coef_list[k][1][2][i][j] * (param)
+
+                LL[i][j] /= octavs
+                LH[i][j] /= octavs
+                HL[i][j] /= octavs
+                HH[i][j] /= octavs
 
     return LL, (LH, HL, HH)
 
@@ -732,7 +766,7 @@ def do_um_2dwt_fusion(port_input_name: str,  octaves: int, m: int, k: float, s: 
 
     if port_output_name is None:
         port_output_name = 'UM_2DWT_FUSION_O_' + str(octaves).replace('.', '_') +\
-                           '_m_' + str(m) + '_k_' + str(k).replace('.', '_') + '_s_' + str(s) + '_' + wavelet.upper() + '_' + port_input_name
+                           '_m_' + str(m) + '_k_' + str(k).replace('.', '_') + '_s_' + str(s).replace('.', '_') + '_' + wavelet.upper() + '_' + port_input_name
 
     output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
     output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
