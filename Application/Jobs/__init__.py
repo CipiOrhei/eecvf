@@ -27,6 +27,7 @@ import Application.Jobs.image_cube
 import Application.Jobs.bow
 import Application.Jobs.tmbud_bow
 import Application.Jobs.shaperning
-import Application.Jobs.external_dataif CUDA_GPU:
+import Application.Jobs.external_data
+if CUDA_GPU:
     import Application.Jobs.u_net
     import Application.Jobs.semseg

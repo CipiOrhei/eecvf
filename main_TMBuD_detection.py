@@ -13,7 +13,14 @@ import os
 import sys
 
 """
-TBD
+This module contains the code used for the following paper:
+  title={Semantic aware urban landmark detection system},
+  author={Orhei, Ciprian and Vasiu, Radu},
+  booktitle={he Second International Conference on Computational Methods and Applications in Engineerin (ICCMAE) 2022},
+  pages={--},
+  year={2022},
+  organization={--}
+
 """
 
 def prepare_dataset_labels(dataset_in, dataset_out, LabelMe_COLORS, LabelMe_BDT_CORRELATION, BDT_COLORS, BDT_CLASSES):

@@ -8,6 +8,17 @@ import config_main as CONFIG
 # noinspection PyUnresolvedReferences
 import Utils
 
+"""
+This module contains the code used for the following paper:
+  title={Image sharpening using dilated filters},
+  author={Orhei, Ciprian and Vasiu, Radu},
+  booktitle={16th International Symposium on Applied Computational Intelligence and Informatics (SACI)},
+  pages={--},
+  year={2022},
+  organization={IEEE}
+
+"""
+
 def main():
     """
 
@@ -140,9 +151,9 @@ def main_paper():
     eval_list.append(raw)
     eval_list.append(grey)
 
-    # for (input, is_rgb) in ([raw, True], [grey, False]):
+    for (input, is_rgb) in ([raw, True], [grey, False]):
     # for (input, is_rgb) in ([grey, False],):
-    for (input, is_rgb) in ([raw, True],):
+    # for (input, is_rgb) in ([raw, True],):
         eval_list.append(Application.do_sharpen_filter_job(port_input_name=input, is_rgb=is_rgb, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_1))
         eval_list.append(Application.do_sharpen_filter_job(port_input_name=input, is_rgb=is_rgb, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_5x5_1))
         eval_list.append(Application.do_sharpen_filter_job(port_input_name=input, is_rgb=is_rgb, kernel=CONFIG.FILTERS_SECOND_ORDER.LAPLACE_DILATED_5x5_1))
@@ -154,7 +165,11 @@ def main_paper():
     for el in eval_list:
         Application.do_histogram_job(port_input_name=el)
         Application.do_mean_pixel_image_job(port_input_name=el)
-        Application.do_zoom_image_job(port_input_name=el, zoom_factor=2, do_interpolation=True, is_rgb=True)
+        if 'GRAY' in el :
+            is_rgb = False
+        else:
+            is_rgb = True
+        Application.do_zoom_image_job(port_input_name=el, zoom_factor=2, do_interpolation=True, is_rgb=is_rgb)
 
     Application.create_config_file()
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
