@@ -6,7 +6,7 @@ Module handles the configuration of the EECVF.
 Please do not change this file, only if necessary and service does not exist for that change.
 """
 
-CUDA_GPU = 0 != cv2.cuda.getCudaEnabledDeviceCount()
+CUDA_GPU = True
 IF_THINNING_LIB = False
 WIN_OS = sys.platform.startswith('win')
 LINUX_OS = sys.platform.startswith('linux')

@@ -14,13 +14,10 @@ import sys
 
 """
 This module contains the code used for the following paper:
-  title={Semantic aware urban landmark detection system},
-  author={Orhei, Ciprian and Vasiu, Radu},
-  booktitle={he Second International Conference on Computational Methods and Applications in Engineerin (ICCMAE) 2022},
-  pages={--},
-  year={2022},
-  organization={--}
-
+  author  = "Orhei, Ciprian",
+  title   = "Urban Landmark Detection Using Computer Vision",
+  school  = "Politehnica University of Timi\c{s}oara",
+  year    = "2022"
 """
 
 def prepare_dataset_labels(dataset_in, dataset_out, LabelMe_COLORS, LabelMe_BDT_CORRELATION, BDT_COLORS, BDT_CLASSES):
@@ -432,7 +429,8 @@ def main_bow_create(building_classes, desc, diff, desc_size, nOctaves, nLayes, l
 
     binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out, level=level, port_output_name='ROI_RAW')
 
-    kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=binary_mask,
+    # kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=binary_mask,
+    kp, des, img = Application.do_a_kaze_job(port_input_name=grey, descriptor_channels=1, mask_port_name=grey,
                                              descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff, save_to_text=False,
                                              threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes, level=level)
 
@@ -440,8 +438,8 @@ def main_bow_create(building_classes, desc, diff, desc_size, nOctaves, nLayes, l
                                  number_classes=building_classes, level=level)
 
     Application.create_config_file()
-    # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save='ALL')
-    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save=[])
+    Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save='ALL')
+    # Application.configure_save_pictures(location='DEFAULT', job_name_in_port=True, ports_to_save=[])
     Application.run_application()
 
     Utils.close_files()
@@ -500,7 +498,8 @@ def main_bow_inquiry(building_classes, desc, diff, desc_size, nOctaves, nLayes, 
 
     binary_mask = Application.do_class_correlation(port_input_name=semseg_image, class_list_in=class_in, class_list_out=class_out, level=level, port_output_name='ROI_RAW')
 
-    kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=binary_mask, number_features=10*1024,
+    # kp, des, img = Application.do_a_kaze_job(port_input_name=grey_smooth, descriptor_channels=1, mask_port_name=binary_mask, number_features=10*1024,
+    kp, des, img = Application.do_a_kaze_job(port_input_name=grey, descriptor_channels=1, mask_port_name=grey, number_features=10*1024,
                                              descriptor_size=desc_size, descriptor_type=desc, diffusivity=diff,  save_to_text=False,
                                              threshold=thr_akaze, nr_octaves=nOctaves, nr_octave_layers=nLayes, level=level)
 
@@ -725,13 +724,13 @@ if __name__ == "__main__":
     # prepare_dataset_TMBuD(COLORS_TMBuD=COLORS_TMBuD, TMBuD_CORRELATION=TMBuD_CORRELATION)
     # Utils.reopen_files()
 
-    n_classes = 3
-    epochs = 350
-    batch_size = 6
-    train_nr_images = len(os.listdir(r'c:\repos\eecvf_git\Logs\ml_results\TRAIN_INPUT'))
-    val_nr_images = len(os.listdir(r'c:\repos\eecvf_git\Logs\ml_results\VAL_INPUT'))
-    steps_per_epoch = int((train_nr_images/epochs)/batch_size)
-    val_steps_per_epoch = int(val_nr_images/batch_size)
+    # n_classes = 3
+    # epochs = 350
+    # batch_size = 6
+    # train_nr_images = len(os.listdir(r'c:\repos\eecvf_git\Logs\ml_results\TRAIN_INPUT'))
+    # val_nr_images = len(os.listdir(r'c:\repos\eecvf_git\Logs\ml_results\VAL_INPUT'))
+    # steps_per_epoch = int((train_nr_images/epochs)/batch_size)
+    # val_steps_per_epoch = int(val_nr_images/batch_size)
     class_names = ["UNKNOWN", "BUILDING", "NOISE"]
     COLORS = [(0, 0, 0), (125, 125, 0), (0, 0, 255)]
     validate_input = 'TestData/TMBuD/parsed_dataset/SEMSEG_EVAL_FULL/img_label_full/TEST/png'
@@ -754,8 +753,8 @@ if __name__ == "__main__":
     # nr_classes = 201
 
     TRAIN_input_file = 'TestData/TMBuD/parsed_dataset/v3_2/TRAIN'
-    # TEST_input_file = 'TestData/TMBuD/parsed_dataset/v3_2/TEST'
-    TEST_input_file = r'c:\repos\CM_dataset\old_images'
+    TEST_input_file = 'TestData/TMBuD/parsed_dataset/v3_2/TEST'
+    # TEST_input_file = r'c:\repos\CM_dataset\old_images'
     csv_landmark = 'TestData/TMBuD/parsed_dataset/v3_2/landmarks.csv'
     gt_location = 'TestData/TMBuD/parsed_dataset/v3_2/TMBuD_groundtruth.txt'
     train_csv_file = 'TestData/TMBuD/parsed_dataset/v3_2/train_data.csv'
@@ -829,20 +828,20 @@ if __name__ == "__main__":
                         class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, input_file_location=TRAIN_input_file, use_gps=use_gps, gps_file=train_csv_file)
         Utils.reopen_files()
 
-    # if config == 'inquiry':
-    # if True:
-    #     main_bow_inquiry(building_classes=nr_classes, desc=desc_list, diff=diff_list, desc_size=desc_size_list,
-    #                      level=pyramid_level, kernel_smoothing=kernel_smoothing, smoothing_strength=smoothing_strength,
-    #                      nOctaves=nOctaves_list, nLayes=nLayes_list, thr=thr_list, thr_akaze=thr_akaze_list, dictionarySize=dictionarySize_list,
-    #                      class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, gt_location=gt_location, tracking=tracking, boxing=boxing, roi=overlay_semseg,
-    #                      input_file_location=TEST_input_file, distance=distance_list, use_gps=use_gps, threshold_matching=thr_match_procent, csv_landmark=csv_landmark, gps_file=test_csv_file)
-    #     Utils.reopen_files()
-
     if config == 'inquiry':
-    # # if True:
-        main_bow_inquiry_movie(building_classes=nr_classes, desc=desc_list, diff=diff_list, desc_size=desc_size_list,
-                               level=pyramid_level, kernel_smoothing=kernel_smoothing, smoothing_strength=smoothing_strength,
-                               nOctaves=nOctaves_list, nLayes=nLayes_list, thr=thr_list, thr_akaze=thr_akaze_list, dictionarySize=dictionarySize_list,
-                               class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, gt_location=gt_location, tracking=tracking, boxing=boxing, roi=overlay_semseg,
-                               input_file_location=TEST_input_file, distance=distance_list, use_gps=use_gps, threshold_matching=thr_match_procent, csv_landmark=csv_landmark, gps_file=test_csv_file)
+    # if True:
+        main_bow_inquiry(building_classes=nr_classes, desc=desc_list, diff=diff_list, desc_size=desc_size_list,
+                         level=pyramid_level, kernel_smoothing=kernel_smoothing, smoothing_strength=smoothing_strength,
+                         nOctaves=nOctaves_list, nLayes=nLayes_list, thr=thr_list, thr_akaze=thr_akaze_list, dictionarySize=dictionarySize_list,
+                         class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, gt_location=gt_location, tracking=tracking, boxing=boxing, roi=overlay_semseg,
+                         input_file_location=TEST_input_file, distance=distance_list, use_gps=use_gps, threshold_matching=thr_match_procent, csv_landmark=csv_landmark, gps_file=test_csv_file)
         Utils.reopen_files()
+
+    # if config == 'inquiry':
+    # # # if True:
+    #     main_bow_inquiry_movie(building_classes=nr_classes, desc=desc_list, diff=diff_list, desc_size=desc_size_list,
+    #                            level=pyramid_level, kernel_smoothing=kernel_smoothing, smoothing_strength=smoothing_strength,
+    #                            nOctaves=nOctaves_list, nLayes=nLayes_list, thr=thr_list, thr_akaze=thr_akaze_list, dictionarySize=dictionarySize_list,
+    #                            class_in=class_in, class_out=class_out, class_names=class_names, COLORS=COLORS, gt_location=gt_location, tracking=tracking, boxing=boxing, roi=overlay_semseg,
+    #                            input_file_location=TEST_input_file, distance=distance_list, use_gps=use_gps, threshold_matching=thr_match_procent, csv_landmark=csv_landmark, gps_file=test_csv_file)
+    #     Utils.reopen_files()

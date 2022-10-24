@@ -93,6 +93,7 @@ def main_paper():
         Application.do_zoom_image_job(port_input_name=el, zoom_factor=1.5, do_interpolation=False, is_rgb=is_rgb, w_offset=75)
 
     Application.create_config_file()
+    # Application.configure_save_pictures(ports_to_save=[], job_name_in_port=True)
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
     # Application.configure_show_pictures(ports_to_show='ALL', time_to_show=500, to_rotate=False)
     Application.run_application()
@@ -133,6 +134,9 @@ def main_paper():
             Utils.plot_frame_values(name_to_save=data + '_' + el[0], eval=el[1], data=data, set_name_replace_list=el[2], save_plot=True,
                                     x_label_font_size=30, y_label_font_size=30, x_ticks_font_size=20, y_ticks_font_size=20,
                                     legend_name=None, legend_font_size='medium', dpi_save_value=800)
+
+            Utils.plot_box_benchmark_values(name_to_save=data + '_box', number_decimal=3,
+                                            data=data, data_subsets=el[1], eval=eval_list)
 
     Utils.close_files()
 
