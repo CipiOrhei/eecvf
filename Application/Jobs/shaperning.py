@@ -148,8 +148,13 @@ def main_sharpen_filter_func(port_list: list = None) -> bool:
                     kernel_identity[mid, mid] = 1
 
                     kernel_high_pass = kernel_identity - kernel
-                    result = cv2.filter2D(p_in.arr.copy(), -1, kernel_high_pass)
-                        # p_out.arr[:] = cv2.normalize(src=result, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+                    img = p_in.arr.copy().astype(np.int16)
+                    result = cv2.filter2D(img, cv2.CV_16S, kernel_high_pass)
+                    result[result > 255] = 255
+                    result[result < 0] = 0
+                    x = np.sum(kernel_high_pass)
+                    # tmp = np.sum(kernel_high_pass, where=kernel_high_pass>0)
+                    # result = cv2.normalize(src=result, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
                     p_out.arr[:] = result
                 else:
                     p_out.arr[:] = p_in.arr[:]

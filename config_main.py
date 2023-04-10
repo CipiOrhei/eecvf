@@ -241,8 +241,12 @@ class FILTERS_SECOND_ORDER:
     # https://www.sciencedirect.com/science/article/abs/pii/0734189X8990131X
     LAPLACE_1 = 'LAPLACE_V1_3x3'
     LAPLACE_5x5_1 = 'LAPLACE_V1_5x5'
+    LAPLACE_7x7_1 = 'LAPLACE_V1_7x7'
+    LAPLACE_9x9_1 = 'LAPLACE_V1_9x9'
     LAPLACE_DILATED_5x5_1 = 'LAPLACE_V1_DILATED_5x5'
     LAPLACE_DILATED_7x7_1 = 'LAPLACE_V1_DILATED_7x7'
+    LAPLACE_DILATED_9x9_1 = 'LAPLACE_V1_DILATED_9x9'
+    LAPLACE_DILATED_11x11_1 = 'LAPLACE_V1_DILATED_11x11'
 
     # http://fourier.eng.hmc.edu/e161/lectures/gradient/node7.html
     LAPLACE_2 = 'LAPLACE_V2_3x3'

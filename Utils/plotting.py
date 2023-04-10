@@ -518,7 +518,7 @@ def plot_histogram_grey_image(image, name_folder, picture_name,
     if not os.path.exists(file_to_save):
         os.makedirs(file_to_save)
     if to_save:
-        plt.savefig(os.path.join(file_to_save, '{}.png'.format('hist_' + picture_name)), bbox_inches='tight', dpi=dpi_save_value)
+        plt.savefig(os.path.join(file_to_save, '{}.png'.format('histogram_' + picture_name)), bbox_inches='tight', dpi=dpi_save_value)
     if to_show:
         plt.show()
 
@@ -668,6 +668,99 @@ def plot_frame_values(name_to_save: str, eval: list, data,
 
     if save_plot is True:
         plt.savefig(os.path.join(save_location, name_to_save + '.png'), bbox_inches='tight', dpi=dpi_save_value)
+
+    plt.clf()
+    plt.close()
+
+
+def plot_custom_series_list(data_series: list, data_axis:list, name_to_save: str, x_plot_name: str, y_plot_name: str, name_folder: str, data_series_names: list,
+                            x_min=None, x_max = None, y_min = None, y_max = None,
+                            x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=25, y_ticks_font_size=25, dpi_save_value=300, show_legend=True,
+                            title_font_size=35, img_size_w=15, img_size_h=10, legend_font_size='small', legend_name=None, title_name=None, if_grid=False,
+                            save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True, set_name_replace_list=None):
+    """
+      Plot custom ports
+        :param port_list: list of ports to plot
+        :param name_to_save: name you want for plot
+        :param input_location: location of input data csv
+        :param set_frame_name: use name of image instead of frame number on x axis
+        :param set_name_replace_list: list of string to replace for labels in legend
+        :param y_plot_name: name of y label
+        :param x_label_font_size font size of x axis label
+        :param y_label_font_size font size of y axis label
+        :param x_ticks_font_size font size of x axis ticks
+        :param y_ticks_font_size font size of y axis ticks
+        :param title_font_size font size of plot title
+        :param title_name name of plot title
+        :param legend_font_size size of legend font (xx-small, x-small, small, medium, large, x-large, xx-large)
+        :param legend_name name of legend
+        :param img_size_w save width image
+        :param img_size_h save height image
+        :param dpi_save_value save dpi of image
+                The bigger value the longer time it takes to save
+       :param show_plot: if we want to show the plot
+       :param save_plot: if we want to save the plot
+       :param table_number: what table from csv to plot
+       :param save_location: where to save
+       :return None
+      """
+
+    for element in range(len(data_series)):
+
+        if x_min is None:
+            x_min = min(data_axis[element])
+        elif x_min > min(data_axis[element]):
+            x_min = min(data_axis[element])
+
+        if y_min is None:
+            y_min = min(data_series[element])
+        elif y_min > min(data_series[element]):
+            y_min = min(data_series[element])
+
+        if x_max is None:
+            x_max = max(data_axis[element])
+        elif x_max < max(data_axis[element]):
+            x_max = max(data_axis[element])
+
+        if y_max is None:
+            y_max = max(data_series[element])
+        elif y_max < max(data_series[element]):
+            y_max = max(data_series[element])
+
+        plt.plot(data_axis[element], data_series[element], label=data_series_names[element])
+
+    fig = plt.gcf()
+    fig.set_size_inches(w=img_size_w, h=img_size_h)
+    plt.xlabel(x_plot_name, fontsize=x_label_font_size)
+    plt.ylabel(y_plot_name, fontsize=y_label_font_size)
+
+    plt.xlim(x_min, x_max, 5)
+    plt.ylim(y_min, y_max, 10)
+
+    if show_legend:
+        if legend_name is not None:
+            plt.legend(fancybox=True, fontsize=legend_font_size, loc='best', title=legend_name)
+        else:
+            plt.legend(fancybox=True, fontsize=legend_font_size, loc='best')
+
+    plt.yticks(fontsize=y_ticks_font_size)
+    plt.xticks(fontsize=x_ticks_font_size)
+
+    if if_grid:
+        plt.grid()
+
+    if title_name is not None:
+        plt.title(title_name, fontsize=title_font_size)
+
+    if show_plot is True:
+        plt.show()
+
+    if save_plot is True:
+        file_to_save = os.path.join(CONFIG.APPL_SAVE_LOCATION, name_folder)
+        if not os.path.exists(file_to_save):
+            os.makedirs(file_to_save)
+
+        plt.savefig(os.path.join(file_to_save, '{}.png'.format(name_to_save)), bbox_inches='tight', dpi=dpi_save_value)
 
     plt.clf()
     plt.close()

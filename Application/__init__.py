@@ -52,6 +52,7 @@ from Application.Config.job_create import do_pixelate_image_job
 from Application.Jobs.processing_image import do_resize_image_job
 from Application.Jobs.processing_image import do_blending_images_job
 from Application.Jobs.processing_image import do_histogram_job
+from Application.Jobs.processing_image import do_plot_lines_over_columns_job
 ############################################################################################################################################
 # Image blurring jobs
 ############################################################################################################################################

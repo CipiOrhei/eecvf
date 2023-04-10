@@ -653,12 +653,32 @@ laplace_v1_3x3_xy = np.array([[0, 1, 0],
 
 laplace_v1_5x5_xy = np.array([[0, 0,   1, 0, 0],
                               [0, 1,   2, 1, 0],
-                              [1, 2, -17, 2, 1],
+                              [1, 2, -16, 2, 1],
                               [0, 1,   2, 1, 0],
                               [0, 0,   1, 0, 0]])
 
+laplace_v1_7x7_xy = np.array([[ 0, 0, 1, 1, 1, 0, 0],
+                              [ 0, 1, 3, 3, 3, 1, 0],
+                              [ 1, 3, 0, -7, 0, 3, 1],
+                              [ 1, 3, -7, -24, -7, 3, 1],
+                              [ 1, 3, 0, -7, 0, 3, 1],
+                              [ 0, 1, 3, 3, 3, 1, 0],
+                              [ 0, 0, 1, 1, 1, 0, 0]])
+
+laplace_v1_9x9_xy = np.array( [[0, 0,  1,   1,   1,   1,   1, 0, 0],
+                               [0, 1,  3,   3,   3,   3,   3, 1, 0],
+                               [1, 3,  7,   7,   7,   7,   7, 3, 1],
+                               [1, 3,  7,  -3, -23,  -3,   7, 3, 1],
+                               [1, 3,  7, -23, -92, -23,   7, 3, 1],
+                               [1, 3,  7,  -3, -23,  -3,   7, 3, 1],
+                               [1, 3,  7,   7,   7,   7,   7, 3, 1],
+                               [0, 1,  3,   3,   3,   3,   3, 1, 0],
+                               [0, 0,  1,   1,   1,   1,   1, 0, 0]])
+
 laplace_v1_dilated_5x5_xy = dilate(laplace_v1_3x3_xy, 1)
 laplace_v1_dilated_7x7_xy = dilate(laplace_v1_3x3_xy, 2)
+laplace_v1_dilated_9x9_xy = dilate(laplace_v1_3x3_xy, 3)
+laplace_v1_dilated_11x11_xy = dilate(laplace_v1_3x3_xy, 4)
 
 # http://fourier.eng.hmc.edu/e161/lectures/gradient/node7.html
 laplace_v2_3x3_xy = np.array([[1, 1, 1],
