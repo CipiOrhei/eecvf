@@ -67,6 +67,8 @@ from Application.Config.job_create import do_anisotropic_diffusion_filter_job
 from Application.Config.job_create import do_crimmins_job
 from Application.Config.job_create import do_isef_filter_job
 from Application.Config.job_create import do_motion_blur_filter_job
+from Application.Jobs.blur_image import do_lee_filter_job
+from Application.Jobs.blur_image import do_lee_sigma_filter_job
 ############################################################################################################################################
 # Image morphology jobs
 ############################################################################################################################################

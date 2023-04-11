@@ -789,6 +789,235 @@ def main_weiner_func(param_list: list = None) -> bool:
         return True
 
 
+@jit(nopython=True)
+def _weighting(window, cu=0.25):
+    """
+    Computes the weighthing function for Lee filter using cu as the noise
+    coefficient.
+    """
+    # cu is the noise variation coefficient
+    two_cu = cu * cu
+
+    # ci is the variation coefficient in the window
+    window_mean = window.mean()
+    window_std = window.std()
+    ci = window_std / window_mean
+
+    two_ci = ci * ci
+
+    if not two_ci:  # dirty patch to avoid zero division
+        two_ci = 0.01
+
+    if cu > ci:  # preserve the original value (I guess)
+        w_t = 0.0
+    else: # use the filter
+        w_t = 1.0 - (two_cu / two_ci)
+
+    return w_t
+
+
+@jit(nopython=True)
+def lee_filter_processing(img_filtered, img, win_offset, M, N, cu):
+    for i in np.arange(0, N):
+        xleft = i - win_offset
+        xright = i + win_offset
+
+        if xleft < 0:
+            xleft = 0
+        if xright >= N:
+            xright = N
+
+        for j in np.arange(0, M):
+            yup = j - win_offset
+            ydown = j + win_offset
+
+            if yup < 0:
+                yup = 0
+            if ydown >= M:
+                ydown = M
+
+            # assert_indices_in_range(N, M, xleft, xright, yup, ydown)
+
+            pix_value = img[i, j]
+            window = img[xleft:xright, yup:ydown]
+            w_t = _weighting(window, cu)
+            window_mean = window.mean()
+
+            new_pix_value = (pix_value * w_t) + (window_mean * (1.0 - w_t))
+
+            if new_pix_value < 0.0: raise Exception("ERROR: lee_filter(), pixel filtered can't be negative")
+            if (new_pix_value is None) or np.isnan(new_pix_value):
+                new_pix_value = 0
+
+            img_filtered[i, j] = round(new_pix_value)
+
+    return img_filtered
+
+# define a main function, function that will be executed at the begging of the wave
+def main_lee_func(param_list: list = None) -> bool:
+    """
+    Main function for {job} calculation job.
+    :param param_list: Param needed to respect the following list:
+                       [enumerate list]
+    :return: True if the job executed OK.
+    """
+    # variables for position of param needed
+    # ex:
+
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE_IMG = 1
+    # noinspection PyPep8Naming
+    PORT_WIN_SIZE = 2
+    # noinspection PyPep8Naming
+    PORT_CU_VALUE = 3
+    # noinspection PyPep8Naming
+    PORT_OUT_POS = 4
+    # verify that the number of parameters are OK.
+    if len(param_list) != 5:
+        log_error_to_console("LEE FILTER JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
+        return False
+    else:
+        # get needed ports
+        port_in = get_port_from_wave(name=param_list[PORT_IN_POS], wave_offset=param_list[PORT_IN_WAVE_IMG])
+        p_out = get_port_from_wave(name=param_list[PORT_OUT_POS])
+
+        if port_in.is_valid() is True:
+            # if True:
+            try:
+                img = port_in.arr.copy()
+
+                if len(port_in.arr.shape) > 2:
+                    img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
+                    img = img_yuv[:, :, 0]
+
+                # we process the entire img as float64 to avoid type overflow error
+                img = np.float64(img)
+                img_filtered = np.zeros_like(img)
+                N, M = img.shape
+                win_offset = int(param_list[PORT_WIN_SIZE] / 2)
+
+                img_filtered = lee_filter_processing(img_filtered, img, win_offset, M, N, param_list[PORT_CU_VALUE])
+
+                if len(port_in.arr.shape) > 2:
+                    img_yuv[:, :, 0] = img_filtered
+                    img_filtered = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+
+                p_out.arr[:] = img_filtered
+                p_out.set_valid()
+
+            except BaseException as error:
+                log_error_to_console("LEE FILTER JOB NOK: ", str(error))
+                pass
+        else:
+            return False
+
+        return True
+
+
+@jit(nopython=True)
+def lee_sigma_filter_processing(img_filtered, img, win_offset, M, N, sigma):
+    for i in np.arange(0, N):
+        xleft = i - win_offset
+        xright = i + win_offset
+
+        if xleft < 0:
+            xleft = 0
+        if xright >= N:
+            xright = N
+
+        for j in np.arange(0, M):
+            yup = j - win_offset
+            ydown = j + win_offset
+
+            if yup < 0:
+                yup = 0
+            if ydown >= M:
+                ydown = M
+
+            # assert_indices_in_range(N, M, xleft, xright, yup, ydown)
+
+            pix_value = img[i, j]
+            sum = 0
+            nr = 0
+            # window = img[xleft:xright, yup:ydown]
+            for px_i in range(xleft, xright):
+                for px_j in range(yup, ydown):
+                    if abs(img[px_i, px_j] - pix_value) <= sigma:
+                        sum += img[px_i, px_j]
+                        nr += 1
+            if nr != 0 :
+                img_filtered[i, j] = round(sum/nr)
+            else:
+                img_filtered[i, j] = pix_value
+
+    return img_filtered
+
+
+# define a main function, function that will be executed at the begging of the wave
+def main_lee_sigma_func(param_list: list = None) -> bool:
+    """
+    Main function for {job} calculation job.
+    :param param_list: Param needed to respect the following list:
+                       [enumerate list]
+    :return: True if the job executed OK.
+    """
+    # variables for position of param needed
+    # ex:
+
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE_IMG = 1
+    # noinspection PyPep8Naming
+    PORT_WIN_SIZE = 2
+    # noinspection PyPep8Naming
+    PORT_SIGMA_VALUE = 3
+    # noinspection PyPep8Naming
+    PORT_OUT_POS = 4
+    # verify that the number of parameters are OK.
+    if len(param_list) != 5:
+        log_error_to_console("LEE FILTER JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
+        return False
+    else:
+        # get needed ports
+        port_in = get_port_from_wave(name=param_list[PORT_IN_POS], wave_offset=param_list[PORT_IN_WAVE_IMG])
+        p_out = get_port_from_wave(name=param_list[PORT_OUT_POS])
+
+        if port_in.is_valid() is True:
+            # if True:
+            try:
+                img = port_in.arr.copy()
+
+                if len(port_in.arr.shape) > 2:
+                    img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
+                    img = img_yuv[:, :, 0]
+
+                # we process the entire img as float64 to avoid type overflow error
+                img = np.float64(img)
+                img_filtered = np.zeros_like(img)
+                N, M = img.shape
+                win_offset = int(param_list[PORT_WIN_SIZE] / 2)
+
+                img_filtered = lee_sigma_filter_processing(img_filtered, img, win_offset, M, N, param_list[PORT_SIGMA_VALUE])
+
+                if len(port_in.arr.shape) > 2:
+                    img_yuv[:, :, 0] = img_filtered
+                    img_filtered = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+
+                p_out.arr[:] = img_filtered
+                p_out.set_valid()
+
+            except BaseException as error:
+                log_error_to_console("LEE FILTER JOB NOK: ", str(error))
+                pass
+        else:
+            return False
+
+        return True
+
+
 ############################################################################################################################################
 # Job create functions
 ############################################################################################################################################
@@ -836,6 +1065,93 @@ def do_weiner_filter_job(port_input_name: str,
 
     return port_output_name
 
+
+def do_lee_filter_job(port_input_name: str,
+                      win_size: int = 7, cu_value: float = 0.25,
+                      port_output_name: str = None,
+                      wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
+    """
+    TBD
+    https://ieeexplore.ieee.org/abstract/document/4766994?casa_token=6vgxnKAoib0AAAAA:YSzKmLVPYqqM10RCKGBuPZaM33ax5x7ZXydKRUdFag66CixGROA_97K8-UapvuT0CCwKW78Ukw
+    :param port_input_name: name of input port
+    :param win_size: size of window to take in consideration.
+    :param cu_value: factor for the weighting phase
+    :param port_output_name: name of output port
+    :param level: pyramid level to calculate at
+    :param is_rgb: if the output ports is rgb, 3 channels
+    return port_output_name
+    """
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    if port_output_name is None:
+        port_output_name = 'LEE_FILER_W_{}_K_{}_{}'.format(win_size, cu_value.__str__().replace('.', "_"), port_input_name)
+
+    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, win_size, cu_value, output_port_name]
+    output_port_list = [(output_port_name, output_port_size, 'B', True)]
+
+    job_name = job_name_create(action='Lee filter', input_list=input_port_list, wave_offset=[wave_offset], level=level,
+                               S=str(win_size), K=str(cu_value))
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  max_wave=wave_offset,
+                                  init_func_name='init_func', init_func_param=None,
+                                  main_func_name='main_lee_func',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output_name
+
+
+def do_lee_sigma_filter_job(port_input_name: str,
+                            win_size: int = 7, sigma: float = 15,
+                            port_output_name: str = None,
+                            wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
+    """
+    TBD
+    https://www.sciencedirect.com/science/article/abs/pii/0734189X83900476
+    :param port_input_name: name of input port
+    :param win_size: size of window to take in consideration.
+    :param sigma: sigma value
+    :param port_output_name: name of output port
+    :param level: pyramid level to calculate at
+    :param is_rgb: if the output ports is rgb, 3 channels
+    return port_output_name
+    """
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    if port_output_name is None:
+        port_output_name = 'LEE_SIGMA_FILER_W_{}_S_{}_{}'.format(win_size, sigma.__str__().replace('.', "_"), port_input_name)
+
+    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, win_size, sigma, output_port_name]
+    output_port_list = [(output_port_name, output_port_size, 'B', True)]
+
+    job_name = job_name_create(action='Lee Sigma filter', input_list=input_port_list, wave_offset=[wave_offset], level=level,
+                               S=str(win_size), K=str(sigma))
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  max_wave=wave_offset,
+                                  init_func_name='init_func', init_func_param=None,
+                                  main_func_name='main_lee_sigma_func',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output_name
 
 if __name__ == "__main__":
     pass
