@@ -152,7 +152,7 @@ def main_sharpen_filter_func(port_list: list = None) -> bool:
                     result = cv2.filter2D(img, cv2.CV_16S, kernel_high_pass)
                     result[result > 255] = 255
                     result[result < 0] = 0
-                    x = np.sum(kernel_high_pass)
+                    # x = np.sum(kernel_high_pass)
                     # tmp = np.sum(kernel_high_pass, where=kernel_high_pass>0)
                     # result = cv2.normalize(src=result, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
                     p_out.arr[:] = result
@@ -256,7 +256,7 @@ def main_unsharp_filter_func_long(port_list: list = None) -> bool:
                     elif port_list[PORT_STREGHT_POS] > 9:
                         port_list[PORT_STREGHT_POS] = 9
 
-                    lap = cv2.filter2D(src=p_in.arr.copy(), ddepth=cv2.CV_64F, kernel=kernel)
+                    lap = cv2.filter2D(src=p_in.arr.copy(), ddepth=cv2.CV_16S, kernel=kernel)
                     a_lap = port_list[PORT_STREGHT_POS] * lap
                     img = np.float64(p_in.arr.copy())
                     sharp = img - a_lap
@@ -522,6 +522,242 @@ def main_um_2dwt_fusion(port_list: list = None) -> bool:
             return False
 
         return True
+
+
+@jit(nopython=True)
+def clipping(img, img_filtered, M, N, win_offset):
+    for i in np.arange(0, N):
+        xleft = i - win_offset
+        xright = i + win_offset
+
+        if xleft < 0:
+            xleft = 0
+        if xright >= N:
+            xright = N
+
+        for j in np.arange(0, M):
+            yup = j - win_offset
+            ydown = j + win_offset
+
+            if yup < 0:
+                yup = 0
+            if ydown >= M:
+                ydown = M
+
+            # assert_indices_in_range(N, M, xleft, xright, yup, ydown)
+            window = img[xleft:xright, yup:ydown]
+            min = np.min(window)
+            max = np.max(window)
+
+            if img_filtered[i, j] > max:
+                img_filtered[i, j] = max
+            elif img_filtered[i, j] < min:
+                img_filtered[i, j] = min
+            else:
+                img_filtered[i, j] = img_filtered[i, j]
+
+    return img_filtered
+
+
+def main_constrained_unsharp_filter(port_list: list = None) -> bool:
+    """
+        :param port_list: Param needed list of port names [input1,  wave_offset, kernel_size, sigma, output]
+                      List of ports passed as parameters should be even. Every input picture should have a output port.
+    :return: True if the job executed OK.
+    """
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE_IMG = 1
+    # noinspection PyPep8Naming
+    PORT_KERNEL_POS = 2
+    # noinspection PyPep8Naming
+    PORT_STREGHT_POS = 3
+    # noinspection PyPep8Naming
+    PORT_LS_WIN = 4
+    # noinspection PyPep8Naming
+    PORT_LS_VAL = 5
+    # noinspection PyPep8Naming
+    PORT_CLIPPING_TH = 6
+    # noinspection PyPep8Naming
+    PORT_CASCADE_VER = 7
+    # noinspection PyPep8Naming
+    PORT_OUT_POS = 8
+
+    # check if param OK
+    if len(port_list) != 9:
+        log_error_to_console("CONSTRAINED UM JOB MAIN FUNCTION PARAM NOK", str(len(port_list)))
+        return False
+    else:
+        p_in = get_port_from_wave(name=port_list[PORT_IN_POS], wave_offset=port_list[PORT_IN_WAVE_IMG])
+        p_out = get_port_from_wave(name=port_list[PORT_OUT_POS])
+
+        if p_in.is_valid() is True:
+            if True:
+            # try:
+                if port_list[PORT_KERNEL_POS] == None:
+                    kernel = None
+                elif 'xy' in port_list[PORT_KERNEL_POS]:
+                    kernel = eval('Application.Jobs.kernels.' + port_list[PORT_KERNEL_POS])
+                else:
+                    kernel = np.array(eval(port_list[PORT_KERNEL_POS]))
+
+                if kernel is not None:
+                    if port_list[PORT_STREGHT_POS] < 0:
+                        port_list[PORT_STREGHT_POS] = 0.01
+                    elif port_list[PORT_STREGHT_POS] > 1:
+                        port_list[PORT_STREGHT_POS] = 1
+
+                    if len(p_in.arr.shape) > 2:
+                        img_yuv = cv2.cvtColor(p_in.arr.copy(), cv2.COLOR_BGR2YUV)
+                        img = img_yuv[:, :, 0]
+                    else:
+                        img = p_in.arr.copy()
+
+                    from Application.Jobs.blur_image import lee_sigma_filter_processing
+
+                    # we process the entire img as float64 to avoid type overflow error
+                    img_filtered = np.zeros_like(img)
+
+                    img_f = lee_sigma_filter_processing(img_filtered=img_filtered, img=img, win_offset=int(port_list[PORT_LS_WIN] / 2),
+                                                        M=img.shape[0], N=img.shape[1], sigma=port_list[PORT_LS_VAL]).astype('int16')
+
+                    if port_list[PORT_CASCADE_VER]:
+                        img_h = cv2.filter2D(src=img_f.copy(), ddepth=cv2.CV_16S, kernel=kernel)
+                    else:
+                        img_h = cv2.filter2D(src=img.copy(), ddepth=cv2.CV_16S, kernel=kernel)
+
+                    img_h = port_list[PORT_STREGHT_POS] * img_h
+
+                    img_s = img_f - img_h
+                    img_s[img_s > 255] = 255
+                    img_s[img_s < 0] = 0
+
+                    sharp = clipping(img=img_f, img_filtered=img_s, M=img.shape[1], N=img.shape[0], win_offset=port_list[PORT_CLIPPING_TH])
+
+                    if len(p_in.arr.shape) > 2:
+                        img_yuv[:, :, 0] = sharp
+                        sharp = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+
+                    p_out.arr[:] = sharp
+                else:
+                    p_out.arr[:] = p_in.arr[:]
+                p_out.set_valid()
+            # except BaseException as error:
+            #     log_error_to_console("UNSHARP FILTER JOB NOK: ", str(error))
+            #     pass
+        else:
+            return False
+
+        return True
+
+
+def main_nonlinear_unsharp_filter(port_list: list = None) -> bool:
+    """
+        :param port_list: Param needed list of port names [input1,  wave_offset, kernel_size, sigma, output]
+                      List of ports passed as parameters should be even. Every input picture should have a output port.
+    :return: True if the job executed OK.
+    """
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE_IMG = 1
+    # noinspection PyPep8Naming
+    PORT_GAUSS_KERNEL_SIZE = 2
+    # noinspection PyPep8Naming
+    PORT_GAUSS_SIGMA = 3
+    # noinspection PyPep8Naming
+    PORT_FIRST_ORDER_X = 4
+    # noinspection PyPep8Naming
+    PORT_FIRST_ORDER_Y = 5
+    # noinspection PyPep8Naming
+    PORT_LAPLACE_KERNEL = 6
+    # noinspection PyPep8Naming
+    PORT_HPF_STRENGHT = 7
+    # noinspection PyPep8Naming
+    PORT_OUT_POS = 8
+
+    # check if param OK
+    if len(port_list) != 9:
+        log_error_to_console("NONLINEAER UM JOB MAIN FUNCTION PARAM NOK", str(len(port_list)))
+        return False
+    else:
+        p_in = get_port_from_wave(name=port_list[PORT_IN_POS], wave_offset=port_list[PORT_IN_WAVE_IMG])
+        p_out = get_port_from_wave(name=port_list[PORT_OUT_POS])
+
+        if p_in.is_valid() is True:
+            if True:
+            # try:
+
+                if 'x' in port_list[PORT_FIRST_ORDER_X] or 'y' in port_list[PORT_FIRST_ORDER_Y]:
+                    kernel_x = eval('Application.Jobs.kernels.' + port_list[PORT_FIRST_ORDER_X])
+                    kernel_y = eval('Application.Jobs.kernels.' + port_list[PORT_FIRST_ORDER_Y])
+                else:
+                    kernel_x = np.array(eval(port_list[PORT_FIRST_ORDER_X]))
+                    kernel_y = np.array(eval(port_list[PORT_FIRST_ORDER_Y]))
+
+                if port_list[PORT_LAPLACE_KERNEL] == None:
+                    kernel = None
+                elif 'xy' in port_list[PORT_LAPLACE_KERNEL]:
+                    kernel = eval('Application.Jobs.kernels.' + port_list[PORT_LAPLACE_KERNEL])
+                else:
+                    kernel = np.array(eval(port_list[PORT_LAPLACE_KERNEL]))
+
+                if (kernel is not None) or (kernel_x is not None) or (kernel_y is not None):
+                    if port_list[PORT_HPF_STRENGHT] < 0:
+                        port_list[PORT_HPF_STRENGHT] = 0.01
+                    elif port_list[PORT_HPF_STRENGHT] > 1:
+                        port_list[PORT_HPF_STRENGHT] = 1
+
+                    if len(p_in.arr.shape) > 2:
+                        img_yuv = cv2.cvtColor(p_in.arr.copy(), cv2.COLOR_BGR2YUV)
+                        img = img_yuv[:, :, 0]
+                    else:
+                        img = p_in.arr.copy()
+
+                    # Apply a Gaussian filter
+                    img_blur = cv2.GaussianBlur(src=img.copy(), ksize=(port_list[PORT_GAUSS_KERNEL_SIZE], port_list[PORT_GAUSS_KERNEL_SIZE]),
+                                                sigmaX=port_list[PORT_GAUSS_SIGMA], sigmaY=port_list[PORT_GAUSS_SIGMA])
+
+                    # Magnitude matrices for Ix/dx and Iy/dy
+                    magnitude_x = np.zeros(shape=img.shape, dtype=np.float32)
+                    magnitude_y = np.zeros(shape=img.shape, dtype=np.float32)
+
+                    # flip kernels for a real convolution to be done by cv2.filter2D
+                    kernel_x = kernel_x[::-1, ::-1]
+                    kernel_y = kernel_y[::-1, ::-1]
+
+                    cv2.filter2D(src=img.copy(), ddepth=cv2.CV_32F, kernel=kernel_x, dst=magnitude_x, anchor=(-1, -1)).astype('int32')
+                    cv2.filter2D(src=img.copy(), ddepth=cv2.CV_32F, kernel=kernel_y, dst=magnitude_y, anchor=(-1, -1)).astype('int32')
+
+                    result_first_order = np.hypot(magnitude_x, magnitude_y).astype('int32')
+
+                    img_h = cv2.filter2D(src=img.copy(), ddepth=cv2.CV_16S, kernel=kernel).astype('int32')
+
+                    sub_operator = cv2.multiply(result_first_order, img_h)
+
+                    sharp = img_blur - port_list[PORT_HPF_STRENGHT] * sub_operator
+
+                    sharp[sharp > 255] = 255
+                    sharp[sharp < 0] = 0
+
+                    if len(p_in.arr.shape) > 2:
+                        img_yuv[:, :, 0] = sharp
+                        sharp = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+
+                    p_out.arr[:] = sharp
+                else:
+                    p_out.arr[:] = p_in.arr[:]
+                p_out.set_valid()
+            # except BaseException as error:
+            #     log_error_to_console("UNSHARP FILTER JOB NOK: ", str(error))
+            #     pass
+        else:
+            return False
+
+        return True
+
+
 ############################################################################################################################################
 # Job create functions
 ############################################################################################################################################
@@ -838,6 +1074,172 @@ def do_unsharp_filter_job(port_input_name: str,
                                   max_wave=wave_offset,
                                   init_func_name='init_func_global', init_func_param=None,
                                   main_func_name='main_unsharp_filter_func',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output_name
+
+
+def do_constrained_unsharp_filter_expanded_job(port_input_name: str,
+                                               laplace_kernel: str, hpf_strenght: float,
+                                               lee_sigma_filter_window: int, lee_filter_sigma_value:int,
+                                               threshold_cliping_window:int,
+                                               casacade_version: float = False,
+                                               port_output_name: str = None,
+                                               wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
+    """
+    TBD
+    https://link.springer.com/chapter/10.1007/978-3-540-69905-7_2
+    :param port_input_name: name of input port
+    :param wave_offset: port wave offset. If 0 it is in current wave.
+    :param kernel: smoothing kernel to use
+    :param strenght: alpha constant that represents the strenght
+    :param threshold: threshold to apply
+    :param port_output_name: name of output port
+    :param level: pyramid level to calculate at
+    :param is_rgb: if the output ports is rgb, 3 channels
+    return port_output_name
+    """
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    if laplace_kernel is None:
+        laplace_kernel = None
+    elif isinstance(laplace_kernel, list):
+        if laplace_kernel not in custom_kernels_used:
+            custom_kernels_used.append(laplace_kernel)
+        kernel = laplace_kernel.__str__()
+    else:
+        if not isinstance(laplace_kernel, str):
+            log_setup_info_to_console("CONSTRAINED UNSHARP MASKING JOB DIDN'T RECEIVE CORRECT KERNEL")
+            return
+        else:
+            laplace_kernel = laplace_kernel.lower() + '_xy'
+
+    if port_output_name is None:
+        if casacade_version:
+            port_output_name = 'CONSTRAINED_CASCADE_UM_' + str(laplace_kernel).replace('.', '_') + '_S_' + str(hpf_strenght).replace('.', '_') \
+                               + '_LS_W_' + str(lee_sigma_filter_window) + '_LS_V_' + str(lee_filter_sigma_value) \
+                               + '_TH_' + str(threshold_cliping_window) + '_' + port_input_name
+        else:
+            port_output_name = 'CONSTRAINED_UM_' + str(laplace_kernel).replace('.', '_') + '_S_' + str(hpf_strenght).replace('.', '_') \
+                               + '_LS_W_' + str(lee_sigma_filter_window) + '_LS_V_' + str(lee_filter_sigma_value)\
+                               + '_TH_' + str(threshold_cliping_window) + '_' + port_input_name
+
+    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, laplace_kernel, hpf_strenght, lee_sigma_filter_window, lee_filter_sigma_value, threshold_cliping_window, casacade_version, output_port_name]
+    output_port_list = [(output_port_name, output_port_size, 'B', True)]
+
+    if casacade_version:
+        job_name = job_name_create(action='Constrained UM', input_list=input_port_list, wave_offset=[wave_offset], level=level,
+                                   Kernel=str(laplace_kernel), HPF_S=str(hpf_strenght).replace('.', '_'), W=str(lee_sigma_filter_window), S=str(lee_filter_sigma_value),
+                                   TH=str(threshold_cliping_window))
+    else:
+        job_name = job_name_create(action='Constrained cascade UM', input_list=input_port_list, wave_offset=[wave_offset], level=level,
+                                   Kernel=str(laplace_kernel), HPF_S=str(hpf_strenght).replace('.', '_'), W=str(lee_sigma_filter_window), S=str(lee_filter_sigma_value),
+                                   TH=str(threshold_cliping_window))
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  max_wave=wave_offset,
+                                  init_func_name='init_func_global', init_func_param=None,
+                                  main_func_name='main_constrained_unsharp_filter',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output_name
+
+
+def do_nonlinear_unsharp_filter_job(port_input_name: str,
+                                    kernel_size: int, sigma: float,
+                                    operator,
+                                    laplace_kernel: str, hpf_strength: float,
+                                    port_output_name: str = None,
+                                    wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
+    """
+    TBD
+    https://link.springer.com/chapter/10.1007/978-3-540-69905-7_2
+    :param port_input_name: name of input port
+    :param wave_offset: port wave offset. If 0 it is in current wave.
+    :param sigma: sigma to use. 0 to auto calculate
+    :param kernel_size: kernel of gaussian to use
+    :param operator: operator to use
+    :param laplace_kernel: xxx
+    :param hpf_strength: xxx
+    :param port_output_name: name of output port
+    :param level: pyramid level to calculate at
+    :param is_rgb: if the output ports is rgb, 3 channels
+    return port_output_name
+    """
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    kernel_x = operator.lower() + '_x'
+    kernel_y = operator.lower() + '_y'
+
+    kernel_1 = kernel_x
+    kernel_2 = kernel_y
+
+    # check kernel passed
+    if isinstance(kernel_x, list):
+        if kernel_1 not in custom_kernels_used:
+            custom_kernels_used.append(kernel_1)
+        kernel_1 = kernel_1.__str__()
+    else:
+        if not isinstance(kernel_x, str):
+            log_setup_info_to_console("CONVOLUTION JOB DIDN'T RECEIVE CORRECT KERNEL")
+            return None
+
+    if isinstance(kernel_y, list):
+        if kernel_2 not in custom_kernels_used:
+            custom_kernels_used.append(kernel_2)
+        kernel_2 = kernel_2.__str__()
+    else:
+        if not isinstance(kernel_y, str):
+            log_setup_info_to_console("CONVOLUTION JOB DIDN'T RECEIVE CORRECT KERNEL")
+            return None
+
+    if laplace_kernel is None:
+        laplace_kernel = None
+    elif isinstance(laplace_kernel, list):
+        if laplace_kernel not in custom_kernels_used:
+            custom_kernels_used.append(laplace_kernel)
+        kernel = laplace_kernel.__str__()
+    else:
+        if not isinstance(laplace_kernel, str):
+            log_setup_info_to_console("NONLINEAR UNSHARP MASKING JOB DIDN'T RECEIVE CORRECT KERNEL")
+            return
+        else:
+            laplace_kernel = laplace_kernel.lower() + '_xy'
+
+    if port_output_name is None:
+        # port_output_name = 'NUM_' + + '_' + port_input_name
+        port_output_name = 'NUM_GAUSS_BLUR_K_{}_S_{}_{}_{}_Str_{}_{}'.format(kernel_size, str(sigma).replace('.', '_'), operator,
+                                                                             str(laplace_kernel).replace('.', '_'), str(hpf_strength).replace('.', '_'), port_input_name)
+
+    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, kernel_size, sigma, kernel_1, kernel_2, laplace_kernel, hpf_strength, output_port_name]
+    output_port_list = [(output_port_name, output_port_size, 'B', True)]
+
+    job_name = job_name_create(action='Constrained cascade UM', input_list=input_port_list, wave_offset=[wave_offset], level=level,
+                               GAUSS_S=sigma.__str__().replace('.','_'), GAUSS_K=kernel_size, OPERATOR=operator,
+                               LAPLACE_K=str(laplace_kernel), HPF_S=str(hpf_strength).replace('.', '_'),)
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  max_wave=wave_offset,
+                                  init_func_name='init_func_global', init_func_param=None,
+                                  main_func_name='main_nonlinear_unsharp_filter',
                                   main_func_param=main_func_list,
                                   output_ports=output_port_list)
 
