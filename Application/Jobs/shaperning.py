@@ -274,6 +274,86 @@ def main_unsharp_filter_func_long(port_list: list = None) -> bool:
 
         return True
 
+
+def main_n_nun_func_long(port_list: list = None) -> bool:
+    """
+    :param port_list: Param needed list of port names [input1,  wave_offset, kernel_size, sigma, output]
+                      List of ports passed as parameters should be even. Every input picture should have a output port.
+    :return: True if the job executed OK.
+    """
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE_IMG = 1
+    # noinspection PyPep8Naming
+    PORT_KERNEL_POS = 2
+    # noinspection PyPep8Naming
+    PORT_STREGHT_POS = 3
+    # noinspection PyPep8Naming
+    PORT_OUT_POS = 4
+
+    # check if param OK
+    if len(port_list) != 5:
+        log_error_to_console("N-NUM JOB MAIN FUNCTION PARAM NOK", str(len(port_list)))
+        return False
+    else:
+        p_in = get_port_from_wave(name=port_list[PORT_IN_POS], wave_offset=port_list[PORT_IN_WAVE_IMG])
+        p_out = get_port_from_wave(name=port_list[PORT_OUT_POS])
+
+        if p_in.is_valid() is True:
+            try:
+                if port_list[PORT_KERNEL_POS] == None:
+                    kernel = None
+                elif 'xy' in port_list[PORT_KERNEL_POS]:
+                    kernel = eval('Application.Jobs.kernels.' + port_list[PORT_KERNEL_POS])
+                else:
+                    kernel = np.array(eval(port_list[PORT_KERNEL_POS]))
+
+                if kernel is not None:
+                    if port_list[PORT_STREGHT_POS] < 0:
+                        port_list[PORT_STREGHT_POS] = 1
+                    elif port_list[PORT_STREGHT_POS] > 9:
+                        port_list[PORT_STREGHT_POS] = 9
+
+                    in_img = p_in.arr.copy()
+
+                    if len(p_in.arr.shape) == 3:
+                        img_ycbcr = cv2.cvtColor(p_in.arr, cv2.COLOR_BGR2YCR_CB)
+                        in_img = img_ycbcr[:, :, 0]
+
+                    # obtain the output of the quadratic filter
+                    qf = cv2.filter2D(src=in_img.copy(), ddepth=cv2.CV_16S, kernel=kernel)
+
+                    sign_qf = np.sign(qf)
+                    max_qf = np.max(np.abs(qf))
+
+                    nqf = sign_qf * (qf/max_qf)**2
+
+                    a_lap = port_list[PORT_STREGHT_POS] * nqf
+
+                    sharp = in_img - a_lap
+
+                    sharp[sharp > 255] = 255
+                    sharp[sharp < 0] = 0
+
+                    if len(p_in.arr.shape) == 3:
+                        img_ycbcr[:, :, 0] = sharp
+
+                        sharp = cv2.cvtColor(img_ycbcr, cv2.COLOR_YCR_CB2BGR)
+
+                    p_out.arr[:] = sharp
+                else:
+                    p_out.arr[:] = p_in.arr[:]
+                p_out.set_valid()
+            except BaseException as error:
+                log_error_to_console("N-NUM JOB NOK: ", str(error))
+                pass
+        else:
+            return False
+
+        return True
+
+
 from numba import jit
 
 @jit(nopython=True)
@@ -1165,7 +1245,7 @@ def do_nonlinear_unsharp_filter_job(port_input_name: str,
                                     wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
     """
     TBD
-    https://link.springer.com/chapter/10.1007/978-3-540-69905-7_2
+    https://www.spiedigitallibrary.org/journals/Journal-of-Electronic-Imaging/volume-5/issue-3/0000/Nonlinear-unsharp-masking-methods-for-image-contrast-enhancement/10.1117/12.242618.short
     :param port_input_name: name of input port
     :param wave_offset: port wave offset. If 0 it is in current wave.
     :param sigma: sigma to use. 0 to auto calculate
@@ -1240,6 +1320,63 @@ def do_nonlinear_unsharp_filter_job(port_input_name: str,
                                   max_wave=wave_offset,
                                   init_func_name='init_func_global', init_func_param=None,
                                   main_func_name='main_nonlinear_unsharp_filter',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output_name
+
+
+def do_normalized_unsharp_filter_job(port_input_name: str,  kernel: str, strenght: float,
+                                     port_output_name: str = None,
+                                     wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
+    """
+    https://www.researchgate.net/profile/Giovanni-gianni-Ramponi/publication/220050577_Nonlinear_unsharp_masking_methods_for_image_contrast_enhancement/links/542192f90cf203f155c6e2eb/Nonlinear-unsharp-masking-methods-for-image-contrast-enhancement.pdf
+    :param port_input_name: name of input port
+    :param wave_offset: port wave offset. If 0 it is in current wave.
+    :param kernel: smoothing kernel to use
+    :param strenght: alpha constant that represents the strenght
+    :param threshold: threshold to apply
+    :param port_output_name: name of output port
+    :param level: pyramid level to calculate at
+    :param is_rgb: if the output ports is rgb, 3 channels
+    return port_output_name
+    """
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    if kernel is None:
+        kernel = None
+    elif isinstance(kernel, list):
+        if kernel not in custom_kernels_used:
+            custom_kernels_used.append(kernel)
+        kernel = kernel.__str__()
+    else:
+        if not isinstance(kernel, str):
+            log_setup_info_to_console("N-NUM JOB DIDN'T RECEIVE CORRECT KERNEL")
+            return
+        else:
+            kernel = kernel.lower() + '_xy'
+
+    if port_output_name is None:
+        port_output_name = 'N_NUM_' + str(kernel).replace('.', '_') + '_S_' + str(strenght).replace('.', '_') + '_' + port_input_name
+
+    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, kernel, strenght, output_port_name]
+    output_port_list = [(output_port_name, output_port_size, 'B', True)]
+
+    job_name = job_name_create(action='N-NUM', input_list=input_port_list, wave_offset=[wave_offset], level=level, Kernel=str(kernel), S=str(strenght).replace('.', '_'))
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  max_wave=wave_offset,
+                                  init_func_name='init_func_global', init_func_param=None,
+                                  # main_func_name='main_unsharp_filter_func_long',
+                                  main_func_name='main_n_nun_func_long',
                                   main_func_param=main_func_list,
                                   output_ports=output_port_list)
 
