@@ -481,8 +481,8 @@ def plot_box_benchmark_values(name_to_save: str, eval: list,
 
 
 def plot_histogram_grey_image(image, name_folder, picture_name,
-                              x_label_font_size=30, y_label_font_size=30, x_ticks_font_size=20, y_ticks_font_size=20, dpi_save_value=300,
-                              title_font_size=30, img_size_w=15, img_size_h=10,
+                              x_label_font_size=40, y_label_font_size=40, x_ticks_font_size=30, y_ticks_font_size=30, dpi_save_value=300,
+                              title_font_size=40, img_size_w=15, img_size_h=10,
                               to_show=False, to_save=False):
     """
     Plots the histogram of an image.
@@ -513,7 +513,7 @@ def plot_histogram_grey_image(image, name_folder, picture_name,
     # plt.legend(fancybox=True, fontsize='small', loc='best')
     plt.xticks(fontsize=x_ticks_font_size)  # fontsize of the tick labels
     plt.yticks(fontsize=y_ticks_font_size)  # fontsize of the tick labels
-    plt.title(picture_name, fontsize=title_font_size)
+    # plt.title(picture_name, fontsize=title_font_size)
     file_to_save = os.path.join(CONFIG.APPL_SAVE_LOCATION, name_folder)
     if not os.path.exists(file_to_save):
         os.makedirs(file_to_save)
@@ -527,8 +527,8 @@ def plot_histogram_grey_image(image, name_folder, picture_name,
 
 
 def plot_histogram_rgb_image(image, name_folder, picture_name,
-                             x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=25, y_ticks_font_size=25, dpi_save_value=300,
-                             title_font_size=35, img_size_w=15, img_size_h=10,
+                             x_label_font_size=40, y_label_font_size=40, x_ticks_font_size=30, y_ticks_font_size=30, dpi_save_value=300,
+                             title_font_size=40, img_size_w=15, img_size_h=10,
                              to_show=False, to_save=False):
     """
     Plots the histogram of an image.
@@ -581,8 +581,8 @@ def plot_histogram_rgb_image(image, name_folder, picture_name,
 
 def plot_frame_values(name_to_save: str, eval: list, data,
                       number_decimal: int = 3, set_name_replace_list=None,
-                      x_label_font_size=30, y_label_font_size=30, x_ticks_font_size=20, y_ticks_font_size=20, dpi_save_value=300,
-                      title_font_size=35, img_size_w=15, img_size_h=10, legend_font_size='medium', legend_name='Jobs', title_name=None,
+                      x_label_font_size=40, y_label_font_size=40, x_ticks_font_size=30, y_ticks_font_size=30, dpi_save_value=300,
+                      title_font_size=40, img_size_w=15, img_size_h=10, legend_font_size='medium', legend_name='Jobs', title_name=None,
                       save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True):
     """
       Plot custom ports
@@ -676,7 +676,7 @@ def plot_frame_values(name_to_save: str, eval: list, data,
 def plot_custom_series_list(data_series: list, data_axis:list, name_to_save: str, x_plot_name: str, y_plot_name: str, name_folder: str, data_series_names: list,
                             x_min=None, x_max = None, y_min = None, y_max = None,
                             x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=25, y_ticks_font_size=25, dpi_save_value=300, show_legend=True,
-                            title_font_size=35, img_size_w=15, img_size_h=10, legend_font_size='small', legend_name=None, title_name=None, if_grid=False,
+                            title_font_size=35, img_size_w=15, img_size_h=10, legend_font_size=20, legend_loc='best', legend_name=None, title_name=None, if_grid=False,
                             save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True, set_name_replace_list=None):
     """
       Plot custom ports
@@ -706,27 +706,26 @@ def plot_custom_series_list(data_series: list, data_axis:list, name_to_save: str
       """
 
     for element in range(len(data_series)):
-
-        if x_min is None:
-            x_min = min(data_axis[element])
-        elif x_min > min(data_axis[element]):
-            x_min = min(data_axis[element])
-
-        if y_min is None:
-            y_min = min(data_series[element])
-        elif y_min > min(data_series[element]):
-            y_min = min(data_series[element])
-
-        if x_max is None:
-            x_max = max(data_axis[element])
-        elif x_max < max(data_axis[element]):
-            x_max = max(data_axis[element])
-
-        if y_max is None:
-            y_max = max(data_series[element])
-        elif y_max < max(data_series[element]):
-            y_max = max(data_series[element])
-
+    #
+    #     if x_min is None:
+    #         x_min = min(data_axis[element])
+    #     elif x_min > min(data_axis[element]):
+    #         x_min = min(data_axis[element])
+    #
+    #     if y_min is None:
+    #         y_min = min(data_series[element])
+    #     elif y_min > min(data_series[element]):
+    #         y_min = min(data_series[element])
+    #
+    #     if x_max is None:
+    #         x_max = max(data_axis[element])
+    #     elif x_max < max(data_axis[element]):
+    #         x_max = max(data_axis[element])
+    #
+    #     if y_max is None:
+    #         y_max = max(data_series[element])
+    #     elif y_max < max(data_series[element]):
+    #         y_max = max(data_series[element])
         plt.plot(data_axis[element], data_series[element], label=data_series_names[element])
 
     fig = plt.gcf()
@@ -739,9 +738,9 @@ def plot_custom_series_list(data_series: list, data_axis:list, name_to_save: str
 
     if show_legend:
         if legend_name is not None:
-            plt.legend(fancybox=True, fontsize=legend_font_size, loc='best', title=legend_name)
+            plt.legend(fancybox=True, fontsize=legend_font_size, loc=legend_loc, title=legend_name)
         else:
-            plt.legend(fancybox=True, fontsize=legend_font_size, loc='best')
+            plt.legend(fancybox=True, fontsize=legend_font_size, loc=legend_loc)
 
     plt.yticks(fontsize=y_ticks_font_size)
     plt.xticks(fontsize=x_ticks_font_size)

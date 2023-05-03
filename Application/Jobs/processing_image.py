@@ -950,8 +950,10 @@ def main_func_plot_lines(param_list: list = None) -> bool:
                         pixel_line_series.append(np.array(port_in.arr[line, columns[0]:columns[1]]))
                         pixel_column_series.append(np.arange(columns[0], columns[1], 1))
 
+                # print(data_series_names, pixel_line_series, pixel_column_series)
                 plot_custom_series_list(data_series=pixel_line_series, data_axis=pixel_column_series, x_plot_name='Line pixel', y_plot_name='Pixel Value',
-                                        y_min=0, y_max=260, title_name="One line in the image",
+                                        y_min=0, y_max=260,
+                                        # title_name="One line in the image",
                                         data_series_names=data_series_names, legend_name=None, show_legend=False, if_grid=True,
                                         name_folder='PLOT_LINE_' + port_in.name,
                                         name_to_save='plot_line_{}_{}'.format(global_var_handler.PICT_NAME.split('.')[0], port_in.name),
