@@ -702,7 +702,7 @@ def main_constrained_unsharp_filter(port_list: list = None) -> bool:
                     img_filtered = np.zeros_like(img)
 
                     img_f = lee_sigma_filter_processing(img_filtered=img_filtered, img=img, win_offset=int(port_list[PORT_LS_WIN] / 2),
-                                                        M=img.shape[0], N=img.shape[1], sigma=port_list[PORT_LS_VAL]).astype('int16')
+                                                        M=img.shape[1], N=img.shape[0], sigma=port_list[PORT_LS_VAL]).astype('int16')
 
                     if port_list[PORT_CASCADE_VER]:
                         img_h = cv2.filter2D(src=img_f.copy(), ddepth=cv2.CV_16S, kernel=kernel)
@@ -1066,7 +1066,6 @@ def main_adaptive_um(port_list: list = None) -> bool:
                     kernel = np.array(eval(port_list[PORT_KERNEL_POS]))
 
                 if kernel is not None:
-
                     in_img = p_in.arr.copy()
 
                     if len(p_in.arr.shape) == 3:
@@ -1104,6 +1103,7 @@ def main_adaptive_um(port_list: list = None) -> bool:
 
                     p_out.arr[:] = img_out
                 else:
+                    log_error_to_console("AUM KERNEL NONE: ")
                     p_out.arr[:] = p_in.arr[:]
                 p_out.set_valid()
             except BaseException as error:
@@ -1970,7 +1970,7 @@ def do_adaptive_non_linear_unsharp_filter_job(port_input_name: str,  kernel: str
 
     if port_output_name is None:
         port_output_name = 'ANUM_' + str(kernel).replace('.', '_') + '_BF_D_' + str(bf_distance) + '_SC_' + str(bf_sigma_colors).replace('.', '_') + '_SS_' + str(bf_sigma_space).replace('.', '_') \
-                           + '_THR_1_' + str(thr_1) + '_THR_1_' + str(thr_2) + '_' + port_input_name
+                           + '_THR_1_' + str(thr_1) + '_THR_2_' + str(thr_2) + '_' + port_input_name
 
     output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
     output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)

@@ -377,10 +377,10 @@ def plot_time_jobs(port_list: list, series_names: list, name_to_save: str, input
 
 
 def plot_box_benchmark_values(name_to_save: str, eval: list,
-                              number_decimal: int = 3, number_of_series: int = None, data='FOM', data_subsets=None,
+                              number_decimal: int = 3, number_of_series: int = None, data='FOM', data_subsets=None, show_legend=False,
                               x_label_font_size=25, y_label_font_size=25, x_ticks_font_size=25, y_ticks_font_size=25, dpi_save_value=300,
                               title_font_size=35, img_size_w=15, img_size_h=10, legend_font_size='small', legend_name='Jobs', title_name=None,
-                              save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True):
+                              save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True, set_name_replace_list=None,):
     """
     Plot average time of jobs.
     :param name_to_save name for file to save
@@ -442,25 +442,41 @@ def plot_box_benchmark_values(name_to_save: str, eval: list,
         # print(subset_dict[data_subset])
 
     for set in subset_dict:
-        if 'RDE' in data:
+        if 'RDE' in data or 'BRISQUE' in data:
             print('min', subset_dict[set][-1])
         else:
             print('max', subset_dict[set][0])
 
+
     subset_values_dict = {}
 
     for data_subset in subset_dict:
-        subset_values_dict[data_subset] = [variant[1] for variant in subset_dict[data_subset]]
+        name = data_subset[-3]
+
+        if '_dilated_' in data_subset:
+            name = data_subset[-3] + '(d)'
+
+        subset_values_dict[name] = [variant[1] for variant in subset_dict[data_subset]]
+        print('average', data_subset, " ", np.average(subset_values_dict[name]))
 
     dataframe = pd.DataFrame.from_dict(subset_values_dict)
     dataframe.set_index(dataframe.columns[0])
     colors = ['blue', 'green', 'purple', 'tan', 'pink', 'red']
 
-    df = dataframe.plot(kind='box',
+    df = dataframe.plot(kind='box', fontsize=y_label_font_size,
                         labels=list(subset_dict.keys()),
                         figsize=(img_size_w, img_size_h), showmeans=True, grid=True)
 
-    plt.ylabel(data, fontsize=y_label_font_size)
+    plt.yticks(fontsize=y_ticks_font_size)
+    plt.xticks(fontsize=x_ticks_font_size)
+
+    if title_name is not None:
+        plt.title(title_name, fontsize=title_font_size)
+
+    if show_legend is True:
+        plt.legend(fancybox=True, fontsize=legend_font_size, title=legend_name, loc='best')
+
+    plt.xlabel(xlabel='Recall', fontsize=x_label_font_size)
 
     # colors = iter(random.sample(color_list, k=len(subset_dict)))
     #

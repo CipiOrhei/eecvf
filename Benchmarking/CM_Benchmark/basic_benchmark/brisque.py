@@ -72,13 +72,16 @@ def run_CM_benchmark_BRISQUE():
                 img_al = cv2.imread(path_img_al, cv2.IMREAD_GRAYSCALE)
 
                 try:
-                    # Define a transform to convert the image to tensor
-                    transform = transforms.ToTensor()
+                    # # Define a transform to convert the image to tensor
+                    # transform = transforms.ToTensor()
+                    #
+                    # # Convert the image to PyTorch tensor
+                    # tensor = transform(img_al)
+                    # tensor = torch.unsqueeze(tensor, dim=0)
+                    # val = piq.brisque(tensor, data_range=1.0).item()
 
-                    # Convert the image to PyTorch tensor
-                    tensor = transform(img_al)
-                    tensor = torch.unsqueeze(tensor, dim=0)
-                    val = piq.brisque(tensor, data_range=255).item()
+                    img_al_tensor = torch.from_numpy(img_al).float().unsqueeze(0).unsqueeze(0) / 255.0
+                    val = piq.brisque(img_al_tensor, data_range=1.0)
 
                     avg += val
                     count += 1
