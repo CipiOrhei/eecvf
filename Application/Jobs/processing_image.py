@@ -14,8 +14,7 @@ from Utils.log_handler import log_to_file, log_error_to_console
 from Application.Config.create_config import jobs_dict, create_dictionary_element
 from config_main import PYRAMID_LEVEL, FILTERS
 from Application.Config.util import transform_port_name_lvl, transform_port_size_lvl, job_name_create, get_module_name_from_file
-from Utils.plotting import plot_histogram_grey_image, plot_histogram_rgb_image
-
+from Utils.plotting import plot_histogram_grey_image, plot_histogram_rgb_image, plot_custom_series_list
 """
 Module handles single image jobs for the APPL block.
 """
@@ -886,11 +885,13 @@ def main_func_histogram(param_list: list = None) -> bool:
         if port_in.is_valid() is True:
             try:
                 if len(port_in.arr.shape) == 2:
-                    plot_histogram_grey_image(image=port_in.arr.copy(), name_folder='HIST_' + port_in.name, picture_name=global_var_handler.PICT_NAME.split('.')[0],
-                                                  to_save=True, to_show=False)
+                    plot_histogram_grey_image(image=port_in.arr.copy(), name_folder='HIST_' + port_in.name,
+                                              picture_name='{}_{}'.format(global_var_handler.PICT_NAME.split('.')[0], port_in.name),
+                                              to_save=True, to_show=False)
                 elif len(port_in.arr.shape) == 3:
-                    plot_histogram_rgb_image(image=port_in.arr.copy(), name_folder='HIST_' + port_in.name, picture_name=global_var_handler.PICT_NAME.split('.')[0],
-                                                  to_save=True, to_show=False)
+                    plot_histogram_rgb_image(image=port_in.arr.copy(), name_folder='HIST_' + port_in.name,
+                                             picture_name='{}_{}'.format(global_var_handler.PICT_NAME.split('.')[0], port_in.name),
+                                             to_save=True, to_show=False)
 
             except BaseException as error:
                 log_error_to_console("HISTOGRAM JOB NOK: ", str(error))
@@ -901,6 +902,69 @@ def main_func_histogram(param_list: list = None) -> bool:
         return True
 
 
+# define a main function, function that will be executed at the begging of the wave
+def main_func_plot_lines(param_list: list = None) -> bool:
+    """
+    Saves a plot with the values on each line as y and columns as x. Each new line in the list will create a new series
+    :param param_list: Param needed to respect the following list:
+                       [port in, port in wave, port out]
+    :return: True if the job executed OK.
+    """
+    # variables for position of param needed
+    # ex:
+
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE = 1
+    # noinspection PyPep8Naming
+    PORT_IN_LINES = 2
+    # noinspection PyPep8Naming
+    PORT_IN_COLUMNS = 3
+    # verify that the number of parameters are OK.
+    if len(param_list) != 4:
+        log_error_to_console("PLOT PATCH JOB MAIN FUNCTION PARAM NOK", str(len(param_list)))
+        return False
+    else:
+        # get needed ports
+        port_in = get_port_from_wave(name=param_list[PORT_IN_POS], wave_offset=param_list[PORT_IN_WAVE])
+        lines = eval(param_list[PORT_IN_LINES])
+        columns = eval(param_list[PORT_IN_COLUMNS])
+
+
+        # check if port's you want to use are valid
+        if port_in.is_valid() is True:
+            # try:
+            if True:
+                pixel_line_series = list()
+                pixel_column_series = list()
+                data_series_names = list()
+
+                for line in lines:
+                    data_series_names.append('Line ' + line.__str__())
+
+                    if len(columns) == 0:
+                        pixel_line_series.append(np.array(port_in.arr[line, :]))
+                        pixel_column_series.append(np.arange(0, len(port_in.arr[0]), 1))
+                    else:
+                        pixel_line_series.append(np.array(port_in.arr[line, columns[0]:columns[1]]))
+                        pixel_column_series.append(np.arange(columns[0], columns[1], 1))
+
+                # print(data_series_names, pixel_line_series, pixel_column_series)
+                plot_custom_series_list(data_series=pixel_line_series, data_axis=pixel_column_series, x_plot_name='Line pixel', y_plot_name='Pixel Value',
+                                        y_min=0, y_max=260,
+                                        # title_name="One line in the image",
+                                        data_series_names=data_series_names, legend_name=None, show_legend=False, if_grid=True,
+                                        name_folder='PLOT_LINE_' + port_in.name,
+                                        name_to_save='plot_line_{}_{}'.format(global_var_handler.PICT_NAME.split('.')[0], port_in.name),
+                                        save_plot=True, show_plot=False)
+            # except BaseException as error:
+            #     log_error_to_console("HISTOGRAM JOB NOK: ", str(error))
+            #     pass
+        else:
+            return False
+
+        return True
 ############################################################################################################################################
 # Job create functions
 ############################################################################################################################################
@@ -1037,6 +1101,45 @@ def do_histogram_job(port_input_name: str,
                                   input_ports=input_port_list,
                                   init_func_name='init_func_global', init_func_param=None,
                                   main_func_name='main_func_histogram',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+
+def do_plot_lines_over_columns_job(port_input_name: str, lines: list, columns: list = [],
+                                   level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0, wave_offset: int = 0) -> str:
+    """
+    Saves a plot with the values on each line as y and columns as x. Each new line in the list will create a new series
+    :param port_input_name: Name of input port
+    :param level: Level of input port, please correlate with each input port name parameter
+    :param wave_offset: wave of input port, please correlate with each input port name parameter
+    :param lines: list of lines from an image to port
+    :param columns: list of columns, [start, stop] from an image to port. If empty list will take all columns of the image.
+    :return: Name of output port or ports
+    """
+    # Do this for each input port this function has
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    if len(columns) > 3:
+        log_error_to_console('COLUMN VALUE NOT OK PLOT LINES OF IMG JOB')
+        return
+
+    if len(columns) == 1:
+        log_error_to_console('COLUMN VALUE SHOULD BE [START, STOP] OR EMPTY IN PLOT LINES OF IMG JOB')
+        return
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, lines.__str__(), columns.__str__()]
+    output_port_list = []
+
+    job_name = job_name_create(action='PLOT LINES OF IMG', input_list=input_port_list, wave_offset=[wave_offset], level=level)
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  init_func_name='init_func_global', init_func_param=None,
+                                  main_func_name='main_func_plot_lines',
                                   main_func_param=main_func_list,
                                   output_ports=output_port_list)
 

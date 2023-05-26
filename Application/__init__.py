@@ -52,6 +52,7 @@ from Application.Config.job_create import do_pixelate_image_job
 from Application.Jobs.processing_image import do_resize_image_job
 from Application.Jobs.processing_image import do_blending_images_job
 from Application.Jobs.processing_image import do_histogram_job
+from Application.Jobs.processing_image import do_plot_lines_over_columns_job
 ############################################################################################################################################
 # Image blurring jobs
 ############################################################################################################################################
@@ -66,6 +67,8 @@ from Application.Config.job_create import do_anisotropic_diffusion_filter_job
 from Application.Config.job_create import do_crimmins_job
 from Application.Config.job_create import do_isef_filter_job
 from Application.Config.job_create import do_motion_blur_filter_job
+from Application.Jobs.blur_image import do_lee_filter_job
+from Application.Jobs.blur_image import do_lee_sigma_filter_job
 ############################################################################################################################################
 # Image morphology jobs
 ############################################################################################################################################
@@ -235,6 +238,13 @@ from Application.Jobs.shaperning import do_unsharp_filter_job
 from Application.Jobs.shaperning import do_unsharp_filter_expanded_job
 from Application.Jobs.shaperning import do_unsharp_filter_dilated_2dwt_job
 from Application.Jobs.shaperning import do_um_2dwt_fusion
+from Application.Jobs.shaperning import do_constrained_unsharp_filter_expanded_job
+from Application.Jobs.shaperning import do_nonlinear_unsharp_filter_job
+from Application.Jobs.shaperning import do_normalized_unsharp_filter_job
+from Application.Jobs.shaperning import do_adaptive_non_linear_unsharp_filter_job
+from Application.Jobs.shaperning import do_adaptive_unsharp_filter_job
+from Application.Jobs.shaperning import do_selective_unsharp_filter_job
+from Application.Jobs.shaperning import do_histogram_equalization_unsharp_filter_job
 ############################################################################################################################################
 # Get external data
 ############################################################################################################################################
