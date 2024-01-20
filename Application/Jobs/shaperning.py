@@ -502,6 +502,109 @@ def main_um_dilated_2dwt(port_list: list = None) -> bool:
         return True
 
 
+def main_cum_dilated_2dwt(port_list: list = None) -> bool:
+    """
+    The Unsharp filter can be used to enhance the edges of an image.
+
+    :param port_list: Param needed list of port names [input1,  wave_offset, kernel_size, sigma, output]
+                      List of ports passed as parameters should be even. Every input picture should have a output port.
+    :return: True if the job executed OK.
+    """
+    # noinspection PyPep8Naming
+    PORT_IN_POS = 0
+    # noinspection PyPep8Naming
+    PORT_IN_WAVE_IMG = 1
+    # noinspection PyPep8Naming
+    PORT_KERNEL_POS = 2
+    # noinspection PyPep8Naming
+    PORT_STREGHT_POS = 3
+    # noinspection PyPep8Naming
+    PORT_FUSION_LVL = 4
+    # noinspection PyPep8Naming
+    PORT_WAVELENGT = 5
+    # noinspection PyPep8Naming
+    PORT_OUT_POS = 6
+    # noinspection PyPep8Naming
+    PORT_FUSION_POS = 7
+    # noinspection PyPep8Naming
+    PORT_LS_WIN = 8
+    # noinspection PyPep8Naming
+    PORT_LS_VAL = 9
+    # noinspection PyPep8Naming
+    PORT_CLIPPING_TH = 10
+
+    # check if param OK
+    if len(port_list) != 11:
+        log_error_to_console("CUM DILATED 2DWT JOB MAIN FUNCTION PARAM NOK", str(len(port_list)))
+        return False
+    else:
+        p_in = get_port_from_wave(name=port_list[PORT_IN_POS], wave_offset=port_list[PORT_IN_WAVE_IMG])
+        p_out = get_port_from_wave(name=port_list[PORT_OUT_POS])
+
+        if p_in.is_valid() is True:
+            # try:
+            if True:
+                if port_list[PORT_KERNEL_POS] == None:
+                    kernel = None
+                elif 'xy' in port_list[PORT_KERNEL_POS]:
+                    kernel = eval('Application.Jobs.kernels.' + port_list[PORT_KERNEL_POS])
+                else:
+                    kernel = np.array(eval(port_list[PORT_KERNEL_POS]))
+
+                if kernel is not None:
+                    if port_list[PORT_STREGHT_POS] < 0:
+                        port_list[PORT_STREGHT_POS] = 1
+                    elif port_list[PORT_STREGHT_POS] > 9:
+                        port_list[PORT_STREGHT_POS] = 9
+
+                    coef_list = list()
+
+                    in_img = p_in.arr.copy()
+
+                    if len(p_in.arr.shape) == 3:
+                        img_ycbcr = cv2.cvtColor(p_in.arr, cv2.COLOR_BGR2YCR_CB)
+                        in_img = img_ycbcr[:, :, 0]
+
+                    from Application.Jobs.blur_image import lee_sigma_filter_processing
+
+                    # we process the entire img as float64 to avoid type overflow error
+                    img_filtered = np.zeros_like(in_img)
+
+                    img_f = lee_sigma_filter_processing(img_filtered=img_filtered, img=in_img, win_offset=int(port_list[PORT_LS_WIN] / 2),
+                                                        M=in_img.shape[1], N=in_img.shape[0], sigma=port_list[PORT_LS_VAL]).astype('int16')
+
+                    for l in range(port_list[PORT_FUSION_LVL]):
+                        # res_um = um(img=img_f, kernel=dilate(kernel, l), strength=port_list[PORT_STREGHT_POS])
+                        res_um = um(img=in_img, kernel=dilate(kernel, l), strength=port_list[PORT_STREGHT_POS])
+                        coef_list.append(pywt.dwt2(res_um.astype('int32'), port_list[PORT_WAVELENGT]))
+
+                    coeffs = fusion_test(coef_list=coef_list, octavs=port_list[PORT_FUSION_LVL], fuison_logic=port_list[PORT_FUSION_POS])
+
+                    inverse = pywt.idwt2(coeffs, port_list[PORT_WAVELENGT])
+
+                    inverse = cv2.normalize(src=inverse, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
+
+                    inverse = clipping(img=img_f, img_filtered=inverse, M=inverse.shape[1], N=inverse.shape[0],
+                                     win_offset=port_list[PORT_CLIPPING_TH])
+
+                    if len(p_in.arr.shape) == 3:
+                        img_ycbcr[:, :, 0] = inverse
+
+                        inverse = cv2.cvtColor(img_ycbcr, cv2.COLOR_YCR_CB2BGR)
+
+                    p_out.arr[:] = inverse
+                else:
+                    p_out.arr[:] = p_in.arr[:]
+                p_out.set_valid()
+            # except BaseException as error:
+            #     log_error_to_console("UM DILATED 2DWT JOB NOK: ", str(error))
+            #     pass
+        else:
+            return False
+
+        return True
+
+
 @jit(nopython=True)
 def fusion_max(coef_list, octavs):
     LL = np.zeros_like(coef_list[0][0])
@@ -1605,6 +1708,57 @@ def do_unsharp_filter_dilated_2dwt_job(port_input_name: str,  kernel: str, stren
                                   max_wave=wave_offset,
                                   init_func_name='init_func_global', init_func_param=None,
                                   main_func_name='main_um_dilated_2dwt',
+                                  main_func_param=main_func_list,
+                                  output_ports=output_port_list)
+
+    jobs_dict.append(d)
+
+    return port_output_name
+
+
+def do_constrained_unsharp_filter_dilated_2dwt_job(port_input_name: str,  kernel: str, strenght: float, levels_fusion: int, wave_lenght: str, fusion_rule: str,
+                                                   lee_sigma_filter_window: int, lee_filter_sigma_value:int, threshold_cliping_window:int, casacade_version: float = False,
+                                                   port_output_name: str = None,
+                                                   wave_offset: int = 0, is_rgb: bool = False, level: PYRAMID_LEVEL = PYRAMID_LEVEL.LEVEL_0) -> str:
+    """
+    xxx
+    """
+    input_port_name = transform_port_name_lvl(name=port_input_name, lvl=level)
+
+    if kernel is None:
+        kernel = None
+    elif isinstance(kernel, list):
+        if kernel not in custom_kernels_used:
+            custom_kernels_used.append(kernel)
+        kernel = kernel.__str__()
+    else:
+        if not isinstance(kernel, str):
+            log_setup_info_to_console("CUM_DILATED_2DWT FILTER JOB DIDN'T RECEIVE CORRECT KERNEL")
+            return
+        else:
+            kernel = kernel.lower() + '_xy'
+
+    if port_output_name is None:
+        port_output_name = 'CUM_D_2DWT_' + str(kernel).replace('.', '_') + '_LS_W_' + str(lee_sigma_filter_window) + '_LS_V_' + str(lee_filter_sigma_value) \
+                            + '_S_' + str(strenght).replace('.', '_')  + '_TH_' + str(threshold_cliping_window) \
+                           + '_L_' + levels_fusion.__str__() + '_' + wave_lenght.upper() + '_F_' + fusion_rule + '_' + port_input_name
+
+    output_port_name = transform_port_name_lvl(name=port_output_name, lvl=level)
+    output_port_size = transform_port_size_lvl(lvl=level, rgb=is_rgb)
+
+    input_port_list = [input_port_name]
+    main_func_list = [input_port_name, wave_offset, kernel, strenght, levels_fusion, wave_lenght, output_port_name, fusion_rule, lee_sigma_filter_window, lee_filter_sigma_value, threshold_cliping_window]
+    output_port_list = [(output_port_name, output_port_size, 'B', True)]
+
+    job_name = job_name_create(action='CUM dilated 2DWT', input_list=input_port_list, wave_offset=[wave_offset], level=level, Kernel=str(kernel),
+                               S=str(strenght).replace('.', '_'), L_W=str(lee_sigma_filter_window), L_S=str(lee_filter_sigma_value),  TH=str(threshold_cliping_window), levels_fusion=levels_fusion)
+
+    d = create_dictionary_element(job_module=get_module_name_from_file(__file__),
+                                  job_name=job_name,
+                                  input_ports=input_port_list,
+                                  max_wave=wave_offset,
+                                  init_func_name='init_func_global', init_func_param=None,
+                                  main_func_name='main_cum_dilated_2dwt',
                                   main_func_param=main_func_list,
                                   output_ports=output_port_list)
 
