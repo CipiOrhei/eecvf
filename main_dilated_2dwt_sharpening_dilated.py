@@ -12,39 +12,155 @@ import math
 
 """
 This module contains the code used for the following paper:
-  title={An image sharpening technique based on dilated filters and 2D-DWT image fusion},
-  author={Bogdan, Victor and Orhei, Ciprian and Bonchis, Bogdan},
-  booktitle={he Second International Conference on Computational Methods and Applications in Engineerin (ICCMAE) 2022},
+  title={An Image Sharpening Technique Based on Dilated Filters and 2D-DWT Image Fusion},
+  author={Bogdan, Victor and Bonchis, Bogdan and Orhei, Ciprian},
+  booktitle={In Proceedings of the 19th International Joint Conference on Computer Vision, Imaging and Computer Graphics Theory and Applications (VISIGRAPP 2024)},
   pages={--},
-  year={2022},
+  year={2024},
   organization={--}
 
 """
+# Custom plot
+def plot_frame_values(name_to_save: str, eval: list, data,
+                      number_decimal: int = 3, set_name_replace_list=None,
+                      x_label_font_size=40, y_label_font_size=40, x_ticks_font_size=30, y_ticks_font_size=30, dpi_save_value=300,
+                      title_font_size=40, img_size_w=15, img_size_h=10, legend_font_size='medium', legend_name='Jobs', title_name=None,
+                      save_location: str = 'Logs/', show_plot: bool = False, save_plot: bool = True):
+    """
+      Plot custom ports
+        :param name_to_save: name you want for plot
+        :param eval: list of ports evaluated to plot
+        :param number_decimal: number of decimals to use
+        :param set_name_replace_list: list of string to replace for labels in legend
+        :param y_plot_name: name of y label
+        :param x_label_font_size font size of x axis label
+        :param y_label_font_size font size of y axis label
+        :param x_ticks_font_size font size of x axis ticks
+        :param y_ticks_font_size font size of y axis ticks
+        :param title_font_size font size of plot title
+        :param title_name name of plot title
+        :param legend_font_size size of legend font (xx-small, x-small, small, medium, large, x-large, xx-large)
+        :param legend_name name of legend
+        :param img_size_w save width image
+        :param img_size_h save height image
+        :param dpi_save_value save dpi of image
+                The bigger value the longer time it takes to save
+       :param show_plot: if we want to show the plot
+       :param save_plot: if we want to save the plot
+       :param save_location: where to save
+       :return None
+      """
+
+    import matplotlib.pyplot as plt
+    import os
+
+    input_location = os.path.join(CONFIG.BENCHMARK_RESULTS, data)
+    subset_dict = dict()
+
+    # get files from benchmark folder
+    for dirname, dirnames, filenames in os.walk(input_location):
+        for filename in filenames:
+            # files.append(filename)
+            try:
+            # if True:
+                f = open(os.path.join(input_location, filename)).readlines()
+                set_name = filename.split('.')[0]
+
+                if set_name in eval:
+
+                    if set_name_replace_list is not None:
+                        for el in set_name_replace_list:
+                            set_name = set_name.replace(el[0], el[1])
+
+                    subset_dict[set_name] = {'average': 0, 'frames': list(), 'values': list()}
+
+                    for line in range(len(f)):
+                        if line == 0:
+                            pass
+                        elif line == (len(f)-1):
+                            tmp = f[line].split(' ')
+                            for el in range(len(tmp)-1, 0, -1):
+                                if tmp[el] != '' and tmp[el] != ' ' and tmp[el] != '\n':
+                                    subset_dict[set_name]['average'] = round(float(tmp[el]), number_decimal)
+                                    break
+
+                        else:
+                            tmp = f[line].split(' ')
+                            subset_dict[set_name]['frames'].append(tmp[0])
+                            for el in range(len(tmp)-1, 0, -1):
+                                if tmp[el] != '' and tmp[el] != ' ' and tmp[el] != '\n':
+                                    subset_dict[set_name]['values'].append(round(float(tmp[el]), number_decimal))
+                                    break
+
+            except:
+                print(filename, 'NOK TO USE FOR PLOTTING')
+
+    tst = dict()
+    for frame in subset_dict['RAW']['frames']:
+        tst[frame] = 0
+
+    for set in subset_dict.keys():
+        for frame_idx in range(len(subset_dict[set]['frames'])):
+            tst[subset_dict[set]['frames'][frame_idx]] += subset_dict[set]['values'][frame_idx]
+
+    for idx in tst.keys():
+        tst[idx] /=10
+
+    subset_dict['AVERAGE'] = {'average': 0, 'frames': list(tst.keys()), 'values': list(tst.values())}
+
+    for set in subset_dict.keys():
+        if set in ['AVERAGE']:
+            plt.plot(subset_dict[set]['frames'], subset_dict[set]['values'], marker='_', linestyle='', ms=20,  label=set)
+        elif set in ['UM_P_AVG_1', 'UM_P_AVG_2', 'UM_P_AVG_3', 'UM_P_MAX']:
+            plt.plot(subset_dict[set]['frames'], subset_dict[set]['values'], marker='D', linestyle='',ms=10,label=set)
+        else:
+            plt.plot(subset_dict[set]['frames'], subset_dict[set]['values'], marker='.', linestyle='',ms=10,label=set)
+
+    # plt.plot('AVERAGE', tst[idx], marker='_', linestyle='', label=set)
+
+    fig = plt.gcf()
+    fig.set_size_inches(w=img_size_w, h=img_size_h)
+    plt.xlabel('Frames', fontsize=x_label_font_size)
+    plt.ylabel(data, fontsize=y_label_font_size)
+    plt.yticks(fontsize=y_ticks_font_size)
+    plt.xticks(fontsize=x_ticks_font_size)
+    # plt.legend(fancybox=True, fontsize=legend_font_size, loc='best', title=legend_name)
+    plt.legend(fancybox=True,fontsize=legend_font_size,title=legend_name, bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left", borderaxespad=0, mode="expand", ncol=6)
+    # plt.legend(fancybox=True, fontsize=legend_font_size, loc='best', title=legend_name)
+
+    if title_name is not None:
+        plt.title(title_name, fontsize=title_font_size)
+
+    if show_plot is True:
+        plt.show()
+
+    if save_plot is True:
+        plt.savefig(os.path.join(save_location, name_to_save + '.png'), bbox_inches='tight', dpi=dpi_save_value)
+
+    plt.clf()
+    plt.close()
+
+
 
 def main_paper():
     """
 
     """
     Application.delete_folder_appl_out()
-
+    # Please change accordingly to data you wish to execute on
     Application.set_input_image_folder('TestData/sharpnnes_test')
     # Application.set_input_image_folder('TestData/smoke_test')
     # Application.set_input_image_folder('TestData/sharpnnes_test2')
     # Application.set_input_image_folder('TestData/TMBuD/images')
+
     raw = Application.do_get_image_job('RAW')
-    grey = Application.do_grayscale_transform_job(port_input_name='RAW')
 
     eval_list = list()
 
-    # grey_blur = Application.do_add_gaussian_blur_noise_job(port_input_name=raw, mean_value=0.5, is_rgb=True)
-    # grey_blur = Application.do_add_gaussian_blur_noise_job(port_input_name=grey, mean_value=0.5, is_rgb=False)
-    # eval_list.append(grey_blur)
 
     eval_list.append(raw)
-    # eval_list.append(grey)
-    # input = grey
+
     input = raw
-    # is_rgb = False
     is_rgb = True
 
     um_standard = Application.do_unsharp_filter_job(port_input_name=input, is_rgb=is_rgb, port_output_name='UM_STD')
@@ -93,7 +209,6 @@ def main_paper():
         Application.do_zoom_image_job(port_input_name=el, zoom_factor=1.5, do_interpolation=False, is_rgb=is_rgb, w_offset=75)
 
     Application.create_config_file()
-    # Application.configure_save_pictures(ports_to_save=[], job_name_in_port=True)
     Application.configure_save_pictures(ports_to_save='ALL', job_name_in_port=True)
     # Application.configure_show_pictures(ports_to_show='ALL', time_to_show=500, to_rotate=False)
     Application.run_application()
@@ -118,7 +233,6 @@ def main_paper():
 
     Benchmarking.run_BRISQUE_benchmark(input_location='Logs/application_results',
                                        raw_image='TestData/sharpnnes_test',
-                                       # raw_image='TestData/sharpnnes_test2',
                                        # raw_image='TestData/TMBuD/images',
                                     jobs_set=eval_list)
 
@@ -131,12 +245,12 @@ def main_paper():
     #
     for data in ['Entropy', 'SF', 'RMSC', 'BRISQUE']:
         for el in list_to_plot:
-            Utils.plot_frame_values(name_to_save=data + '_' + el[0], eval=el[1], data=data, set_name_replace_list=el[2], save_plot=True,
-                                    x_label_font_size=30, y_label_font_size=30, x_ticks_font_size=20, y_ticks_font_size=20,
-                                    legend_name=None, legend_font_size='medium', dpi_save_value=800)
-
-            Utils.plot_box_benchmark_values(name_to_save=data + '_box', number_decimal=3,
-                                            data=data, data_subsets=el[1], eval=eval_list)
+            plot_frame_values(name_to_save=data + '_' + el[0], eval=el[1], data=data, set_name_replace_list=el[2], save_plot=True,
+                              x_label_font_size=30, y_label_font_size=30, x_ticks_font_size=20, y_ticks_font_size=20,
+                              legend_name=None, legend_font_size='medium', dpi_save_value=800)
+            # Only when TMBuD or other big dataset
+            # Utils.plot_box_benchmark_values(name_to_save=data + '_box', number_decimal=3,
+            #                                 data=data, data_subsets=el[1], eval=eval_list)
 
     Utils.close_files()
 

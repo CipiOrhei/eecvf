@@ -8,7 +8,7 @@ import os
 from operator import add
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
+# import seaborn as sns
 from Utils.plot_benchmark_results import color_list
 
 """
@@ -543,7 +543,7 @@ def plot_histogram_grey_image(image, name_folder, picture_name,
 
 
 def plot_histogram_rgb_image(image, name_folder, picture_name,
-                             x_label_font_size=40, y_label_font_size=40, x_ticks_font_size=30, y_ticks_font_size=30, dpi_save_value=300,
+                             x_label_font_size=30, y_label_font_size=30, x_ticks_font_size=20, y_ticks_font_size=20, dpi_save_value=600,
                              title_font_size=40, img_size_w=15, img_size_h=10,
                              to_show=False, to_save=False):
     """
@@ -571,16 +571,17 @@ def plot_histogram_rgb_image(image, name_folder, picture_name,
 
     for channel_id, c in zip(channel_ids, colors):
         histogram, bin_edges = np.histogram(image[:, :, channel_id], bins=256, range=(0, 256) )
+        histogram = histogram/1000
         plt.plot(bin_edges[0:-1], histogram, color=c)
 
     # plt.hist(image.flatten(), bins=256, range=[0, 256], color='b')
     plt.xlim([0, 256])
     plt.xlabel('Pixel value', fontsize=x_label_font_size)
-    plt.ylabel('Pixel number', fontsize=y_label_font_size)
+    plt.ylabel('Pixel number [k]', fontsize=y_label_font_size)
     plt.xticks(fontsize=x_ticks_font_size)  # fontsize of the tick labels
     plt.yticks(fontsize=y_ticks_font_size)  # fontsize of the tick labels
 
-    plt.title(picture_name, fontsize=title_font_size)
+    # plt.title(picture_name, fontsize=title_font_size)
     file_to_save = os.path.join(CONFIG.APPL_SAVE_LOCATION, name_folder)
     if not os.path.exists(file_to_save):
         os.makedirs(file_to_save)
@@ -756,7 +757,9 @@ def plot_custom_series_list(data_series: list, data_axis:list, name_to_save: str
         if legend_name is not None:
             plt.legend(fancybox=True, fontsize=legend_font_size, loc=legend_loc, title=legend_name)
         else:
-            plt.legend(fancybox=True, fontsize=legend_font_size, loc=legend_loc)
+            # plt.legend(fancybox=True, fontsize=legend_font_size, loc=legend_loc)
+            plt.legend(fancybox=True, fontsize=legend_font_size, title=legend_name, bbox_to_anchor=(0, 1.02, 1, 0.2),
+                       loc="lower left", borderaxespad=0, mode="expand", ncol=4)
 
     plt.yticks(fontsize=y_ticks_font_size)
     plt.xticks(fontsize=x_ticks_font_size)

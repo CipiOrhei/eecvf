@@ -15,15 +15,14 @@ matplotlib~=3.2.1
 numpy~=1.18.4
 numba~=0.51.0
 networkx
-# opencv-python~=4.5.0
-opencv-contrib-python~=4.5.0
 piq
 piq
 Pillow~=7.1.2
 Pillow-PIL
 PyWavelets
 pandas==1.1.5
-seaborn==0.11.2scipy~=1.1.0
+seaborn==0.11.2
+scipy~=1.1.0
 six
 tqdm~=4.46.0
 torch
@@ -31,6 +30,8 @@ torchvision
 thinning_py3
 wheel
 theano
+# opencv-python~=4.5.0
+opencv-contrib-python~=4.5.0
 # cntk
 ###### Requirements with Version Specifiers ######
 #   See https://www.python.org/dev/peps/pep-0440/#version-specifiers
